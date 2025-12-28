@@ -1,0 +1,39 @@
+/* Background slides from bottom to top */
+@keyframes bgSlide {
+  0% { transform: translateY(100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.bg-slide {
+  opacity: 0; /* start hidden */
+  animation: bgSlide 2s ease forwards;
+}
+
+/* Left-side content slides from left */
+@keyframes contentSlide {
+  0% { transform: translateX(-100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+.content-slide {
+  opacity: 0; /* start hidden */
+  animation: contentSlide 3s ease 2s forwards; /* delay after background */
+}
+
+/* Navbar buttons slide from top */
+@keyframes navbarSlide {
+  0% { transform: translateY(-50px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.navbar-slide {
+  opacity: 0; /* start hidden */
+  animation: navbarSlide 3s ease 3s forwards; /* delay after content */
+}
+
+/* Buttons fade in */
+@keyframes buttonFade {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.button-slide {
+  opacity: 0; /* start hidden */
+  animation: buttonFade 0.8s ease 4.5s forwards;
+}

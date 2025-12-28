@@ -1,0 +1,42 @@
+"use server";
+
+import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import User from "@/models/User";
+import { connectDB } from "@/lib/db";
+
+export async function POST(req: Request) {
+  try {
+    await connectDB();
+
+    const { newPassword, confirmPassword } = await req.json();
+
+    if (!newPassword || !confirmPassword) {
+      return NextResponse.json(
+        { error: "New password and confirm password are required" },
+        { status: 400 }
+      );
+    }
+
+    if (newPassword !== confirmPassword) {
+      return NextResponse.json({ error: "Passwords do not match" }, { status: 400 });
+    }
+
+    // Find the last user who has verified OTP (assuming otp cleared after verification)
+    const user = await User.findOne().sort({ updatedAt: -1 });
+    if (!user) {
+      return NextResponse.json({ error: "No user available to reset password" }, { status: 400 });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    await user.save();
+
+    return NextResponse.json({ message: "Password reset successfully" });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
