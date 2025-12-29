@@ -1,8 +1,29 @@
+<<<<<<< HEAD
 import Image from "next/image";
 import Link from "next/link";
 import "./_components/animations/animations.css";
 
 export default function WelcomePage() {
+=======
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import "./_components/animations/animations.css";
+
+export default function WelcomePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      router.replace("/dashboard"); // redirect logged-in users to dashboard
+    }
+  }, [router]);
+
+>>>>>>> d69b7d5 (Initial commit)
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Background Image */}
@@ -21,7 +42,10 @@ export default function WelcomePage() {
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* TOP NAVBAR */}
         <div className="flex flex-wrap md:flex-nowrap justify-between items-center px-4 sm:px-6 md:px-10 py-4 md:py-6 navbar-slide">
+<<<<<<< HEAD
           {/* Logo */}
+=======
+>>>>>>> d69b7d5 (Initial commit)
           <div className="flex items-center gap-2">
             <div className="w-10 h-10">
               <Image
@@ -54,7 +78,10 @@ export default function WelcomePage() {
         {/* MAIN SECTION */}
         <div className="flex flex-col md:flex-row flex-1 items-center px-4 sm:px-6 md:px-10 py-6 md:py-0 content-slide">
           <div className="w-full md:w-auto max-w-full md:max-w-xl text-black text-center md:text-left">
+<<<<<<< HEAD
             {/* Heading */}
+=======
+>>>>>>> d69b7d5 (Initial commit)
             <h1 className="text-[32px] sm:text-[40px] md:text-[50px] mb-4 letter-typewriter">
               WELCOME TO <br /> INVOICE GENERATOR
             </h1>
@@ -65,11 +92,20 @@ export default function WelcomePage() {
               <br /> process and stay organized.
             </p>
 
+<<<<<<< HEAD
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <button className="bg-[#D9D9D9] text-black px-4 sm:px-6 rounded-lg w-full sm:w-[220px] h-[50px] text-[20px] sm:text-[24px] flex items-center justify-center button-slide hover:bg-gray-300 transition shadow-[10px_10px_10px_rgba(0,0,0,0.25)]">
                 Get Started
               </button>
+=======
+            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+              <Link href="/signup">
+                <button className="bg-[#D9D9D9] text-black px-4 sm:px-6 rounded-lg w-full sm:w-[220px] h-[50px] text-[20px] sm:text-[24px] flex items-center justify-center button-slide hover:bg-gray-300 transition shadow-[10px_10px_10px_rgba(0,0,0,0.25)]">
+                  Get Started
+                </button>
+              </Link>
+>>>>>>> d69b7d5 (Initial commit)
 
               <button className="bg-white text-black px-4 sm:px-6 rounded-lg w-full sm:w-[220px] h-[50px] text-[20px] sm:text-[24px] flex items-center justify-center button-slide hover:bg-gray-100 transition shadow-[10px_10px_10px_rgba(0,0,0,0.25)]">
                 Contact Us

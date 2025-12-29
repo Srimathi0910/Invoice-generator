@@ -2,7 +2,11 @@
 
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+<<<<<<< HEAD
 import * as jwt from "jsonwebtoken";
+=======
+import jwt from "jsonwebtoken";
+>>>>>>> d69b7d5 (Initial commit)
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 
@@ -12,6 +16,7 @@ export async function POST(req: Request) {
 
     const { email, password } = await req.json();
 
+<<<<<<< HEAD
     if (!email)
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     if (!password)
@@ -26,20 +31,50 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid password" }, { status: 401 });
 
     // ✅ ACCESS TOKEN (short life recommended)
+=======
+    // Validate input
+    if (!email) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+    if (!password) {
+      return NextResponse.json({ error: "Password is required" }, { status: 400 });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return NextResponse.json({ error: "Email not found" }, { status: 404 });
+    }
+
+    // Check password
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return NextResponse.json({ error: "Invalid password" }, { status: 401 });
+    }
+
+    // Generate tokens
+>>>>>>> d69b7d5 (Initial commit)
     const accessToken = jwt.sign(
       { id: user._id.toString(), email: user.email },
       process.env.JWT_SECRET as string,
       { expiresIn: "15m" }
     );
 
+<<<<<<< HEAD
     // ✅ REFRESH TOKEN (long life)
+=======
+>>>>>>> d69b7d5 (Initial commit)
     const refreshToken = jwt.sign(
       { id: user._id.toString() },
       process.env.JWT_REFRESH_SECRET as string,
       { expiresIn: "7d" }
     );
 
+<<<<<<< HEAD
     // ✅ Set cookies
+=======
+    // Prepare response with cookies
+>>>>>>> d69b7d5 (Initial commit)
     const response = NextResponse.json({
       message: "Login successful",
       user: {

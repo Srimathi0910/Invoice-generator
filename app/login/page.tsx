@@ -29,6 +29,7 @@ export default function Login() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+<<<<<<< HEAD
     e.preventDefault();
     setErrors({ email: "", password: "", general: "" });
     setLoading(true);
@@ -69,6 +70,40 @@ export default function Login() {
       setLoading(false);
     }
   };
+=======
+  e.preventDefault();
+  setErrors({ email: "", password: "", general: "" });
+  setLoading(true);
+
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+      credentials: "include", // ✅ REQUIRED FOR COOKIES
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (data.field) {
+        setErrors((prev) => ({ ...prev, [data.field]: data.message }));
+      } else {
+        setErrors((prev) => ({ ...prev, general: data.error || "Login failed" }));
+      }
+    } else {
+      // ✅ Add user to localStorage and redirect
+      localStorage.setItem("user", JSON.stringify(data.user));
+      router.replace("/dashboard");
+    }
+  } catch (err) {
+    setErrors((prev) => ({ ...prev, general: "Network error. Please try again." }));
+  } finally {
+    setLoading(false);
+  }
+};
+
+>>>>>>> d69b7d5 (Initial commit)
 
   const inputClass =
     "peer w-full border-b border-gray-400 py-2 outline-none bg-transparent";
