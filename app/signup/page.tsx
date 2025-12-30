@@ -3,9 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { User, Mail, Phone, Lock } from "lucide-react";
 
 export default function Signup() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -21,7 +24,7 @@ export default function Signup() {
     general: "",
   });
 
-  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -31,8 +34,7 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccess("");
-    setErrors({ ...errors, general: "" });
+    setErrors({ username: "", email: "", phone: "", password: "", general: "" });
 
     let valid = true;
     const newErrors = { username: "", email: "", phone: "", password: "", general: "" };
@@ -65,6 +67,8 @@ export default function Signup() {
     }
 
     try {
+      setLoading(true);
+
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,11 +80,12 @@ export default function Signup() {
       if (!res.ok) {
         setErrors({ ...errors, general: data.error || "Something went wrong" });
       } else {
-        setSuccess(data.message);
-        setFormData({ username: "", email: "", phone: "", password: "" });
+        router.push("/signup-success"); // ✅ redirect
       }
-    } catch (err) {
+    } catch {
       setErrors({ ...errors, general: "Network error" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,131 +97,88 @@ export default function Signup() {
     }`;
 
   return (
-    // Added p-4 for mobile spacing
     <div className="min-h-screen flex items-center justify-center bg-[#D9D9D9] p-4">
-      {/* - flex-col for mobile, flex-row for desktop
-          - w-full max-w-[1000px] instead of fixed width
-          - h-auto for mobile, fixed h-[586px] for desktop
-      */}
       <div className="flex flex-col md:flex-row w-full max-w-[1000px] md:h-[586px] bg-white rounded-xl shadow-lg overflow-hidden p-3">
-        
-        {/* LEFT IMAGE - Hidden or resized on mobile */}
+
+        {/* LEFT IMAGE */}
         <div className="relative w-full md:w-1/2 h-48 md:h-auto p-3">
           <Image
             src="/assets/signup/signup-img.png"
-            alt="Signup Image"
+            alt="Signup"
             fill
             className="object-cover rounded-xl"
             priority
           />
-          <div className="absolute inset-0 flex items-center justify-center rounded-xl p-4">
-            <h1 className="text-white text-2xl md:text-4xl font-bold tracking-wide bg-white/20 px-8 py-4 md:px-16 md:py-8 backdrop-blur-[5px] rounded-2xl shadow-lg text-center">
-              Join Us
-              <br />
-              today
+          <div className="absolute inset-0 flex items-center justify-center">
+            <h1 className="text-white text-3xl md:text-4xl font-bold bg-white/20 px-10 py-6 backdrop-blur rounded-xl">
+              Join Us <br /> Today
             </h1>
           </div>
         </div>
 
         {/* RIGHT FORM */}
         <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-8 md:px-10">
-          <h2 className="text-2xl font-bold mb-6 text-black text-center">
-            Signup
-          </h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Signup</h2>
 
           {errors.general && (
-            <p className="text-red-500 mb-2 text-center">{errors.general}</p>
+            <p className="text-red-500 text-center mb-3">{errors.general}</p>
           )}
-          {success && <p className="text-green-500 mb-2 text-center">{success}</p>}
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             {/* Username */}
             <div className="relative">
-              <input
-                type="text"
-                id="username"
-                value={formData.username}
-                onChange={handleChange}
-                placeholder=" "
-                className={inputClass}
-              />
-              <label htmlFor="username" className={labelClass(formData.username)}>
-                Username
-              </label>
+              <input id="username" value={formData.username} onChange={handleChange} placeholder=" " className={inputClass} />
+              <label className={labelClass(formData.username)}>Username</label>
               <User className="absolute right-0 top-2 text-gray-500" size={18} />
-              {errors.username && (
-                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
-              )}
+              {errors.username && <p className="text-red-500 text-sm">{errors.username}</p>}
             </div>
 
             {/* Email */}
             <div className="relative">
-              <input
-                type="email"
-                id="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder=" "
-                className={inputClass}
-              />
-              <label htmlFor="email" className={labelClass(formData.email)}>
-                Email
-              </label>
+              <input id="email" type="email" value={formData.email} onChange={handleChange} placeholder=" " className={inputClass} />
+              <label className={labelClass(formData.email)}>Email</label>
               <Mail className="absolute right-0 top-2 text-gray-500" size={18} />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
             </div>
 
             {/* Phone */}
             <div className="relative">
-              <input
-                type="tel"
-                id="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder=" "
-                className={inputClass}
-              />
-              <label htmlFor="phone" className={labelClass(formData.phone)}>
-                Phone Number
-              </label>
+              <input id="phone" value={formData.phone} onChange={handleChange} placeholder=" " className={inputClass} />
+              <label className={labelClass(formData.phone)}>Phone Number</label>
               <Phone className="absolute right-0 top-2 text-gray-500" size={18} />
-              {errors.phone && (
-                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-              )}
+              {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
             </div>
 
             {/* Password */}
             <div className="relative">
-              <input
-                type="password"
-                id="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder=" "
-                className={inputClass}
-              />
-              <label htmlFor="password" className={labelClass(formData.password)}>
-                Password
-              </label>
+              <input id="password" type="password" value={formData.password} onChange={handleChange} placeholder=" " className={inputClass} />
+              <label className={labelClass(formData.password)}>Password</label>
               <Lock className="absolute right-0 top-2 text-gray-500" size={18} />
-              {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-              )}
+              {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
             </div>
 
+            {/* Submit Button */}
             <button
               type="submit"
-              className="bg-[#D9D9D9] text-[18px] md:text-[20px] flex align-items justify-center text-black py-2 rounded-lg hover:bg-gray-300 transition w-full md:w-3/4 mx-auto block cursor-pointer"
+              disabled={loading}
+              className={`bg-[#D9D9D9] py-2 rounded-lg w-full md:w-3/4 mx-auto flex justify-center items-center text-lg ${
+                loading ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-300"
+              }`}
             >
-              Sign Up
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
+                  Signing Up...
+                </span>
+              ) : (
+                "Sign Up"
+              )}
             </button>
           </form>
 
-          <p className="mt-4 text-center text-[16px] md:text-[20px]">
+          <p className="mt-4 text-center">
             Already have an account?{" "}
-            <Link href="/login" className="text-black-600 font-medium underline">
+            <Link href="/login" className="underline font-medium">
               Login
             </Link>
           </p>

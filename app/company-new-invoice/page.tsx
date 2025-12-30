@@ -1,8 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { X, Eye } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Eye, FileText, StickyNote, Paperclip, Info, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
+
+import {
+  FaFileInvoiceDollar,
+  FaUsers,
+  FaChartBar,
+  FaMoneyCheckAlt,
+  FaCog,
+  FaUserCircle,
+  FaSearch,
+  FaBars,
+  FaTimes,
+} from "react-icons/fa";
 
 type Item = {
   itemName: string;
@@ -12,21 +24,43 @@ type Item = {
   rate: number;
 };
 
+
 export default function InvoicePage() {
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState("Invoices");
+  const [user, setUser] = useState<{ username: string; email?: string } | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) {
+      router.replace("/login");
+    } else {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoadingUser(false);
+  }, [router]);
+  /* ---------------- Invoice Meta ---------------- */
   const [invoiceMeta, setInvoiceMeta] = useState({
     invoiceNumber: "",
     invoiceDate: "",
     dueDate: "",
   });
 
+  /* ---------------- Items ---------------- */
   const [items, setItems] = useState<Item[]>([
     { itemName: "", hsn: "", gst: 0, qty: 1, rate: 0 },
   ]);
 
-  const [extras, setExtras] = useState({ discount: 0, charges: 0, round: 0 });
+  /* ---------------- Extras ---------------- */
+  const [extras, setExtras] = useState({
+    discount: 0,
+    charges: 0,
+    round: 0,
+  });
 
+  /* ---------------- Totals ---------------- */
   const [totals, setTotals] = useState({
     amount: 0,
     cgst: 0,
@@ -35,6 +69,7 @@ export default function InvoicePage() {
     totalQty: 0,
   });
 
+  /* ---------------- Business Details ---------------- */
   const [billedBy, setBilledBy] = useState({
     country: "",
     businessName: "",
@@ -53,12 +88,10 @@ export default function InvoicePage() {
     city: "",
   });
 
+  /* ---------------- Item handlers ---------------- */
   const addItem = () =>
     setItems([...items, { itemName: "", hsn: "", gst: 0, qty: 1, rate: 0 }]);
-
-  const removeItem = (index: number) =>
-    setItems(items.filter((_, i) => i !== index));
-
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
   const handleChange = (index: number, field: keyof Item, value: string) => {
     const updated = [...items];
     updated[index] = {
@@ -68,11 +101,41 @@ export default function InvoicePage() {
     setItems(updated);
   };
 
-  const calculateTotal = () => {
-    let amount = 0,
-      cgst = 0,
-      sgst = 0,
-      qty = 0;
+  /* ---------------- Validation ---------------- */
+  const validateInvoice = () => {
+    if (!invoiceMeta.invoiceNumber || !invoiceMeta.invoiceDate || !invoiceMeta.dueDate) {
+      alert("Please fill all invoice details.");
+      return false;
+    }
+
+    for (const key in billedBy) {
+      if (!(billedBy as any)[key]) {
+        alert(`Please fill Billed By field: ${key}`);
+        return false;
+      }
+    }
+
+    for (const key in billedTo) {
+      if (!(billedTo as any)[key]) {
+        alert(`Please fill Billed To field: ${key}`);
+        return false;
+      }
+    }
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (!item.itemName || !item.hsn || item.gst === null || item.qty === null || item.rate === null) {
+        alert(`Please fill all fields for Item ${i + 1}`);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  /* ---------------- Totals Calculation ---------------- */
+  const computeTotals = () => {
+    let amount = 0, cgst = 0, sgst = 0, qty = 0;
 
     items.forEach((item) => {
       const rowAmount = item.qty * item.rate;
@@ -85,92 +148,46 @@ export default function InvoicePage() {
     });
 
     let grand = amount + cgst + sgst - extras.discount + extras.charges;
+
     if (extras.round === 1) grand = Math.ceil(grand);
-    else if (extras.round === -1) grand = Math.floor(grand);
+    if (extras.round === -1) grand = Math.floor(grand);
 
-    setTotals({ amount, cgst, sgst, totalQty: qty, grandTotal: grand });
+    return { amount, cgst, sgst, totalQty: qty, grandTotal: grand };
   };
 
-  const numberToWords = (num: number) => `${num} rupees only`;
-
-  const validateInvoice = (): boolean => {
-    // Validate invoice meta
-    if (!invoiceMeta.invoiceNumber || !invoiceMeta.invoiceDate || !invoiceMeta.dueDate) {
-      alert("Please fill all invoice details.");
-      return false;
-    }
-
-    // Validate billedBy
-    for (const key in billedBy) {
-      if (!(billedBy as any)[key]) {
-        alert(`Please fill Billed By: ${key}`);
-        return false;
-      }
-    }
-
-    // Validate billedTo
-    for (const key in billedTo) {
-      if (!(billedTo as any)[key]) {
-        alert(`Please fill Billed To: ${key}`);
-        return false;
-      }
-    }
-
-    // Validate items
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (!item.itemName || !item.hsn || item.gst === null || item.qty === null || item.rate === null) {
-        alert(`Please fill all fields for item ${i + 1}`);
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  const handleCalculateTotal = () => {
+  const handleCalculate = () => {
     if (!validateInvoice()) return;
-    calculateTotal();
+    const calculatedTotals = computeTotals();
+    setTotals(calculatedTotals);
   };
 
-  const handlePreviewClick = () => {
+  const handleSaveInvoice = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!validateInvoice()) return;
 
-    calculateTotal();
-    const dataStr = encodeURIComponent(
-      JSON.stringify({
-        invoiceMeta,
-        billedBy,
-        billedTo,
-        items,
-        extras,
-        totals,
-        totalInWords: numberToWords(totals.grandTotal),
-      })
-    );
-    router.push(`/preview?data=${dataStr}`);
-  };
+    // Convert date strings to Date objects
+    const invoiceDate = invoiceMeta.invoiceDate ? new Date(invoiceMeta.invoiceDate) : null;
+    const dueDate = invoiceMeta.dueDate ? new Date(invoiceMeta.dueDate) : null;
 
-  const handleSaveInvoice = async () => {
-    if (!validateInvoice()) return;
-    calculateTotal();
+    if (!invoiceDate || !dueDate) {
+      alert("Please fill valid Invoice Date and Due Date.");
+      return;
+    }
 
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) return alert("Please login to save invoice");
-    const user = JSON.parse(storedUser);
+    const calculatedTotals = computeTotals();
 
     const invoiceData = {
-      invoiceMeta,
+      invoiceNumber: invoiceMeta.invoiceNumber.trim(),
+      invoiceDate,
+      dueDate,
       billedBy,
       billedTo,
       items,
       extras,
-      totals,
-      totalInWords: numberToWords(totals.grandTotal),
-      uploadedFiles: {},
-      userEmail: user.email,
-      userName: user.name,
+      totals: calculatedTotals,
+      totalInWords: `${calculatedTotals.grandTotal} rupees only`,
     };
+
 
     try {
       const res = await fetch("/api/auth/invoice", {
@@ -178,87 +195,184 @@ export default function InvoicePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(invoiceData),
       });
+
       const data = await res.json();
-      if (data.success) alert("Invoice saved! ID: " + data.invoiceId);
-      else alert("Error saving invoice: " + data.error);
-    } catch (err) {
+
+      if (data.success) {
+        alert("Invoice saved successfully!");
+        console.log("Saved invoice:", data.invoice);
+      } else {
+        alert("Failed to save invoice: " + data.error);
+      }
+    } catch (err: any) {
       console.error(err);
-      alert("Network error. Invoice not saved.");
+      alert("Error saving invoice: " + err.message);
     }
   };
 
+  const menuItems = [
+    { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/invoices" },
+    { icon: <FaUsers />, label: "Clients", path: "/clients" },
+    { icon: <FaChartBar />, label: "Reports", path: "/reports" },
+    { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
+    { icon: <FaCog />, label: "Settings", path: "/settings" },
+  ];
+
+  /* ---------------- Preview ---------------- */
+  const handlePreview = () => {
+    if (!validateInvoice()) return;
+
+    const calculatedTotals = computeTotals();
+    setTotals(calculatedTotals);
+
+    const invoiceData = {
+      invoiceNumber: invoiceMeta.invoiceNumber.trim(),
+      invoiceDate: new Date(invoiceMeta.invoiceDate),
+      dueDate: new Date(invoiceMeta.dueDate),
+      billedBy,
+      billedTo,
+      items,
+      extras,
+      totals: calculatedTotals,
+      totalInWords: `${calculatedTotals.grandTotal} rupees only`,
+    };
+
+
+
+
+    localStorage.setItem("invoiceData", JSON.stringify(invoiceData));
+    router.push("/preview");
+  };
+
+  const numberToWords = (num: number) => `${num} rupees only`;
+
+
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      router.push("/");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
+
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <form className="max-w-7xl mx-auto bg-white rounded-xl shadow p-6" onSubmit={(e) => e.preventDefault()}>
+      <div className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+          {/* LOGO */}
+        </div>
+
+        <div className="md:hidden flex items-center mb-3">
+          <button onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          </button>
+        </div>
+
+        <div
+          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
+            }`}
+        >
+          <div className="flex flex-col md:flex-row gap-4 md:gap-8 mb-3 md:mb-0">
+            {menuItems.map((item) => (
+              <MenuItem
+                key={item.label}
+                icon={item.icon}
+                label={item.label}
+                isActive={activeMenu === item.label}
+                onClick={() => {
+                  setActiveMenu(item.label); // set active menu
+                  if (item.path) router.push(item.path); // navigate to page
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="flex flex-col items-end space-y-2">
+            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+              <FaUserCircle size={28} />
+              <span className="font-medium">{user?.username || "User"}</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-red-600 hover:underline"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+      <form className="max-w-7xl mx-auto bg-white rounded-xl shadow p-6">
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
-  <h1 className="text-3xl font-semibold">Invoice</h1>
-
-  {/* Image Upload */}
-  <label className="border border-dashed p-10 rounded cursor-pointer bg-gray-50 hover:bg-gray-100 flex items-center gap-2">
-    <span>Add Business Logo</span>
-    <input
-      type="file"
-      accept="image/*"
-      className="hidden"
-      onChange={(e) => {
-        const file = e.target.files?.[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            console.log("Uploaded Image Data URL:", reader.result);
-            // You can store the image in state to display it
-          };
-          reader.readAsDataURL(file);
-        }
-      }}
-    />
-  </label>
-</div>
-
+          <h1 className="text-3xl font-semibold">Invoice</h1>
+          <button
+            type="button"
+            className="border border-dashed px-4 py-2 rounded"
+          >
+            Add Business Logo
+          </button>
+        </div>
 
         {/* INVOICE META */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-  <div className="flex flex-col">
-    <label className="font-medium mb-1">Invoice Number</label>
-    <input
-      className="input"
-      placeholder="Invoice Number"
-      required
-      value={invoiceMeta.invoiceNumber}
-      onChange={(e) => setInvoiceMeta({ ...invoiceMeta, invoiceNumber: e.target.value })}
-    />
-  </div>
+          <input
+            className="input"
+            placeholder="Invoice Number"
+            required
+            value={invoiceMeta.invoiceNumber}
+            onChange={(e) =>
+              setInvoiceMeta({ ...invoiceMeta, invoiceNumber: e.target.value })
+            }
+          />
+          <input
+            className="input"
+            type="date"
+            required
+            value={invoiceMeta.invoiceDate}
+            onChange={(e) =>
+              setInvoiceMeta({
+                ...invoiceMeta,
+                invoiceDate: e.target.value,
+              })
+            }
+          />
+          <input
+            className="input"
+            type="date"
+            required
+            value={invoiceMeta.dueDate}
+            onChange={(e) =>
+              setInvoiceMeta({
+                ...invoiceMeta,
+                dueDate: e.target.value,
+              })
+            }
+          />
+        </div>
 
-  <div className="flex flex-col">
-    <label className="font-medium mb-1">Invoice Date</label>
-    <input
-      className="input"
-      type="date"
-      required
-      value={invoiceMeta.invoiceDate}
-      onChange={(e) => setInvoiceMeta({ ...invoiceMeta, invoiceDate: e.target.value })}
-    />
-  </div>
+        {/* REST OF THE FORM REMAINS EXACTLY THE SAME */}
+        {/* Billed By / Billed To / Items / Summary / File Uploads / Buttons */}
+        {/* ...your existing JSX continues without any changes */}
 
-  <div className="flex flex-col">
-    <label className="font-medium mb-1">Invoice Due Date</label>
-    <input
-      className="input"
-      type="date"
-      required
-      value={invoiceMeta.dueDate}
-      onChange={(e) => setInvoiceMeta({ ...invoiceMeta, dueDate: e.target.value })}
-    />
-  </div>
-</div>
+
+
+
+
 
 
         {/* BILLED DETAILS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
           <div className="bg-gray-50 p-5 rounded-lg">
             <h3 className="font-semibold mb-4">Billed By (Your Details)</h3>
-            <div className="flex flex-col space-y-3">
+            <div className="grid gap-3">
+
+
               {Object.keys(billedBy).map((key) => (
                 <input
                   key={key}
@@ -274,8 +388,9 @@ export default function InvoicePage() {
           </div>
 
           <div className="bg-gray-50 p-5 rounded-lg">
+
             <h3 className="font-semibold mb-4">Billed To (Client’s Details)</h3>
-            <div className="flex flex-col space-y-3">
+            <div className="grid gap-3">
               {Object.keys(billedTo).map((key) => (
                 <input
                   key={key}
@@ -291,65 +406,322 @@ export default function InvoicePage() {
           </div>
         </div>
 
-        {/* ITEMS TABLE */}
-        <div className="lg:col-span-2 overflow-x-auto mb-6">
-          <table className="w-full border text-sm">
-            <thead className="bg-gray-200">
-              <tr>
-                <th className="th">Item</th>
-                <th className="th">HSN</th>
-                <th className="th">GST%</th>
-                <th className="th">Qty</th>
-                <th className="th">Rate</th>
-                <th className="th">Amount</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item, i) => (
-                <tr key={i}>
-                  <td className="td"><input className="input-sm" value={item.itemName} onChange={(e) => handleChange(i, "itemName", e.target.value)} /></td>
-                  <td className="td"><input className="input-sm" value={item.hsn} onChange={(e) => handleChange(i, "hsn", e.target.value)} /></td>
-                  <td className="td"><input className="input-sm" type="number" value={item.gst} onChange={(e) => handleChange(i, "gst", e.target.value)} /></td>
-                  <td className="td"><input className="input-sm" type="number" value={item.qty} onChange={(e) => handleChange(i, "qty", e.target.value)} /></td>
-                  <td className="td"><input className="input-sm" type="number" value={item.rate} onChange={(e) => handleChange(i, "rate", e.target.value)} /></td>
-                  <td className="td">₹{(item.qty * item.rate).toFixed(2)}</td>
-                  <td className="td"><X size={16} className="text-red-600 cursor-pointer" onClick={() => removeItem(i)} /></td>
+
+
+
+        {/* ITEMS + SUMMARY */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {/* ITEMS TABLE */}
+          <div className="lg:col-span-2 overflow-x-auto">
+            <table className="w-full border text-sm">
+              <thead className="bg-gray-200">
+                <tr>
+                  <th className="th">Item</th>
+                  <th className="th">HSN</th>
+                  <th className="th">GST%</th>
+                  <th className="th">Qty</th>
+                  <th className="th">Rate</th>
+                  <th className="th">Amount</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {items.map((item, i) => {
+                  const amount = item.qty * item.rate;
+                  return (
+                    <tr key={i}>
+                      <td className="td">
+                        <input
+                          className="input-sm"
+                          required
+                          onChange={(e) =>
+                            handleChange(i, "itemName", e.target.value)
+                          }
+                        />
+                      </td>
+                      <td className="td">
+                        <input
+                          className="input-sm"
+                          required
+                          onChange={(e) =>
+                            handleChange(i, "hsn", e.target.value)
+                          }
+                        />
+                      </td>
+                      <td className="td">
+                        <input
+                          className="input-sm"
+                          type="number"
+                          required
+                          onChange={(e) =>
+                            handleChange(i, "gst", e.target.value)
+                          }
+                        />
+                      </td>
+                      <td className="td">
+                        <input
+                          className="input-sm"
+                          type="number"
+                          value={item.qty}
+                          required
+                          onChange={(e) =>
+                            handleChange(i, "qty", e.target.value)
+                          }
+                        />
+                      </td>
+                      <td className="td">
+                        <input
+                          className="input-sm"
+                          type="number"
+                          required
+                          onChange={(e) =>
+                            handleChange(i, "rate", e.target.value)
+                          }
+                        />
+                      </td>
+                      <td className="td">₹{amount.toFixed(2)}</td>
+                      <td className="td">
+                        <X
+                          size={16}
+                          className="text-red-600 cursor-pointer"
+                          onClick={() => removeItem(i)}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
 
-          <button type="button" onClick={addItem} className="w-full mt-3 bg-gray-200 py-2 rounded">+ Add New Item</button>
+            <button
+              type="button"
+              onClick={addItem}
+              className="w-full mt-3 bg-gray-200 py-2 rounded"
+            >
+              + Add New Item
+            </button>
+          </div>
+
+          {/* RIGHT SUMMARY */}
+
+
+
+          {/* SUMMARY + TOTAL IN WORDS */}
+
+
         </div>
+        <div>
+          <div className="flex flex-row justify-between p-10">
+            <div className="mb-6 bg-gray-50 w-[250px] h-[200px] p-10">
+              <div className="flex justify-between">
+                <p className="font-medium">Total (in words)</p>
+                <Eye />
+              </div>
+              <p className="text-sm">{numberToWords(totals.grandTotal)}</p>
+            </div>
 
-        {/* ACTION BUTTONS */}
-        <div className="flex flex-col gap-4 mt-6 items-center">
+            <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+              <div className="flex justify-between items-center font-semibold">
+                <span>Show Total (PDF)</span>
+                <Eye />
+              </div>
+
+              <div className="flex justify-between">
+                <span>Amount</span>
+                <span>₹{totals.amount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>SGST</span>
+                <span>₹{totals.sgst.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>CGST</span>
+                <span>₹{totals.cgst.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between"><span>Amount</span><span>₹{totals.amount.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>SGST</span><span>₹{totals.sgst.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>CGST</span><span>₹{totals.cgst.toFixed(2)}</span></div>
+
+              <input
+                className="input-sm"
+                placeholder="Add Discounts"
+                type="number"
+                onChange={(e) =>
+                  setExtras({ ...extras, discount: Number(e.target.value) })
+                }
+              ></input>
+              <input
+                className="input-sm"
+                placeholder="Add Additional Charges"
+                type="number"
+                onChange={(e) =>
+                  setExtras({ ...extras, charges: Number(e.target.value) })
+                }
+              />
+
+              <div className="flex gap-2">
+
+
+
+
+                <div className="flex gap-2">
+                  <button type="button" className="btn-sm" onClick={() => setExtras({ ...extras, round: 1 })}>Round Up</button>
+                  <button type="button" className="btn-sm" onClick={() => setExtras({ ...extras, round: -1 })}>Round Down</button>
+                </div>
+
+                <hr />
+
+
+                <div className="mt-4">
+                  <div className="flex justify-between font-semibold">
+                    <span>Total Qty</span>
+                    <span>{totals.totalQty}</span>
+                  </div>
+
+                  <div className="flex justify-between text-lg font-bold mt-1">
+                    <span>Total</span>
+                    <span>₹{totals.grandTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* TOTAL IN WORDS */}
+
+
+            {/* EXTRA INPUTS */}
+
+
+
+
+            {/* ACTION */}
+
+          </div>
+
+          {/* FILE UPLOADS */}
+          <div className="mb-6">
+            {/* Add Signature */}
+            <div className="mb-4 flex justify-end">
+              <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
+                <FileText size={18} className="text-gray-500" />
+                <span className="text-sm text-gray-600 text-center">
+                  Upload Signature (PNG / JPG)
+                </span>
+                <input type="file" accept=".png,.jpg,.jpeg" className="hidden" />
+              </label>
+            </div>
+
+            {/* FILE UPLOAD GRID */}
+            <div>
+              <div className="grid md:grid-cols-3 gap-4 justify-items-center">
+                {/* Terms & Conditions */}
+                <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
+                  <FileText size={18} className="text-gray-500" />
+                  <span className="text-sm text-gray-600 text-center">
+                    Add Terms & Conditions
+                  </span>
+                  <input type="file" accept=".pdf,.doc,.docx" className="hidden" />
+                </label>
+
+                {/* Notes */}
+                <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
+                  <StickyNote size={18} className="text-gray-500" />
+                  <span className="text-sm text-gray-600 text-center">
+                    Add Notes
+                  </span>
+                  <input
+                    type="file"
+                    accept=".txt,.pdf,.doc,.docx"
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Attachments */}
+                <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
+                  <Paperclip size={18} className="text-gray-500" />
+                  <span className="text-sm text-gray-600 text-center">
+                    Add Attachments
+                  </span>
+                  <input type="file" multiple className="hidden" />
+                </label>
+              </div>
+            </div>
+
+            {/* Last 2 uploads */}
+            <div>
+              <div className="grid md:grid-cols-2 gap-4 justify-items-center mt-4">
+                {/* Additional Info */}
+                <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
+                  <Info size={18} className="text-gray-500" />
+                  <span className="text-sm text-gray-600 text-center">
+                    Additional Information
+                  </span>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.png"
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Contact Details */}
+                <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
+                  <Phone size={18} className="text-gray-500" />
+                  <span className="text-sm text-gray-600 text-center">
+                    Contact Details
+                  </span>
+                  <input type="file" accept=".pdf,.vcf" className="hidden" />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* ACTION BUTTONS */}
+
+
+
+        </div>
+        <div className="flex flex-col items-center gap-4 mt-6">
           <button
             type="button"
-            className="bg-[#D9D9D9] text-black px-6 py-3 w-[160px] rounded-lg"
-            onClick={handleCalculateTotal}
+            onClick={handleCalculate}
+            className="w-[300px] bg-gray-300 text-black py-3 px-4 rounded-lg cursor-pointer"
           >
             Calculate Total
           </button>
 
           <button
             type="button"
-            className="text-black underline px-6 py-3 w-[160px] rounded-lg"
-            onClick={handlePreviewClick}
+            onClick={handlePreview}
+            className="w-[300px] text-black underline py-3 px-4 rounded-lg cursor-pointer"
           >
             Preview
           </button>
 
           <button
             type="button"
-            className="bg-[#D9D9D9] text-black px-6 py-3 w-[160px] rounded-lg"
             onClick={handleSaveInvoice}
+            className="w-[300px] bg-green-500 text-white py-3 px-4 rounded-lg cursor-pointer"
           >
-            Save Invoice
+            Save
           </button>
+
+
         </div>
+
       </form>
     </div>
+
   );
 }
+
+const MenuItem = ({ icon, label, isActive, onClick }: any) => (
+  <div
+    onClick={onClick}
+    className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
+      }`}
+  >
+    {icon}
+    <span>{label}</span>
+  </div>
+);

@@ -19,7 +19,7 @@ const Dashboard = () => {
   const router = useRouter();
 
   /* ---------------- AUTH ---------------- */
-  const [user, setUser] = useState<{ name: string; email?: string } | null>(null);
+  const [user, setUser] = useState<{ username: string; email?: string } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
   useEffect(() => {
@@ -75,11 +75,11 @@ const Dashboard = () => {
   const tabs = ["All", "Paid", "Unpaid", "Overdue"];
 
   const menuItems = [
-    { icon: <FaFileInvoiceDollar />, label: "Invoices" },
-    { icon: <FaUsers />, label: "Clients" },
-    { icon: <FaChartBar />, label: "Reports" },
-    { icon: <FaMoneyCheckAlt />, label: "Payments" },
-    { icon: <FaCog />, label: "Settings" },
+    { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/invoices" },
+    { icon: <FaUsers />, label: "Clients", path: "/clients" },
+    { icon: <FaChartBar />, label: "Reports", path: "/reports" },
+    { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
+    { icon: <FaCog />, label: "Settings", path: "/settings" },
   ];
 
   const filteredInvoices =
@@ -110,26 +110,26 @@ const Dashboard = () => {
         </div>
 
         <div
-          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${
-            menuOpen ? "flex" : "hidden md:flex"
-          }`}
+          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
+            }`}
         >
-          <div className="flex flex-col md:flex-row gap-4 md:gap-8 mb-3 md:mb-0">
-            {menuItems.map((item) => (
-              <MenuItem
-                key={item.label}
-                icon={item.icon}
-                label={item.label}
-                isActive={activeMenu === item.label}
-                onClick={() => setActiveMenu(item.label)}
-              />
-            ))}
-          </div>
+          {menuItems.map((item) => (
+            <MenuItem
+              key={item.label}
+              icon={item.icon}
+              label={item.label}
+              isActive={activeMenu === item.label}
+              onClick={() => {
+                setActiveMenu(item.label); // set active menu
+                if (item.path) router.push(item.path); // navigate to page
+              }}
+            />
+          ))}
 
           <div className="flex flex-col items-end space-y-2">
             <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
               <FaUserCircle size={28} />
-              <span className="font-medium">{user?.name || "User"}</span>
+              <span className="font-medium">{user?.username || "User"}</span>
             </div>
             <button
               onClick={handleLogout}
@@ -186,11 +186,10 @@ const Dashboard = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`text-sm font-medium text-[20px] transition pb-1 ${
-                  activeTab === tab
+                className={`text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
                     ? "text-[#29268E] border-b-2 border-[#29268E]"
                     : "text-black hover:text-[#29268E]"
-                }`}
+                  }`}
               >
                 {tab}
               </button>
@@ -239,9 +238,8 @@ const Dashboard = () => {
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
   <div
     onClick={onClick}
-    className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${
-      isActive ? "text-[#8F90DF] underline" : "text-black"
-    }`}
+    className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
+      }`}
   >
     {icon}
     <span>{label}</span>

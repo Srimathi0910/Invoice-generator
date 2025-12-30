@@ -1,21 +1,58 @@
 import mongoose from "mongoose";
 
-const InvoiceSchema = new mongoose.Schema(
+const invoiceSchema = new mongoose.Schema(
   {
-    userEmail: { type: String, required: true },
+    invoiceNumber: { type: String, required: true },
+    invoiceDate: { type: Date, required: true },
+    dueDate: { type: Date, required: true },
+
+    billedBy: {
+      businessName: String,
+      address: String,
+      city: String,
+      country: String,
+      phone: String,
+      gstin: String,
+    },
+
+    billedTo: {
+      businessName: String,
+      address: String,
+      city: String,
+      country: String,
+      phone: String,
+      gstin: String,
+    },
+
+    items: [
+      {
+        itemName: String,
+        hsn: String,
+        gst: Number,
+        qty: Number,
+        rate: Number,
+      },
+    ],
+
+    extras: {
+      discount: Number,
+      charges: Number,
+      round: Number,
+    },
+
+    totals: {
+      amount: Number,
+      cgst: Number,
+      sgst: Number,
+      totalQty: Number,
+      grandTotal: Number,
+    },
+
+    userEmail: String,
     userName: String,
-    invoiceNumber: String,
-    invoiceDate: String,
-    dueDate: String,
-    billedBy: Object,
-    billedTo: Object,
-    items: Array,
-    extras: Object,
-    totals: Object,
-    uploadedFiles: Object,
-    status: { type: String, default: "Unpaid" },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Invoice || mongoose.model("Invoice", InvoiceSchema);
+export default mongoose.models.Invoice ||
+  mongoose.model("Invoice", invoiceSchema);
