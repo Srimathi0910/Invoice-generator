@@ -97,12 +97,12 @@ export default function SettingsPage() {
 
 
             {/* Page Content */}
-            <div className="px-100 py-8">
+            <div className="px-10 py-8">
                 <h1 className="text-3xl font-bold mb-6 pl-10">Settings</h1>
 
                 <div className="bg-white rounded-xl p-8">
                     {/* Tabs */}
-                    <div className="flex gap-100 mb-8">
+                    <div className="flex gap-10 mb-8">
                         <span className="text-purple-600 font-semibold border-b-2 border-purple-600 pb-1">
                             Company Profile
                         </span>
