@@ -1,7 +1,6 @@
-import dynamic from "next/dynamic";
+"use client";
 
-// Dynamically import the client component, disable SSR
-const InvoicePreview = dynamic(() => import("./InvoicePreview"), { ssr: false });
+import InvoicePreview from "./InvoicePreview";
 
 export default function PreviewPage() {
   return <InvoicePreview />;
