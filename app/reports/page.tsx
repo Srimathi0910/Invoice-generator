@@ -57,7 +57,7 @@ const invoices = [
 export default function ReportsPage() {
     const router = useRouter();
 
-    const [activeMenu, setActiveMenu] = useState("Clients");
+    const [activeMenu, setActiveMenu] = useState("Reports");
     const [user, setUser] = useState<{ username: string } | null>(null);
 
     const [menuOpen, setMenuOpen] = useState(false);
@@ -244,12 +244,12 @@ function StatusBadge({ status }: { status: string }) {
     );
 }
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-    <div
-        onClick={onClick}
-        className={`flex gap-2 items-center cursor-pointer ${isActive ? "text-blue-600 underline" : "text-black"
-            }`}
-    >
-        {icon}
-        <span>{label}</span>
-    </div>
+  <div
+    onClick={onClick}
+    className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
+      }`}
+  >
+    {icon}
+    <span>{label}</span>
+  </div>
 );

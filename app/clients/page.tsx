@@ -277,7 +277,7 @@ export default function ClientsPage() {
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
   <div
     onClick={onClick}
-    className={`flex gap-2 items-center cursor-pointer ${isActive ? "text-blue-600 underline" : "text-black"
+    className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
       }`}
   >
     {icon}

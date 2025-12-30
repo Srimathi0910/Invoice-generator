@@ -214,17 +214,11 @@ export default function SettingsPage() {
 
 /* ---------------- COMPONENTS ---------------- */
 
-const MenuItem = ({
-  icon,
-  label,
-  isActive,
-  onClick,
-}: any) => (
+const MenuItem = ({ icon, label, isActive, onClick }: any) => (
   <div
     onClick={onClick}
-    className={`flex gap-2 items-center cursor-pointer whitespace-nowrap ${
-      isActive ? "text-purple-600 underline" : "text-black"
-    }`}
+    className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
+      }`}
   >
     {icon}
     <span>{label}</span>
