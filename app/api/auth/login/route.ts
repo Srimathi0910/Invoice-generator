@@ -1,8 +1,5 @@
-"use server";
-
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-
 import jwt from "jsonwebtoken";
 
 import { connectDB } from "@/lib/db";
@@ -14,62 +11,57 @@ export async function POST(req: Request) {
 
     const { email, password } = await req.json();
 
-
-    if (!email)
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
-    if (!password)
-      return NextResponse.json({ error: "Password is required" }, { status: 400 });
-
-    const user = await User.findOne({ email });
-    if (!user)
-      return NextResponse.json({ error: "Email not found" }, { status: 404 });
-
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid)
-      return NextResponse.json({ error: "Invalid password" }, { status: 401 });
-
-    // ✅ ACCESS TOKEN (short life recommended)
-
-    // Validate input
+    /* ---------- Validation ---------- */
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
+
     if (!password) {
-      return NextResponse.json({ error: "Password is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Password is required" },
+        { status: 400 }
+      );
     }
 
-    // Find user
+    /* ---------- Find User ---------- */
     const user = await User.findOne({ email });
     if (!user) {
-      return NextResponse.json({ error: "Email not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Email not found" },
+        { status: 404 }
+      );
     }
 
-    // Check password
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
-      return NextResponse.json({ error: "Invalid password" }, { status: 401 });
+    /* ---------- Password Check ---------- */
+    const passwordMatch = await bcrypt.compare(
+      password,
+      user.password as string
+    );
+
+    if (!passwordMatch) {
+      return NextResponse.json(
+        { error: "Invalid password" },
+        { status: 401 }
+      );
     }
 
-    // Generate tokens
+    /* ---------- JWT ---------- */
+    if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
+      throw new Error("JWT secrets missing");
+    }
 
     const accessToken = jwt.sign(
       { id: user._id.toString(), email: user.email },
-      process.env.JWT_SECRET as string,
+      process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
 
-
-    // ✅ REFRESH TOKEN (long life)
-
     const refreshToken = jwt.sign(
       { id: user._id.toString() },
-      process.env.JWT_REFRESH_SECRET as string,
+      process.env.JWT_REFRESH_SECRET,
       { expiresIn: "7d" }
     );
 
-
-    // ✅ Set cookies
-)
     const response = NextResponse.json({
       message: "Login successful",
       user: {
@@ -85,7 +77,7 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
-      maxAge: 60 * 15, // 15 minutes
+      maxAge: 60 * 15,
     });
 
     response.cookies.set("refreshToken", refreshToken, {
@@ -93,12 +85,12 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return response;
-  } catch (err) {
-    console.error("LOGIN ERROR:", err);
+  } catch (error) {
+    console.error("LOGIN ERROR:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Edit2, Download, Send } from "lucide-react"; // example icons
+
 
 const InvoicePreview = () => {
   const searchParams = useSearchParams();
@@ -107,13 +109,43 @@ const InvoicePreview = () => {
         </div>
 
         {/* Save Button */}
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          onClick={saveInvoice}
-        >
-          Save Invoice
-        </button>
+        {/* Save Button Centered */}
+        <div className="flex justify-center p-10 m-6">
+          <button
+            className="bg-[#D9D9D9] text-black px-6 py-2 rounded flex items-center gap-2 hover:bg-gray-300"
+            onClick={saveInvoice}
+          >
+            Save Invoice
+          </button>
+        </div>
+
+        <div className="flex justify-center gap-4">
+          <button
+            className="bg-[#D9D9D9] text-black px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-300"
+            onClick={saveInvoice}
+          >
+            <Edit2 size={16} /> Edit Invoice
+          </button>
+
+          <button
+            className="bg-[#D9D9D9] text-black px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-300"
+            onClick={saveInvoice}
+          >
+            <Download size={16} /> Download PDF
+          </button>
+
+          <button
+            className="bg-[#D9D9D9] text-black px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-300"
+            onClick={saveInvoice}
+          >
+            <Send size={16} /> Send Invoice
+          </button>
+        </div>
+
       </div>
+
+
+
     </div>
   );
 };

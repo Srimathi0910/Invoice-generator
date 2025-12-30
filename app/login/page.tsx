@@ -29,7 +29,6 @@ export default function Login() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-<<<<<<< HEAD
     e.preventDefault();
     setErrors({ email: "", password: "", general: "" });
     setLoading(true);
@@ -39,18 +38,14 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-        credentials: "include", // ✅ REQUIRED FOR COOKIES
+        credentials: "include",
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        // ✅ Structured error handling
         if (data.field) {
-          setErrors((prev) => ({
-            ...prev,
-            [data.field]: data.message,
-          }));
+          setErrors((prev) => ({ ...prev, [data.field]: data.message }));
         } else {
           setErrors((prev) => ({
             ...prev,
@@ -58,10 +53,10 @@ export default function Login() {
           }));
         }
       } else {
-        // ✅ Prevent going back to login
+        localStorage.setItem("user", JSON.stringify(data.user));
         router.replace("/dashboard");
       }
-    } catch (err) {
+    } catch {
       setErrors((prev) => ({
         ...prev,
         general: "Network error. Please try again.",
@@ -70,40 +65,6 @@ export default function Login() {
       setLoading(false);
     }
   };
-=======
-  e.preventDefault();
-  setErrors({ email: "", password: "", general: "" });
-  setLoading(true);
-
-  try {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-      credentials: "include", // ✅ REQUIRED FOR COOKIES
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      if (data.field) {
-        setErrors((prev) => ({ ...prev, [data.field]: data.message }));
-      } else {
-        setErrors((prev) => ({ ...prev, general: data.error || "Login failed" }));
-      }
-    } else {
-      // ✅ Add user to localStorage and redirect
-      localStorage.setItem("user", JSON.stringify(data.user));
-      router.replace("/dashboard");
-    }
-  } catch (err) {
-    setErrors((prev) => ({ ...prev, general: "Network error. Please try again." }));
-  } finally {
-    setLoading(false);
-  }
-};
-
->>>>>>> d69b7d5 (Initial commit)
 
   const inputClass =
     "peer w-full border-b border-gray-400 py-2 outline-none bg-transparent";
@@ -123,7 +84,9 @@ export default function Login() {
           </h2>
 
           {errors.general && (
-            <p className="text-red-500 text-center mb-4">{errors.general}</p>
+            <p className="text-red-500 text-center mb-4">
+              {errors.general}
+            </p>
           )}
 
           <form className="space-y-6 md:p-10" onSubmit={handleSubmit}>
@@ -141,10 +104,7 @@ export default function Login() {
               <label htmlFor="email" className={labelClass(formData.email)}>
                 Email
               </label>
-              <Mail
-                className="absolute right-0 top-2 text-gray-500"
-                size={18}
-              />
+              <Mail className="absolute right-0 top-2 text-gray-500" size={18} />
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">{errors.email}</p>
               )}
@@ -161,18 +121,14 @@ export default function Login() {
                 className={inputClass}
                 autoComplete="current-password"
               />
-              <label
-                htmlFor="password"
-                className={labelClass(formData.password)}
-              >
+              <label htmlFor="password" className={labelClass(formData.password)}>
                 Password
               </label>
-              <Lock
-                className="absolute right-0 top-2 text-gray-500"
-                size={18}
-              />
+              <Lock className="absolute right-0 top-2 text-gray-500" size={18} />
               {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.password}
+                </p>
               )}
             </div>
 
