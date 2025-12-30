@@ -1,4 +1,4 @@
-"use client";
+"use client"; // <-- MUST be at the top
 
 import InvoicePreview from "./InvoicePreview";
 
