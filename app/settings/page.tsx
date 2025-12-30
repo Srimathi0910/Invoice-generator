@@ -124,28 +124,25 @@ export default function SettingsPage() {
                 </div>
                 <input
                   className="border px-3 py-2 w-full"
-                  defaultValue="Abc private limited"
+                  placeholder="Enter your company Name"
                 />
               </div>
 
               <input
                 className="border px-3 py-2 w-full mb-3"
-                defaultValue="abcprivate@gmail.com"
+                 placeholder="Enter your Email Id"
               />
 
               <textarea
                 className="border px-3 py-2 w-full mb-3"
                 rows={4}
-                defaultValue={`Electronics City, Hosur Road,
-Bengaluru,
-Karnataka - 560100,
-India`}
+                 placeholder="Enter your Address"
               />
 
               <label className="text-sm font-medium">GSTIN</label>
               <input
                 className="border px-3 py-2 w-full mb-3"
-                defaultValue="33AACCT5678K1Z2"
+                
               />
 
               <p className="text-sm mb-2">Status Code: 33</p>
