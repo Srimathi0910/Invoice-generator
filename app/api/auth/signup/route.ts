@@ -9,37 +9,51 @@ export async function POST(req: Request) {
 
     const { username, email, phone, password } = await req.json();
 
-    // ✅ Basic validation
-    if (!email || !password || !username ||!phone){
+    // ================= VALIDATION =================
+    if (!username || !email || !phone || !password) {
       return NextResponse.json(
-        { error: "All required fields must be filled" },
+        { error: "All fields are required" },
         { status: 400 }
       );
     }
 
-    // ✅ Check if user already exists
+    // ================= CHECK EXISTING USER =================
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "User already exists" },
+        { error: "User already exists with this email" },
         { status: 409 }
       );
     }
 
-    // ✅ Hash password
+    // ================= HASH PASSWORD =================
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ✅ Create user
-    await User.create({
+    // ================= CREATE COMPANY USER =================
+    const user = await User.create({
       username,
       email,
       phone,
       password: hashedPassword,
+
+      // 🔐 IMPORTANT
+      role: "company",      // company signs up manually
+      companyId: null,      // company owns itself
+      isFirstLogin: false,  // company already sets password
     });
 
     return NextResponse.json(
-      { message: "Signup successful" },
+      {
+        success: true,
+        message: "Company account created successfully",
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
+      },
       { status: 201 }
     );
   } catch (error) {

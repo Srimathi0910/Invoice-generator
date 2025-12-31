@@ -18,7 +18,7 @@ import {
 type Client = {
   id: string;
   name: string;
-  email?: string;
+  email?: string;   // ✅ already present
   phone: string;
   gstin: string;
   totalInvoices: number;
@@ -40,7 +40,7 @@ export default function ClientsPage() {
 
   const itemsPerPage = 5;
 
- const menuItems = [
+  const menuItems = [
     { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/invoices" },
     { icon: <FaUsers />, label: "Clients", path: "/clients" },
     { icon: <FaChartBar />, label: "Reports", path: "/reports" },
@@ -110,52 +110,52 @@ export default function ClientsPage() {
     <div className="min-h-screen bg-gray-100 p-6 ">
       {/* -------- HEADER -------- */}
       <div className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-              <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
-                {/* LOGO */}
-              </div>
-      
-              <div className="md:hidden flex items-center mb-3">
-                <button onClick={() => setMenuOpen(!menuOpen)}>
-                  {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-                </button>
-              </div>
-      
-              <div
-                className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
-                  }`}
-              >
-                <div className="flex flex-col md:flex-row gap-4 md:gap-8 mb-3 md:mb-0">
-                  {menuItems.map((item) => (
-                    <MenuItem
-                      key={item.label}
-                      icon={item.icon}
-                      label={item.label}
-                      isActive={activeMenu === item.label}
-                      onClick={() => {
-                        setActiveMenu(item.label); // set active menu
-                        if (item.path) router.push(item.path); // navigate to page
-                      }}
-                    />
-                  ))}
-                </div>
-      
-                <div className="flex flex-col items-end space-y-2">
-                  <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
-                    <FaUserCircle size={28} />
-                    <span className="font-medium">{user?.username || "User"}</span>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="text-sm text-red-600 hover:underline"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </div>
+        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+          {/* LOGO */}
+        </div>
+
+        <div className="md:hidden flex items-center mb-3">
+          <button onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          </button>
+        </div>
+
+        <div
+          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
+            }`}
+        >
+          <div className="flex flex-col md:flex-row gap-4 md:gap-8 mb-3 md:mb-0">
+            {menuItems.map((item) => (
+              <MenuItem
+                key={item.label}
+                icon={item.icon}
+                label={item.label}
+                isActive={activeMenu === item.label}
+                onClick={() => {
+                  setActiveMenu(item.label); // set active menu
+                  if (item.path) router.push(item.path); // navigate to page
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="flex flex-col items-end space-y-2">
+            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+              <FaUserCircle size={28} />
+              <span className="font-medium">{user?.username || "User"}</span>
             </div>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-red-600 hover:underline"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
       <div className="flex justify-end items-center mb-4 gap-4 ">
         {/* Add Client button */}
-        
+
 
         {/* Search input */}
         <div className="relative w-1/3">
@@ -202,12 +202,12 @@ export default function ClientsPage() {
                 <th className="border px-4 py-2 text-left">Client Name</th>
                 <th className="border px-4 py-2 text-left">Phone</th>
                 <th className="border px-4 py-2 text-left">GSTIN</th>
-                <th className="border px-4 py-2 text-center">
-                  Total Invoices
-                </th>
+                <th className="border px-4 py-2 text-center">Total Invoices</th>
+                <th className="border px-4 py-2 text-left">Email</th> {/* ✅ NEW */}
                 <th className="border px-4 py-2 text-center">Actions</th>
               </tr>
             </thead>
+
             <tbody>
               {paginatedClients.length > 0 ? (
                 paginatedClients.map((client) => (
@@ -218,15 +218,22 @@ export default function ClientsPage() {
                     <td className="border px-4 py-2 text-center">
                       {client.totalInvoices}
                     </td>
+
+                    {/* ✅ EMAIL COLUMN */}
+                    <td className="border px-4 py-2">
+                      {client.email || "-"}
+                    </td>
+
                     <td className="border px-4 py-2 text-center">
                       <button
                         onClick={() => handleEdit(client.id)}
-                        className="bg-gray-200 px-4 py-5 rounded flex gap-1 items-center justify-center mx-auto"
+                        className="bg-gray-200 px-4 py-2 rounded flex gap-1 items-center justify-center mx-auto"
                       >
                         <Pencil size={14} /> Edit
                       </button>
                     </td>
                   </tr>
+
                 ))
               ) : (
                 <tr>

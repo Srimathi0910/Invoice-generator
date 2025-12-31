@@ -31,6 +31,10 @@ export default function InvoicePage() {
   const [activeMenu, setActiveMenu] = useState("Invoices");
   const [user, setUser] = useState<{ username: string; email?: string } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [errors, setErrors] = useState<any>({
+    billedBy: {},
+    billedTo: {},
+  });
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -73,20 +77,24 @@ export default function InvoicePage() {
   const [billedBy, setBilledBy] = useState({
     country: "",
     businessName: "",
+    email: "",          // ✅ ADD THIS
     phone: "",
     gstin: "",
     address: "",
     city: "",
   });
 
+
   const [billedTo, setBilledTo] = useState({
     country: "",
     businessName: "",
+    email: "",          // ✅ ADD THIS
     phone: "",
     gstin: "",
     address: "",
     city: "",
   });
+
 
   /* ---------------- Item handlers ---------------- */
   const addItem = () =>
@@ -107,6 +115,14 @@ export default function InvoicePage() {
       alert("Please fill all invoice details.");
       return false;
     }
+    if (
+      !isValidPhone(billedBy.phone) ||
+      !isValidPhone(billedTo.phone)
+    ) {
+      alert("Please enter valid 10-digit mobile numbers.");
+      return false;
+    }
+
 
     for (const key in billedBy) {
       if (!(billedBy as any)[key]) {
@@ -180,13 +196,14 @@ export default function InvoicePage() {
       invoiceNumber: invoiceMeta.invoiceNumber.trim(),
       invoiceDate,
       dueDate,
-      billedBy,
-      billedTo,
+      billedBy,    // ✅ this contains email
+      billedTo,    // ✅ this contains email
       items,
       extras,
       totals: calculatedTotals,
       totalInWords: `${calculatedTotals.grandTotal} rupees only`,
     };
+
 
 
     try {
@@ -259,6 +276,7 @@ export default function InvoicePage() {
     }
   };
 
+  const isValidPhone = (value: string) => /^\d{10}$/.test(value);
 
 
   return (
@@ -374,16 +392,49 @@ export default function InvoicePage() {
 
 
               {Object.keys(billedBy).map((key) => (
-                <input
-                  key={key}
-                  className="input"
-                  placeholder={key}
-                  value={(billedBy as any)[key]}
-                  onChange={(e) =>
-                    setBilledBy({ ...billedBy, [key]: e.target.value })
-                  }
-                />
+                <div key={key}>
+                  <input
+                    type={key === "email" ? "email" : "text"}
+                    className={`input ${errors.billedBy?.[key] ? "border-red-500" : ""
+                      }`}
+                    placeholder={
+                      key === "email"
+                        ? "Email ID"
+                        : key === "phone"
+                          ? "Mobile Number"
+                          : key.replace(/([A-Z])/g, " $1")
+                    }
+                    value={(billedBy as any)[key]}
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      setBilledBy({ ...billedBy, [key]: value });
+
+                      // Phone validation
+                      if (key === "phone") {
+                        setErrors((prev: any) => ({
+                          ...prev,
+                          billedBy: {
+                            ...prev.billedBy,
+                            phone:
+                              value && !isValidPhone(value)
+                                ? "Mobile number must be 10 digits"
+                                : "",
+                          },
+                        }));
+                      }
+                    }}
+                  />
+
+                  {/* ERROR MESSAGE */}
+                  {errors.billedBy?.[key] && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.billedBy[key]}
+                    </p>
+                  )}
+                </div>
               ))}
+
             </div>
           </div>
 
@@ -392,16 +443,49 @@ export default function InvoicePage() {
             <h3 className="font-semibold mb-4">Billed To (Client’s Details)</h3>
             <div className="grid gap-3">
               {Object.keys(billedTo).map((key) => (
-                <input
-                  key={key}
-                  className="input"
-                  placeholder={key}
-                  value={(billedTo as any)[key]}
-                  onChange={(e) =>
-                    setBilledTo({ ...billedTo, [key]: e.target.value })
-                  }
-                />
+                <div key={key}>
+                  <input
+                    type={key === "email" ? "email" : "text"}
+                    className={`input ${errors.billedTo?.[key] ? "border-red-500" : ""
+                      }`}
+                    placeholder={
+                      key === "email"
+                        ? "Email ID"
+                        : key === "phone"
+                          ? "Mobile Number"
+                          : key.replace(/([A-Z])/g, " $1")
+                    }
+                    value={(billedTo as any)[key]}
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      setBilledTo({ ...billedTo, [key]: value });
+
+                      if (key === "phone") {
+                        setErrors((prev: any) => ({
+                          ...prev,
+                          billedTo: {
+                            ...prev.billedTo,
+                            phone:
+                              value && !isValidPhone(value)
+                                ? "Mobile number must be 10 digits"
+                                : "",
+                          },
+                        }));
+                      }
+                    }}
+                  />
+
+                  {/* ERROR MESSAGE */}
+                  {errors.billedTo?.[key] && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.billedTo[key]}
+                    </p>
+                  )}
+                </div>
               ))}
+
+
             </div>
           </div>
         </div>

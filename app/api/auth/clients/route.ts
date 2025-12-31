@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Invoice from "@/models/invoice";
+import Invoice from "@/models/Invoice";
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 
@@ -22,19 +22,22 @@ export async function GET() {
     invoices.forEach((inv: any) => {
       if (!inv.billedTo) return;
 
-      const gstin = inv.billedTo.gstin || inv.billedTo.businessName;
+      // ✅ Use email as unique key (BEST PRACTICE)
+      const key = inv.billedTo.email || inv.billedTo.gstin;
 
-      if (!clientsMap.has(gstin)) {
-        clientsMap.set(gstin, {
-          id: gstin,
-          name: inv.billedTo.businessName,
-          phone: inv.billedTo.phone,
-          gstin: inv.billedTo.gstin,
-          totalInvoices: 1,
-        });
-      } else {
-        clientsMap.get(gstin).totalInvoices += 1;
-      }
+      if (!clientsMap.has(key)) {
+  clientsMap.set(key, {
+    id: key,
+    name: inv.billedTo.businessName,
+    email: inv.billedTo.email || "",   // ensure email is always present
+    phone: inv.billedTo.phone || "",
+    gstin: inv.billedTo.gstin || "",
+    totalInvoices: 1,
+  });
+} else {
+  clientsMap.get(key).totalInvoices += 1;
+}
+
     });
 
     return new Response(

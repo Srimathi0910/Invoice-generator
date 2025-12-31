@@ -54,7 +54,18 @@ export default function Login() {
         }
       } else {
         localStorage.setItem("user", JSON.stringify(data.user));
-        router.replace("/dashboard");
+
+        if (data.role === "company") {
+          router.replace("/dashboard");
+        } else if (data.role === "client") {
+          router.replace("/dashboard-client");
+        } else {
+          setErrors((prev) => ({
+            ...prev,
+            general: "Invalid user role",
+          }));
+        }
+
       }
     } catch {
       setErrors((prev) => ({
@@ -70,8 +81,7 @@ export default function Login() {
     "peer w-full border-b border-gray-400 py-2 outline-none bg-transparent";
 
   const labelClass = (value: string) =>
-    `absolute left-0 transition-all duration-300 ${
-      value ? "-top-3 text-sm text-black" : "top-2 text-base text-gray-500"
+    `absolute left-0 transition-all duration-300 ${value ? "-top-3 text-sm text-black" : "top-2 text-base text-gray-500"
     }`;
 
   return (
@@ -135,9 +145,8 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className={`bg-[#D9D9D9] text-[20px] text-black py-2 rounded-lg hover:bg-gray-300 transition w-full md:w-3/4 mx-auto block ${
-                loading ? "opacity-70 cursor-not-allowed" : "cursor-pointer"
-              }`}
+              className={`bg-[#D9D9D9] text-[20px] text-black py-2 rounded-lg hover:bg-gray-300 transition w-full md:w-3/4 mx-auto block ${loading ? "opacity-70 cursor-not-allowed" : "cursor-pointer"
+                }`}
             >
               {loading ? "Logging in..." : "Login"}
             </button>
