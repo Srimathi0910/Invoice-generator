@@ -31,6 +31,8 @@ export default function InvoicePage() {
   const [activeMenu, setActiveMenu] = useState("Invoices");
   const [user, setUser] = useState<{ username: string; email?: string } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
   const [errors, setErrors] = useState<any>({
     billedBy: {},
     billedTo: {},
@@ -178,17 +180,14 @@ export default function InvoicePage() {
   };
 
   const handleSaveInvoice = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!validateInvoice()) return;
+  e?.preventDefault();
+  if (!validateInvoice()) return;
 
-    // Convert date strings to Date objects
-    const invoiceDate = invoiceMeta.invoiceDate ? new Date(invoiceMeta.invoiceDate) : null;
-    const dueDate = invoiceMeta.dueDate ? new Date(invoiceMeta.dueDate) : null;
+  setIsSaving(true); // 🔹 START saving
 
-    if (!invoiceDate || !dueDate) {
-      alert("Please fill valid Invoice Date and Due Date.");
-      return;
-    }
+  try {
+    const invoiceDate = new Date(invoiceMeta.invoiceDate);
+    const dueDate = new Date(invoiceMeta.dueDate);
 
     const calculatedTotals = computeTotals();
 
@@ -196,36 +195,35 @@ export default function InvoicePage() {
       invoiceNumber: invoiceMeta.invoiceNumber.trim(),
       invoiceDate,
       dueDate,
-      billedBy,    // ✅ this contains email
-      billedTo,    // ✅ this contains email
+      billedBy,
+      billedTo,
       items,
       extras,
       totals: calculatedTotals,
       totalInWords: `${calculatedTotals.grandTotal} rupees only`,
     };
 
+    const res = await fetch("/api/auth/invoice", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(invoiceData),
+    });
 
+    const data = await res.json();
 
-    try {
-      const res = await fetch("/api/auth/invoice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(invoiceData),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        alert("Invoice saved successfully!");
-        console.log("Saved invoice:", data.invoice);
-      } else {
-        alert("Failed to save invoice: " + data.error);
-      }
-    } catch (err: any) {
-      console.error(err);
-      alert("Error saving invoice: " + err.message);
+    if (data.success) {
+      alert("Invoice saved successfully!");
+    } else {
+      alert("Failed to save invoice: " + data.error);
     }
-  };
+  } catch (err: any) {
+    console.error(err);
+    alert("Error saving invoice");
+  } finally {
+    setIsSaving(false); // 🔹 END saving (success or error)
+  }
+};
+
 
   const menuItems = [
     { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/invoices" },
@@ -785,9 +783,13 @@ export default function InvoicePage() {
           <button
             type="button"
             onClick={handleSaveInvoice}
-            className="w-[300px] bg-green-500 text-white py-3 px-4 rounded-lg cursor-pointer"
+            className={`w-[300px] py-3 px-4 rounded-lg transition
+    ${isSaving
+                ? "bg-green-500 text-white cursor-not-allowed pointer-events-none"
+                : "bg-green-500 hover:bg-green-600 text-white"
+              }`}
           >
-            Save
+            {isSaving ? "Saving..." : "Save"}
           </button>
 
 

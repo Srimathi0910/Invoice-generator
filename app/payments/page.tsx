@@ -34,7 +34,7 @@ export default function PaymentsPage() {
     const [activeMenu, setActiveMenu] = useState("Invoices");
     const [menuOpen, setMenuOpen] = useState(false);
     const menuItems = [
-        { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/invoices" },
+        { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/dashboard" },
         { icon: <FaUsers />, label: "Clients", path: "/clients" },
         { icon: <FaChartBar />, label: "Reports", path: "/reports" },
         { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
@@ -71,20 +71,30 @@ export default function PaymentsPage() {
 
     const totalPayments = payments.reduce((acc, p) => acc + p.amount, 0);
 
-    const handleUpdate = async (id: string, field: string, value: any) => {
+    const handleUpdate = async (id: string, payment: Partial<Payment>) => {
         try {
-            await fetch(`/api/auth/invoice/${id}`, {
+            const res = await fetch(`/api/auth/invoice/${id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ [field]: value }),
+                body: JSON.stringify({
+                    paymentDate: payment.paymentDate,
+                    paymentMethod: payment.paymentMethod,
+                    paymentStatus: payment.paymentStatus,
+                }),
             });
-            setPayments((prev) =>
-                prev.map((p) => (p._id === id ? { ...p, [field]: value } : p))
-            );
+
+            const data = await res.json();
+            if (data.success) {
+                setPayments((prev) =>
+                    prev.map((p) => (p._id === id ? { ...p, ...payment } : p))
+                );
+            }
         } catch (err) {
             console.error("Update failed:", err);
         }
     };
+
+
 
     if (loading) return <p className="p-6">Loading...</p>;
 
@@ -163,18 +173,17 @@ export default function PaymentsPage() {
                                         {isEditing ? (
                                             <input
                                                 type="date"
-                                                value={new Date(p.paymentDate).toISOString().split("T")[0]}
+                                                value={p.paymentDate ? new Date(p.paymentDate).toISOString().split("T")[0] : ""}
                                                 className="border px-2 py-1 rounded text-center"
                                                 onChange={(e) =>
                                                     setPayments((prev) =>
                                                         prev.map((pay) =>
-                                                            pay._id === p._id
-                                                                ? { ...pay, paymentDate: e.target.value }
-                                                                : pay
+                                                            pay._id === p._id ? { ...pay, paymentDate: e.target.value } : pay
                                                         )
                                                     )
                                                 }
                                             />
+
                                         ) : (
                                             new Date(p.paymentDate).toLocaleDateString()
                                         )}
@@ -230,12 +239,13 @@ export default function PaymentsPage() {
                                                 className={`px-2 py-1 rounded text-black ${p.paymentStatus === "Paid"
                                                     ? "bg-green-500"
                                                     : p.paymentStatus === "Unpaid"
-                                                        ? "bg-orange-500" // changed from red to orange
-                                                        : "bg-red-500" // changed from orange to red
+                                                        ? "bg-orange-500"
+                                                        : "bg-red-500"
                                                     }`}
                                             >
                                                 {p.paymentStatus}
                                             </span>
+
                                         )}
                                     </td>
 
@@ -247,15 +257,19 @@ export default function PaymentsPage() {
                                             <>
                                                 <button
                                                     className="bg-green-500 text-white px-2 py-1 rounded mr-2"
-                                                    onClick={() => {
-                                                        handleUpdate(p._id, "paymentDate", p.paymentDate);
-                                                        handleUpdate(p._id, "paymentMethod", p.paymentMethod);
-                                                        handleUpdate(p._id, "paymentStatus", p.paymentStatus);
+                                                    onClick={async () => {
+                                                        await handleUpdate(p._id, {
+                                                            paymentDate: p.paymentDate,
+                                                            paymentMethod: p.paymentMethod,
+                                                            paymentStatus: p.paymentStatus,
+                                                        });
                                                         setEditRow(null);
                                                     }}
+
                                                 >
                                                     Save
                                                 </button>
+
                                                 <button
                                                     className="bg-gray-400 text-white px-2 py-1 rounded"
                                                     onClick={() => setEditRow(null)}

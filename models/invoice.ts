@@ -8,7 +8,7 @@ const invoiceSchema = new mongoose.Schema({
   billedBy: {
     country: String,
     businessName: String,
-    email: String,       // ✅ Make sure this exists
+    email: String,
     phone: String,
     gstin: String,
     address: String,
@@ -18,7 +18,7 @@ const invoiceSchema = new mongoose.Schema({
   billedTo: {
     country: String,
     businessName: String,
-    email: String,       // ✅ Make sure this exists
+    email: String,
     phone: String,
     gstin: String,
     address: String,
@@ -50,6 +50,13 @@ const invoiceSchema = new mongoose.Schema({
   },
 
   totalInWords: String,
+
+  status: { type: String, enum: ["Paid", "Unpaid", "Overdue"], default: "Unpaid" },
+
+  // ✅ Add userId
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+
+  logoUrl: String, // optional if you want to store logo
 });
 
 export default mongoose.models.Invoice || mongoose.model("Invoice", invoiceSchema);

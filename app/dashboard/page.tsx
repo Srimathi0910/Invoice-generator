@@ -219,11 +219,12 @@ const Dashboard = () => {
                 <InvoiceRow
                   key={inv._id}
                   id={inv.invoiceNumber}
-                  client={inv.billedTo.businessName}        // Corrected field
-                  amount={`₹${inv.totals?.grandTotal ?? 0}`} // Corrected field
-                  status={inv.status ?? "N/A"}             // If status doesn't exist
-                  date={new Date(inv.invoiceDate).toLocaleDateString()} // Format date
+                  client={inv.billedTo.businessName}
+                  amount={`₹${inv.totals?.grandTotal ?? 0}`}
+                  status={(inv.status ?? "N/A").trim()} // remove spaces
+                  date={new Date(inv.invoiceDate).toLocaleDateString()}
                 />
+
               ))
             )}
           </tbody>
@@ -268,10 +269,11 @@ const Th = ({ children }: { children: React.ReactNode }) => (
 
 const InvoiceRow = ({ id, client, amount, status, date }: any) => {
   const colors: Record<string, string> = {
-    Paid: "bg-[#05410C]",
-    Unpaid: "bg-[#E06A2A]",
-    Overdue: "bg-[#E51F22]",
+    Paid: "bg-[#05410C]",       // dark green
+    Unpaid: "bg-[#E06A2A]",     // orange
+    Overdue: "bg-[#E51F22]",    // red
   };
+
 
   return (
     <tr className="border-t">
@@ -282,6 +284,7 @@ const InvoiceRow = ({ id, client, amount, status, date }: any) => {
         <button className={`px-2 py-1 text-white rounded ${colors[status] ?? "bg-gray-400"}`}>
           {status}
         </button>
+
       </td>
       <td className="px-4 py-2">{date}</td>
     </tr>

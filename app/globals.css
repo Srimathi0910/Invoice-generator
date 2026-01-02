@@ -40,6 +40,6 @@ body {
   @apply border px-2 py-1;
 }
 
-.btn-outline {
+/* .btn-outline {
   @apply border px-4 py-2 rounded-md text-sm hover:bg-gray-100;
-}
+} */

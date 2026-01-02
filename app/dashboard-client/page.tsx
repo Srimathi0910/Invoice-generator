@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog, 
-  FaUserCircle, FaSearch, FaBars, FaTimes 
+import {
+  FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog,
+  FaUserCircle, FaSearch, FaBars, FaTimes
 } from "react-icons/fa";
 
 const Dashboard = () => {
@@ -68,10 +68,10 @@ const Dashboard = () => {
 
   const menuItems = [
     { icon: <FaFileInvoiceDollar />, label: "Dashboard", path: "/dashboard-client" },
-    { icon: <FaUsers />, label: "My Invoices", path: "/clients" },
-    { icon: <FaChartBar />, label: "Payments", path: "/reports" },
-    { icon: <FaMoneyCheckAlt />, label: "Profile", path: "/payments" },
-    { icon: <FaCog />, label: "Help", path: "/settings" },
+    { icon: <FaUsers />, label: "My Invoices", path: "/myInvoices" },
+    { icon: <FaChartBar />, label: "Payments", path: "/payment-client" },
+    { icon: <FaMoneyCheckAlt />, label: "Profile", path: "/profile" },
+    { icon: <FaCog />, label: "Help", path: "/help" },
   ];
 
   const filteredInvoices = activeTab === "All" ? invoices : invoices.filter(i => i.status === activeTab);
@@ -79,6 +79,18 @@ const Dashboard = () => {
   if (loadingUser) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Paid":
+        return "bg-[#05410C]";
+      case "Unpaid":
+        return "bg-[#E06A2A]";
+      case "Overdue":
+        return "bg-[#E51F22]";
+      default:
+        return "bg-gray-400";
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
@@ -137,7 +149,11 @@ const Dashboard = () => {
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
           <div className="relative w-full md:w-1/3">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="text" placeholder="Search invoices..." className="w-full border border-gray-300 rounded pl-10 pr-3 py-2" />
+            <input
+              type="text"
+              placeholder="Search invoices..."
+              className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
+            />
           </div>
 
           <div className="flex flex-wrap gap-4 md:gap-6">
@@ -145,7 +161,8 @@ const Dashboard = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab ? "text-[#29268E] border-b-2 border-[#29268E]" : "text-black hover:text-[#29268E]"}`}
+                className={`text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab ? "text-[#29268E] border-b-2 border-[#29268E]" : "text-black hover:text-[#29268E]"
+                  }`}
               >
                 {tab}
               </button>
@@ -153,37 +170,42 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <table className="min-w-full border table-auto">
+        <table className="min-w-full table-fixed border border-gray-200 text-left">
           <thead className="bg-gray-100">
             <tr>
-              <th>Invoice</th>
-              <th>Billed To</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Date</th>
+              <th className="px-4 py-2 w-1/5">Invoice</th>
+              <th className="px-4 py-2 w-1/5">Billed To</th>
+              <th className="px-4 py-2 w-1/5">Amount</th>
+              <th className="px-4 py-2 w-1/5">Status</th>
+              <th className="px-4 py-2 w-1/5">Date</th>
             </tr>
           </thead>
-
           <tbody>
             {filteredInvoices.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-500">No invoices created yet</td>
+                <td colSpan={5} className="text-center py-6 text-gray-500">
+                  No invoices created yet
+                </td>
               </tr>
             ) : (
               filteredInvoices.map(inv => (
-                <InvoiceRow
-                  key={inv._id}
-                  id={inv.invoiceNumber}
-                  client={inv.billedTo.businessName} // 🔹 Show billedTo instead of billedBy
-                  amount={`₹${inv.totals?.grandTotal ?? 0}`}
-                  status={inv.status ?? "Unpaid"}
-                  date={new Date(inv.invoiceDate).toLocaleDateString()}
-                />
+                <tr key={inv._id} className="border-t">
+                  <td className="px-4 py-2">{inv.invoiceNumber}</td>
+                  <td className="px-4 py-2">{inv.billedTo.businessName}</td>
+                  <td className="px-4 py-2">₹{inv.totals?.grandTotal ?? 0}</td>
+                  <td className="px-4 py-2">
+                    <span className={`px-2 py-1 rounded text-white ${getStatusColor(inv.status)}`}>
+                      {inv.status ?? "Unpaid"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
+                </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+
     </div>
   );
 };

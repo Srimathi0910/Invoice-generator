@@ -34,7 +34,7 @@ const monthlyData = [
     { month: "Dec", amount: 225000 },
 ];
 const menuItems = [
-    { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/invoices" },
+    { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/dashboard" },
     { icon: <FaUsers />, label: "Clients", path: "/clients" },
     { icon: <FaChartBar />, label: "Reports", path: "/reports" },
     { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },

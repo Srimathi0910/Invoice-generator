@@ -27,6 +27,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    contactPerson: {
+      type: String,
+      trim: true,
+    },
 
     role: {
       type: String,
@@ -66,6 +70,7 @@ const UserSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
+
 );
 
 export default mongoose.models.User ||

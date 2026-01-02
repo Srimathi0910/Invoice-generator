@@ -1,4 +1,3 @@
-// app/api/auth/payments/route.ts
 import { connectDB } from "@/lib/db";
 import Invoice from "@/models/Invoice";
 
@@ -7,25 +6,21 @@ export async function GET() {
 
   try {
     const invoices = await Invoice.find().sort({ invoiceDate: -1 });
+
     const payments = invoices.map((inv) => ({
-      _id: inv._id,
+      _id: inv._id.toString(),
       invoiceNumber: inv.invoiceNumber,
       clientName: inv.billedTo.businessName,
-      paymentDate: inv.dueDate, // You can create a field paymentDate in invoice or use dueDate
-      paymentMethod: inv.extras?.paymentMethod || "N/A", // optional field
-      paymentStatus: inv.extras?.paymentStatus || "Unpaid", // optional field
+      paymentDate: inv.dueDate?.toISOString() || "",
+      paymentMethod: inv.extras?.paymentMethod || "N/A",
+      paymentStatus: inv.extras?.paymentStatus || inv.status || "Unpaid", // ✅ use extras first, fallback to status
       amount: inv.totals?.grandTotal || 0,
     }));
 
-    return new Response(JSON.stringify({ success: true, payments }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (err) {
+    return new Response(JSON.stringify({ success: true, payments }), { status: 200 });
+  } catch (err: any) {
     console.error(err);
-    return new Response(JSON.stringify({ success: false, error: "Failed to fetch payments" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500 });
   }
 }
+
