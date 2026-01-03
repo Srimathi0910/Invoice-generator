@@ -34,11 +34,11 @@ export default function Login() {
     setLoading(true);
 
     try {
+      // fetch call
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-        credentials: "include",
       });
 
       const data = await res.json();
@@ -47,13 +47,20 @@ export default function Login() {
         if (data.field) {
           setErrors((prev) => ({ ...prev, [data.field]: data.message }));
         } else {
-          setErrors((prev) => ({
-            ...prev,
-            general: data.error || "Login failed",
-          }));
+          setErrors((prev) => ({ ...prev, general: data.error || "Login failed" }));
         }
       } else {
-        localStorage.setItem("user", JSON.stringify(data.user));
+localStorage.setItem("user", JSON.stringify({
+  _id: data.user._id,       // ✅ make sure _id is stored
+  username: data.user.username,
+  email: data.user.email
+}));
+localStorage.setItem("token", data.token);
+        localStorage.setItem("token", data.token);
+
+        if (data.role === "company") router.replace("/dashboard");
+        else if (data.role === "client") router.replace("/dashboard-client");
+        else setErrors((prev) => ({ ...prev, general: "Invalid user role" }));
 
         if (data.role === "company") {
           router.replace("/dashboard");

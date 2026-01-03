@@ -1,4 +1,5 @@
-import mongoose from "mongoose";
+
+  import mongoose from "mongoose";
 
 const invoiceSchema = new mongoose.Schema({
   invoiceNumber: { type: String, required: true },
@@ -13,7 +14,31 @@ const invoiceSchema = new mongoose.Schema({
     gstin: String,
     address: String,
     city: String,
+    currency: {
+      type: String,
+      default: "INR",
+    },
+
+    defaultGstRate: {
+      type: Number,
+      default: 18,
+    },
+
+    invoicePrefix: {
+      type: String,
+      default: "INV",
+    },
+
+    bankName: {
+      type: String,
+    },
+
+    accountNumber: {
+      type: String,
+    },
   },
+
+  
 
   billedTo: {
     country: String,

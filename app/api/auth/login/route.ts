@@ -43,15 +43,18 @@ export async function POST(req: Request) {
     );
 
     const response = NextResponse.json({
-      message: "Login successful",
-      role: user.role, // 🔥 REQUIRED FOR FRONTEND
-      user: {
-        id: user._id.toString(),
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      },
-    });
+  message: "Login successful",
+  role: user.role,
+  user: {
+    _id: user._id.toString(),
+    username: user.username,
+    email: user.email,
+    role: user.role,
+  },
+  token: accessToken // <-- add this
+});
+
+
 
     response.cookies.set("accessToken", accessToken, {
       httpOnly: true,

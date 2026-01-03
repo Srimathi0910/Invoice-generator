@@ -214,7 +214,7 @@ export default function PaymentsPage() {
                                         {isEditing ? (
                                             <select
                                                 value={p.paymentStatus}
-                                                className={`px-2 py-1 rounded text-black cursor-pointer ${p.paymentStatus === "Paid"
+                                                className={`px-2 py-1 rounded text-white cursor-pointer ${p.paymentStatus === "Paid"
                                                     ? "bg-green-500"
                                                     : p.paymentStatus === "Unpaid"
                                                         ? "bg-orange-500" // changed from red to orange
@@ -236,7 +236,7 @@ export default function PaymentsPage() {
                                             </select>
                                         ) : (
                                             <span
-                                                className={`px-2 py-1 rounded text-black ${p.paymentStatus === "Paid"
+                                                className={`px-2 py-1 rounded text-white ${p.paymentStatus === "Paid"
                                                     ? "bg-green-500"
                                                     : p.paymentStatus === "Unpaid"
                                                         ? "bg-orange-500"

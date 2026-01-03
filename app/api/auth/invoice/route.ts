@@ -12,6 +12,7 @@ export async function POST(req: Request) {
     const data = await req.json();
 
     const invoiceData = {
+      userId: data.userId,
       invoiceNumber: data.invoiceNumber,
       invoiceDate: data.invoiceDate,
       dueDate: data.dueDate,

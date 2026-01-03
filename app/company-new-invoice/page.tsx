@@ -201,6 +201,7 @@ export default function InvoicePage() {
       extras,
       totals: calculatedTotals,
       totalInWords: `${calculatedTotals.grandTotal} rupees only`,
+        userId: (user as any)?._id || ""
     };
 
     const res = await fetch("/api/auth/invoice", {
@@ -226,7 +227,7 @@ export default function InvoicePage() {
 
 
   const menuItems = [
-    { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/invoices" },
+    { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/dashboard" },
     { icon: <FaUsers />, label: "Clients", path: "/clients" },
     { icon: <FaChartBar />, label: "Reports", path: "/reports" },
     { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
@@ -250,6 +251,8 @@ export default function InvoicePage() {
       extras,
       totals: calculatedTotals,
       totalInWords: `${calculatedTotals.grandTotal} rupees only`,
+      userId: (user as any)?._id || "", // user._id must come from login
+
     };
 
 
