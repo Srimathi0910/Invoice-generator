@@ -191,10 +191,9 @@ export default function PaymentsPage() {
 
                                     <td className="p-2 border">
                                         {isEditing ? (
-                                            <input
-                                                type="text"
+                                            <select
                                                 value={p.paymentMethod}
-                                                className="border px-2 py-1 rounded text-center"
+                                                className="px-2 py-1 rounded border text-center"
                                                 onChange={(e) =>
                                                     setPayments((prev) =>
                                                         prev.map((pay) =>
@@ -204,11 +203,19 @@ export default function PaymentsPage() {
                                                         )
                                                     )
                                                 }
-                                            />
+                                            >
+                                                <option value="UPI">UPI</option>
+                                                <option value="Credit/Debit Card">Credit/Debit Card</option>
+                                                <option value="Net Banking">Net Banking</option>
+                                                <option value="Wallet">Wallet</option>
+                                            </select>
                                         ) : (
                                             p.paymentMethod
                                         )}
                                     </td>
+
+                                   
+
 
                                     <td className="p-2 border">
                                         {isEditing ? (

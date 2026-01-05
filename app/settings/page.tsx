@@ -57,63 +57,63 @@ export default function SettingsPage() {
 
   /* ---------------- LOAD COMPANY SETTINGS ---------------- */
   /* ---------------- LOAD COMPANY SETTINGS ---------------- */
-useEffect(() => {
-  if (typeof window === "undefined") return;
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
-  const token = localStorage.getItem("token");
-  if (!token) {
-    console.log("No token found for GET");
-    return;
-  }
-
-  const loadCompany = async () => {
-    try {
-      const res = await fetch("/api/auth/company/settings", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        cache: "no-store", // 🔥 prevents Next.js caching
-      });
-
-      if (!res.ok) {
-        console.error("GET failed:", res.status);
-        return;
-      }
-
-      const data = await res.json();
-
-      setFormData((prev) => ({
-        ...prev,
-        companyName: data.billedBy?.businessName || "",
-        email: data.billedBy?.email || "",
-        phone: data.billedBy?.phone || "",
-        gstin: data.billedBy?.gstin || "",
-        address: data.billedBy?.address || "",
-        city: data.billedBy?.city || "",
-        country: data.billedBy?.country || "",
-
-        currency: data.billedBy?.currency || "INR",
-        gstRate: data.billedBy?.gstRate || 18,
-        invoicePrefix: data.billedBy?.invoicePrefix || "INV-2025-",
-
-        bankName: data.billedBy?.bankName || "",
-        accountNumber: data.billedBy?.accountNumber || "",
-
-        logoUrl: data.logoUrl || "",
-      }));
-
-      setLogoPreview(data.logoUrl || null);
-    } catch (err) {
-      console.error("Error loading company settings:", err);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.log("No token found for GET");
+      return;
     }
-  };
 
-  loadCompany();
-}, []);
-useEffect(() => {
-  console.log("TOKEN FROM LS:", localStorage.getItem("token"));
-}, []);
+    const loadCompany = async () => {
+      try {
+        const res = await fetch("/api/auth/company/settings", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          cache: "no-store", // 🔥 prevents Next.js caching
+        });
+
+        if (!res.ok) {
+          console.error("GET failed:", res.status);
+          return;
+        }
+
+        const data = await res.json();
+
+        setFormData((prev) => ({
+          ...prev,
+          companyName: data.billedBy?.businessName || "",
+          email: data.billedBy?.email || "",
+          phone: data.billedBy?.phone || "",
+          gstin: data.billedBy?.gstin || "",
+          address: data.billedBy?.address || "",
+          city: data.billedBy?.city || "",
+          country: data.billedBy?.country || "",
+
+          currency: data.billedBy?.currency || "INR",
+          gstRate: data.billedBy?.gstRate || 18,
+          invoicePrefix: data.billedBy?.invoicePrefix || "INV-2025-",
+
+          bankName: data.billedBy?.bankName || "",
+          accountNumber: data.billedBy?.accountNumber || "",
+
+          logoUrl: data.logoUrl || "",
+        }));
+
+        setLogoPreview(data.logoUrl || null);
+      } catch (err) {
+        console.error("Error loading company settings:", err);
+      }
+    };
+
+    loadCompany();
+  }, []);
+  useEffect(() => {
+    console.log("TOKEN FROM LS:", localStorage.getItem("token"));
+  }, []);
 
 
   /* ---------------- SAVE SETTINGS ---------------- */
@@ -218,8 +218,8 @@ useEffect(() => {
             <span
               onClick={() => setActiveTab("company")}
               className={`cursor-pointer font-semibold pb-1 ${activeTab === "company"
-                  ? "text-[#8F90DF] underline border-purple-600"
-                  : "text-gray-800"
+                ? "text-[#8F90DF] underline border-purple-600"
+                : "text-gray-800"
                 }`}
             >
               Company Profile
@@ -228,8 +228,8 @@ useEffect(() => {
             <span
               onClick={() => setActiveTab("preferences")}
               className={`cursor-pointer font-semibold pl-10 pb-1 ${activeTab === "preferences"
-                  ? "text-[#8F90DF] underline border-purple-600"
-                  : "text-gray-800"
+                ? "text-[#8F90DF] underline border-purple-600"
+                : "text-gray-800"
                 }`}
             >
               Preferences
@@ -270,9 +270,12 @@ useEffect(() => {
 
                       const uploadData = new FormData();
                       uploadData.append("logo", file);
-
-                      const res = await fetch("/api/company/upload-logo", {
+                      const token = localStorage.getItem("token");
+                      const res = await fetch("/api/auth/company/upload-logo", {
                         method: "POST",
+                        headers: {
+                          Authorization: `Bearer ${token}`,
+                        },
                         body: uploadData,
                       });
 

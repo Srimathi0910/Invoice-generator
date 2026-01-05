@@ -105,6 +105,7 @@ const ProfilePage = () => {
       setUser(updatedUser);
 
       alert("Profile updated successfully!");
+      setLoading(false)
       setFormData({ ...formData, password: "", confirmPassword: "" });
     } catch (err) {
       console.error(err);

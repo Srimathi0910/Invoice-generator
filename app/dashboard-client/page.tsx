@@ -43,10 +43,7 @@ const Dashboard = () => {
 
     fetch(`/api/auth/invoice?email=${user.email}`)
       .then(res => res.json())
-      .then(data => {
-        console.log("Fetched invoices:", data); // Check console
-        setInvoices(data);
-      })
+      .then(data => setInvoices(data))
       .catch(err => console.error("Failed to fetch invoices", err));
   }, [user]);
 
@@ -79,6 +76,7 @@ const Dashboard = () => {
   if (loadingUser) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Paid":
@@ -161,8 +159,8 @@ const Dashboard = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab ? "text-[#29268E] border-b-2 border-[#29268E]" : "text-black hover:text-[#29268E]"
-                  }`}
+                className={`text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab ? "text-[#29268E] border-b-2 border-[#29268E]" : "text-black hover:text-[#29268E]"}`
+                }
               >
                 {tab}
               </button>
@@ -173,17 +171,18 @@ const Dashboard = () => {
         <table className="min-w-full table-fixed border border-gray-200 text-left">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-4 py-2 w-1/5">Invoice</th>
-              <th className="px-4 py-2 w-1/5">Billed To</th>
-              <th className="px-4 py-2 w-1/5">Amount</th>
-              <th className="px-4 py-2 w-1/5">Status</th>
-              <th className="px-4 py-2 w-1/5">Date</th>
+              <th className="px-4 py-2 w-1/6">Invoice</th>
+              <th className="px-4 py-2 w-1/6">Billed To</th>
+              <th className="px-4 py-2 w-1/6">Amount</th>
+              <th className="px-4 py-2 w-1/6">Status</th>
+              <th className="px-4 py-2 w-1/6">Date</th>
+              <th className="px-4 py-2 w-1/6">Action</th> {/* NEW COLUMN */}
             </tr>
           </thead>
           <tbody>
             {filteredInvoices.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-500">
+                <td colSpan={6} className="text-center py-6 text-gray-500">
                   No invoices created yet
                 </td>
               </tr>
@@ -199,6 +198,17 @@ const Dashboard = () => {
                     </span>
                   </td>
                   <td className="px-4 py-2">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
+                  <td className="px-4 py-2">
+                    {(inv.status === "Unpaid" || inv.status === "Overdue") && (
+                      <button
+                        onClick={() => router.push(`/payment-client/${inv._id}`)}
+                        className="px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded font-medium"
+                      >
+                        Pay
+                      </button>
+                    )}
+                  </td>
+
                 </tr>
               ))
             )}
@@ -224,25 +234,5 @@ const SummaryBox = ({ title, value, bg, innerBg }: any) => (
     <div className="w-full text-center py-4 font-semibold text-lg" style={{ backgroundColor: innerBg }}>{value}</div>
   </div>
 );
-
-const InvoiceRow = ({ id, client, amount, status, date }: any) => {
-  const colors: Record<string, string> = {
-    Paid: "bg-[#05410C]",
-    Unpaid: "bg-[#E06A2A]",
-    Overdue: "bg-[#E51F22]",
-  };
-
-  return (
-    <tr className="border-t">
-      <td className="px-4 py-2">{id}</td>
-      <td className="px-4 py-2">{client}</td>
-      <td className="px-4 py-2">{amount}</td>
-      <td className="px-4 py-2">
-        <button className={`px-2 py-1 text-white rounded ${colors[status] ?? "bg-gray-400"}`}>{status}</button>
-      </td>
-      <td className="px-4 py-2">{date}</td>
-    </tr>
-  );
-};
 
 export default Dashboard;

@@ -11,10 +11,13 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.8.0",
+    "html2canvas": "^1.4.1",
     "jsonwebtoken": "^9.0.3",
     "jspdf": "^3.0.4",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.562.0",
     "mongoose": "^9.0.2",
+    "multer": "^2.0.2",
     "next": "16.1.1",
     "nodemailer": "^7.0.12",
     "react": "19.2.3",
@@ -27,6 +30,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/jwt-decode": "^2.2.1",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.4",
     "@types/react": "^19",

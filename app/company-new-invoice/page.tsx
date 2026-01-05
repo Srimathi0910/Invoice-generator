@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Eye, FileText, StickyNote, Paperclip, Info, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -25,13 +25,38 @@ type Item = {
 };
 
 
+
+
+
 export default function InvoicePage() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Invoices");
-  const [user, setUser] = useState<{ username: string; email?: string } | null>(null);
+  const [user, setUser] = useState<{ _id: string; username: string; email?: string } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+
+    const file = e.target.files[0];
+
+    // convert to base64
+    const base64Logo = await fileToBase64(file);
+
+    // store base64 for preview & PDF
+    setLogoPreview(base64Logo);
+  };
 
   const [errors, setErrors] = useState<any>({
     billedBy: {},
@@ -43,10 +68,16 @@ export default function InvoicePage() {
     if (!storedUser) {
       router.replace("/login");
     } else {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      if (!parsedUser._id) {
+        router.replace("/login"); // if _id missing, force login
+      } else {
+        setUser(parsedUser);
+      }
     }
     setLoadingUser(false);
   }, [router]);
+
   /* ---------------- Invoice Meta ---------------- */
   const [invoiceMeta, setInvoiceMeta] = useState({
     invoiceNumber: "",
@@ -179,51 +210,113 @@ export default function InvoicePage() {
     setTotals(calculatedTotals);
   };
 
+  // 1. Fix logoUrl undefined
   const handleSaveInvoice = async (e?: React.FormEvent) => {
-  e?.preventDefault();
-  if (!validateInvoice()) return;
+    e?.preventDefault();
 
-  setIsSaving(true); // 🔹 START saving
+    if (!validateInvoice()) return;
 
-  try {
-    const invoiceDate = new Date(invoiceMeta.invoiceDate);
-    const dueDate = new Date(invoiceMeta.dueDate);
+    if (!user?._id) {
+      alert("User not logged in");
+      return router.push("/login");
+    }
 
-    const calculatedTotals = computeTotals();
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/login");
 
-    const invoiceData = {
-      invoiceNumber: invoiceMeta.invoiceNumber.trim(),
-      invoiceDate,
-      dueDate,
-      billedBy,
-      billedTo,
-      items,
-      extras,
-      totals: calculatedTotals,
-      totalInWords: `${calculatedTotals.grandTotal} rupees only`,
-        userId: (user as any)?._id || ""
+    setIsSaving(true);
+
+    try {
+      const calculatedTotals = computeTotals();
+
+      // 1️⃣ Declare invoiceData first
+      const invoiceData = {
+        invoiceNumber: invoiceMeta.invoiceNumber.trim(),
+        invoiceDate: new Date(invoiceMeta.invoiceDate),
+        dueDate: new Date(invoiceMeta.dueDate),
+        billedBy,
+        billedTo,
+        items,
+        extras,
+        totals: calculatedTotals,
+        totalInWords: `${calculatedTotals.grandTotal} rupees only`,
+        logoUrl: logoPreview || "",   // ✅ ONLY THIS
+        userId: (user as any)?._id || "",
+      };
+
+      // 2️⃣ Then create FormData
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(invoiceData));
+
+      if (logoFile) formData.append("file", logoFile);
+
+      // 3️⃣ Send POST request
+      const res = await fetch("/api/auth/invoice", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await res.json();
+      alert(data.success ? "Invoice saved successfully!" : `Failed: ${data.error}`);
+    } catch (err) {
+      console.error(err);
+      alert("Error saving invoice");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const loadCompanySettings = async () => {
+      try {
+        const res = await fetch("/api/auth/company/settings", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          cache: "no-store",
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        // Set default GST rate & invoice prefix
+        setInvoiceMeta((prev) => ({
+          ...prev,
+          invoiceNumber: data.billedBy?.invoicePrefix || "",
+        }));
+
+        setItems((prev) =>
+          prev.map((item) => ({ ...item, gst: data.billedBy?.gstRate || 18 }))
+        );
+
+        if (data.logoUrl) setLogoPreview(data.logoUrl);
+
+        setBilledBy({
+          country: data.billedBy?.country || "",
+          businessName: data.billedBy?.businessName || "",
+          email: data.billedBy?.email || "",
+          phone: data.billedBy?.phone || "",
+          gstin: data.billedBy?.gstin || "",
+          address: data.billedBy?.address || "",
+          city: data.billedBy?.city || "",
+        });
+      } catch (err) {
+        console.error("Error loading company settings:", err);
+      }
     };
 
-    const res = await fetch("/api/auth/invoice", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(invoiceData),
-    });
+    loadCompanySettings();
+  }, []);
 
-    const data = await res.json();
 
-    if (data.success) {
-      alert("Invoice saved successfully!");
-    } else {
-      alert("Failed to save invoice: " + data.error);
-    }
-  } catch (err: any) {
-    console.error(err);
-    alert("Error saving invoice");
-  } finally {
-    setIsSaving(false); // 🔹 END saving (success or error)
-  }
-};
+
 
 
   const menuItems = [
@@ -251,7 +344,11 @@ export default function InvoicePage() {
       extras,
       totals: calculatedTotals,
       totalInWords: `${calculatedTotals.grandTotal} rupees only`,
-      userId: (user as any)?._id || "", // user._id must come from login
+      logoUrl: typeof logoPreview === "string" && logoPreview.startsWith("http")
+        ? logoPreview
+        : "",
+
+
 
     };
 
@@ -330,49 +427,93 @@ export default function InvoicePage() {
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-semibold">Invoice</h1>
-          <button
-            type="button"
-            className="border border-dashed px-4 py-2 rounded"
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="w-20 h-20 border border-dashed rounded flex items-center justify-center cursor-pointer overflow-hidden hover:bg-gray-50"
           >
-            Add Business Logo
-          </button>
+            {logoPreview ? (
+              <img
+                src={logoPreview}
+                alt="Company Logo"
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <span className="text-sm text-gray-500">Logo</span>
+            )}
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+
+              setLogoFile(file); // ✅ store file
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                setLogoPreview(reader.result as string); // base64
+              };
+              reader.readAsDataURL(file);
+
+            }}
+          />
+
         </div>
 
         {/* INVOICE META */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <input
-            className="input"
-            placeholder="Invoice Number"
-            required
-            value={invoiceMeta.invoiceNumber}
-            onChange={(e) =>
-              setInvoiceMeta({ ...invoiceMeta, invoiceNumber: e.target.value })
-            }
-          />
-          <input
-            className="input"
-            type="date"
-            required
-            value={invoiceMeta.invoiceDate}
-            onChange={(e) =>
-              setInvoiceMeta({
-                ...invoiceMeta,
-                invoiceDate: e.target.value,
-              })
-            }
-          />
-          <input
-            className="input"
-            type="date"
-            required
-            value={invoiceMeta.dueDate}
-            onChange={(e) =>
-              setInvoiceMeta({
-                ...invoiceMeta,
-                dueDate: e.target.value,
-              })
-            }
-          />
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              Invoice Number
+            </label>
+
+            <input
+              className="input"
+              placeholder="Invoice Number"
+              required
+              value={invoiceMeta.invoiceNumber}
+              onChange={(e) =>
+                setInvoiceMeta({ ...invoiceMeta, invoiceNumber: e.target.value })
+              }
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              Date
+            </label>
+
+            <input
+              className="input"
+              type="date"
+              required
+              value={invoiceMeta.invoiceDate}
+              onChange={(e) =>
+                setInvoiceMeta({
+                  ...invoiceMeta,
+                  invoiceDate: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              Due Date
+            </label>
+            <input
+              className="input"
+              type="date"
+              required
+              value={invoiceMeta.dueDate}
+              onChange={(e) =>
+                setInvoiceMeta({
+                  ...invoiceMeta,
+                  dueDate: e.target.value,
+                })
+              }
+            />
+          </div>
         </div>
 
         {/* REST OF THE FORM REMAINS EXACTLY THE SAME */}
@@ -537,10 +678,9 @@ export default function InvoicePage() {
                         <input
                           className="input-sm"
                           type="number"
+                          value={item.gst} // will show default GST from settings
                           required
-                          onChange={(e) =>
-                            handleChange(i, "gst", e.target.value)
-                          }
+                          onChange={(e) => handleChange(i, "gst", e.target.value)}
                         />
                       </td>
                       <td className="td">
