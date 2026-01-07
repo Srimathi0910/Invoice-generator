@@ -237,7 +237,7 @@ export default function ClientsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-6 text-center">
+                  <td colSpan={6} className="py-6 text-center">
                     No clients found
                   </td>
                 </tr>

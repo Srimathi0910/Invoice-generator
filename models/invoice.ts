@@ -15,7 +15,7 @@ const invoiceSchema = new mongoose.Schema({
     city: String,
     currency: { type: String, default: "INR" },
     defaultGstRate: { type: Number, default: 18 },
-    invoicePrefix: { type: String, default: "INV" },
+    invoicePrefix: { type: String, default: "INV-" },
     bankName: String,
     accountNumber: String,
   },
@@ -47,8 +47,8 @@ const invoiceSchema = new mongoose.Schema({
     round: Number,
     paymentMethod: {
       type: String,
-      enum: ["UPI", "Credit/Debit Card", "Net Banking", "Wallet"],
-      default: "UPI",
+    enum: ["UPI", "Credit/Debit Card", "Net Banking", "Wallet"],
+    default: null,
     },
   },
 

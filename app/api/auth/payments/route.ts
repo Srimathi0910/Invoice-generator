@@ -13,7 +13,7 @@ export async function GET() {
       invoiceNumber: inv.invoiceNumber,
       clientName: inv.billedTo?.businessName || "N/A",
       paymentDate: inv.dueDate ? new Date(inv.dueDate).toISOString() : "",
-      paymentMethod: inv.extras?.paymentMethod || "UPI", // default to UPI
+      paymentMethod: inv.extras?.paymentMethod || "NA", // default to UPI
       paymentStatus: inv.extras?.paymentStatus || inv.status || "Unpaid", // fallback to root status
       amount: inv.totals?.grandTotal || 0,
     }));

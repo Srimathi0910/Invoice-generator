@@ -16,7 +16,6 @@ import {
 /* ---------------- MAIN PAGE ---------------- */
 export default function SettingsPage() {
   const router = useRouter();
-
   const [activeMenu, setActiveMenu] = useState("Settings");
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<{ username: string } | null>(null);
@@ -45,6 +44,30 @@ export default function SettingsPage() {
     upiId: "",
   });
 
+  const [preferences, setPreferences] = useState({
+    dueDateReminder: true,
+    overdueAlert: true,
+    paymentReceived: true,
+    reminderPeriod: 3,
+    theme: "light",
+    reminderDueDate: null,
+  });
+
+  /* ---------------- HANDLE CHANGES ---------------- */
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setPreferences({ ...preferences, [name]: checked });
+  };
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (name === "reminderPeriod") {
+      setPreferences({ ...preferences, [name]: Number(value) });
+    } else {
+      setPreferences({ ...preferences, [name]: value });
+    }
+  };
+
   /* ---------------- LOAD USER ---------------- */
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -56,30 +79,18 @@ export default function SettingsPage() {
   }, [router]);
 
   /* ---------------- LOAD COMPANY SETTINGS ---------------- */
-  /* ---------------- LOAD COMPANY SETTINGS ---------------- */
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
     const token = localStorage.getItem("token");
-    if (!token) {
-      console.log("No token found for GET");
-      return;
-    }
+    if (!token) return;
 
     const loadCompany = async () => {
       try {
         const res = await fetch("/api/auth/company/settings", {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          cache: "no-store", // 🔥 prevents Next.js caching
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
         });
-
-        if (!res.ok) {
-          console.error("GET failed:", res.status);
-          return;
-        }
+        if (!res.ok) return console.error("GET failed:", res.status);
 
         const data = await res.json();
 
@@ -92,18 +103,24 @@ export default function SettingsPage() {
           address: data.billedBy?.address || "",
           city: data.billedBy?.city || "",
           country: data.billedBy?.country || "",
-
           currency: data.billedBy?.currency || "INR",
           gstRate: data.billedBy?.gstRate || 18,
           invoicePrefix: data.billedBy?.invoicePrefix || "INV-2025-",
-
           bankName: data.billedBy?.bankName || "",
           accountNumber: data.billedBy?.accountNumber || "",
-
           logoUrl: data.logoUrl || "",
         }));
 
         setLogoPreview(data.logoUrl || null);
+
+        // Load preferences if available
+        if (data.preferences) {
+          setPreferences({
+            ...preferences,
+            ...data.preferences,
+            reminderPeriod: Number(data.preferences.reminderPeriod) || 3,
+          });
+        }
       } catch (err) {
         console.error("Error loading company settings:", err);
       }
@@ -111,18 +128,11 @@ export default function SettingsPage() {
 
     loadCompany();
   }, []);
-  useEffect(() => {
-    console.log("TOKEN FROM LS:", localStorage.getItem("token"));
-  }, []);
 
-
-  /* ---------------- SAVE SETTINGS ---------------- */
+  /* ---------------- SAVE COMPANY SETTINGS ---------------- */
   const handleSave = async () => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Unauthorized");
-      return;
-    }
+    if (!token) return alert("Unauthorized");
 
     try {
       const res = await fetch("/api/auth/company/settings", {
@@ -133,13 +143,36 @@ export default function SettingsPage() {
         },
         body: JSON.stringify(formData),
       });
-
       const data = await res.json();
       if (res.ok) alert("Settings updated successfully!");
       else alert("Error: " + data.message);
     } catch (err) {
-      alert("Error saving settings");
       console.error(err);
+      alert("Error saving settings");
+    }
+  };
+
+  /* ---------------- SAVE PREFERENCES ---------------- */
+  const savePreferences = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Unauthorized");
+
+    try {
+      const res = await fetch("/api/auth/company/preferences", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(preferences),
+      });
+      const data = await res.json();
+
+      if (res.ok) alert("Preferences saved successfully!");
+      else alert("Error saving preferences: " + data.message);
+    } catch (err) {
+      console.error("Error saving preferences:", err);
+      alert("Error saving preferences");
     }
   };
 
@@ -158,6 +191,23 @@ export default function SettingsPage() {
     { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
     { icon: <FaCog />, label: "Settings", path: "/settings" },
   ];
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    fetch("/api/auth/company/preferences", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.preferences) {
+          setPreferences({
+            ...preferences,
+            ...data.preferences,
+          });
+        }
+      });
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-200">
@@ -165,15 +215,11 @@ export default function SettingsPage() {
       <div className="bg-white rounded-lg p-4 shadow mb-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
           <div className="text-xl font-bold cursor-pointer">Dashboard</div>
-
-          {/* Mobile Toggle */}
           <div className="md:hidden">
             <button onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
             </button>
           </div>
-
-          {/* Menu */}
           <div
             className={`flex flex-col md:flex-row gap-6 md:gap-10 items-start md:items-center w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
               }`}
@@ -190,8 +236,6 @@ export default function SettingsPage() {
                 }}
               />
             ))}
-
-            {/* User */}
             <div className="flex flex-col items-end">
               <div className="flex items-center gap-2 bg-white px-4 py-2 rounded shadow">
                 <FaUserCircle size={26} />
@@ -211,25 +255,23 @@ export default function SettingsPage() {
       {/* ---------------- PAGE CONTENT ---------------- */}
       <div className="px-4 sm:px-6 md:px-10 lg:px-16 py-8">
         <h1 className="text-3xl font-bold mb-6">Settings</h1>
-
         <div className="bg-white rounded-xl p-6 sm:p-8">
           {/* -------- Tabs -------- */}
           <div className="flex gap-10 mb-8">
             <span
               onClick={() => setActiveTab("company")}
               className={`cursor-pointer font-semibold pb-1 ${activeTab === "company"
-                ? "text-[#8F90DF] underline border-purple-600"
-                : "text-gray-800"
+                  ? "text-[#8F90DF] underline border-purple-600"
+                  : "text-gray-800"
                 }`}
             >
               Company Profile
             </span>
-
             <span
               onClick={() => setActiveTab("preferences")}
               className={`cursor-pointer font-semibold pl-10 pb-1 ${activeTab === "preferences"
-                ? "text-[#8F90DF] underline border-purple-600"
-                : "text-gray-800"
+                  ? "text-[#8F90DF] underline border-purple-600"
+                  : "text-gray-800"
                 }`}
             >
               Preferences
@@ -240,7 +282,6 @@ export default function SettingsPage() {
           {activeTab === "company" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Card title="Company Profile">
-                {/* Logo + Company Name */}
                 <div className="flex gap-4 mb-4 items-center">
                   <div
                     onClick={() => fileInputRef.current?.click()}
@@ -265,7 +306,6 @@ export default function SettingsPage() {
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
-
                       setLogoPreview(URL.createObjectURL(file));
 
                       const uploadData = new FormData();
@@ -273,12 +313,9 @@ export default function SettingsPage() {
                       const token = localStorage.getItem("token");
                       const res = await fetch("/api/auth/company/upload-logo", {
                         method: "POST",
-                        headers: {
-                          Authorization: `Bearer ${token}`,
-                        },
+                        headers: { Authorization: `Bearer ${token}` },
                         body: uploadData,
                       });
-
                       const data = await res.json();
                       setFormData({ ...formData, logoUrl: data.logoUrl });
                     }}
@@ -302,7 +339,6 @@ export default function SettingsPage() {
                     setFormData({ ...formData, email: e.target.value })
                   }
                 />
-
                 <textarea
                   className="border px-3 py-2 w-full mb-3"
                   rows={4}
@@ -312,7 +348,6 @@ export default function SettingsPage() {
                     setFormData({ ...formData, address: e.target.value })
                   }
                 />
-
                 <input
                   className="border px-3 py-2 w-full mb-3"
                   placeholder="GSTIN"
@@ -321,7 +356,6 @@ export default function SettingsPage() {
                     setFormData({ ...formData, gstin: e.target.value })
                   }
                 />
-
                 <input
                   className="border px-3 py-2 w-full mb-3"
                   placeholder="Phone"
@@ -358,9 +392,7 @@ export default function SettingsPage() {
                   <option value={5}>5%</option>
                 </select>
 
-                <label className="block mb-1 font-medium">
-                  Invoice Number Prefix
-                </label>
+                <label className="block mb-1 font-medium">Invoice Number Prefix</label>
                 <input
                   className="border px-3 py-2 w-full mb-6"
                   value={formData.invoicePrefix}
@@ -381,63 +413,75 @@ export default function SettingsPage() {
 
           {/* ================= PREFERENCES ================= */}
           {activeTab === "preferences" && (
-            <div className="space-y-8">
-              <Card title="Appearance Preferences">
-                <label className="block mb-2 font-medium">Theme</label>
-                <select
-                  className="border px-3 py-2 w-48"
-                  value={"Light Mode"}
-                  onChange={() => { }}
-                >
-                  <option>Light Mode</option>
-                  <option>Dark Mode</option>
-                </select>
+            <div>
+              <div className="bg-white rounded-lg shadow p-6 mb-8">
+                <h2 className="text-lg font-semibold mb-4">Notifications Preferences</h2>
 
-                <button
-                  className="bg-gray-300 px-6 py-2 rounded text-sm mt-4"
-                  onClick={handleSave}
-                >
-                  Save Changes
-                </button>
-              </Card>
+                <div className="space-y-3">
+                  {["dueDateReminder", "overdueAlert", "paymentReceived"].map((field) => (
+                    <label className="flex items-center gap-3" key={field}>
+                      <input
+                        type="checkbox"
+                        name={field}
+                        checked={preferences[field as keyof typeof preferences] as boolean}
+                        onChange={handleCheckboxChange}
+                        className="h-4 w-4"
+                      />
+                      <span>{field === "dueDateReminder" ? "Due Date Reminder" : field === "overdueAlert" ? "Overdue Invoice Alert" : "Payment Received Notification"}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="mt-6 flex items-center gap-4">
+                  <span className="text-sm text-gray-600">Reminder Period:</span>
+                  <select
+                    name="reminderPeriod"
+                    value={preferences.reminderPeriod}
+                    onChange={handleSelectChange}
+                    className="border rounded px-3 py-2 text-sm"
+                  >
+                    {[1, 3, 5].map((day) => (
+                      <option key={day} value={day}>{day} Day{day > 1 ? "s" : ""} Before Due Date</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mt-6 text-right">
+                  <button
+                    onClick={savePreferences}
+                    className="bg-gray-200 hover:bg-gray-300 px-6 py-2 rounded text-sm"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-lg font-semibold mb-4">Appearance Preferences</h2>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-gray-600">Theme:</span>
+                  <select
+                    name="theme"
+                    value={preferences.theme}
+                    onChange={handleSelectChange}
+                    className="border rounded px-3 py-2 text-sm"
+                  >
+                    <option value="light">Light Mode</option>
+                    <option value="dark">Dark Mode</option>
+                  </select>
+                </div>
+
+                <div className="mt-6 text-right">
+                  <button
+                    onClick={savePreferences}
+                    className="bg-gray-200 hover:bg-gray-300 px-6 py-2 rounded text-sm"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
             </div>
           )}
-
-          <div className="mt-8">
-            <Card title="Bank Information">
-              <input
-                className="border px-3 py-2 w-full mb-3"
-                placeholder="Bank Name"
-                value={formData.bankName}
-                onChange={(e) =>
-                  setFormData({ ...formData, bankName: e.target.value })
-                }
-              />
-              <input
-                className="border px-3 py-2 w-full mb-3"
-                placeholder="Account Number"
-                value={formData.accountNumber}
-                onChange={(e) =>
-                  setFormData({ ...formData, accountNumber: e.target.value })
-                }
-              />
-              <input
-                className="border px-3 py-2 w-full mb-3"
-                placeholder="UPI ID"
-                value={formData.upiId}
-                onChange={(e) =>
-                  setFormData({ ...formData, upiId: e.target.value })
-                }
-              />
-
-              <button
-                className="bg-gray-300 px-6 py-2 rounded text-sm"
-                onClick={handleSave}
-              >
-                Save Changes
-              </button>
-            </Card>
-          </div>
         </div>
       </div>
     </div>
@@ -456,13 +500,7 @@ const MenuItem = ({ icon, label, isActive, onClick }: any) => (
   </div>
 );
 
-function Card({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border rounded-lg p-6">
       <h2 className="text-xl font-semibold mb-4">{title}</h2>

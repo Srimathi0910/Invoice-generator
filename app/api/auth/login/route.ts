@@ -37,6 +37,7 @@ export async function POST(req: Request) {
       {
         id: user._id.toString(),
         role: user.role, // 🔥 REQUIRED
+        email: user.email, 
       },
       process.env.JWT_SECRET!,
       { expiresIn: "15m" }
@@ -45,11 +46,13 @@ export async function POST(req: Request) {
     const response = NextResponse.json({
       message: "Login successful",
       role: user.role,
+      companyId: user.companyId,
       user: {
         _id: user._id.toString(),
         username: user.username,
         email: user.email,
         role: user.role,
+        companyId: user.companyId, // optional to send
       },
       token: accessToken // <-- add this
     });

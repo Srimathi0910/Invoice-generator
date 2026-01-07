@@ -81,20 +81,11 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Format response for frontend
-    const formattedInvoice = {
-      _id: invoice._id,
-      invoiceNumber: invoice.invoiceNumber,
-      clientName: invoice.billedTo?.businessName || "",
-      paymentDate: invoice.dueDate,
-      paymentMethod: invoice.extras?.paymentMethod || "UPI",
-      paymentStatus: invoice.extras?.paymentStatus || "Unpaid",
-      amount: invoice.totals?.grandTotal || 0,
-    };
-
-    return NextResponse.json({ success: true, invoice: formattedInvoice }, { status: 200 });
+    // Return the full invoice document
+    return NextResponse.json({ success: true, invoice }, { status: 200 });
   } catch (err: any) {
     console.error(err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
+
