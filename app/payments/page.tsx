@@ -33,6 +33,10 @@ export default function PaymentsPage() {
     const [editRow, setEditRow] = useState<string | null>(null); // Track which row is editable
     const [activeMenu, setActiveMenu] = useState("Invoices");
     const [menuOpen, setMenuOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [activeTab, setActiveTab] = useState("All");
+    const tabs = ["All", "Paid", "Unpaid", "Overdue"];
+
     const menuItems = [
         { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/dashboard" },
         { icon: <FaUsers />, label: "Clients", path: "/clients" },
@@ -68,8 +72,22 @@ export default function PaymentsPage() {
             })
             .catch((err) => console.error(err));
     }, []);
+const filteredPayments = payments.filter((p) => {
+    const statusMatch =
+        activeTab === "All" || p.paymentStatus === activeTab;
 
-    const totalPayments = payments.reduce((acc, p) => acc + p.amount, 0);
+   const searchMatch =
+    p.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase());
+
+
+    return statusMatch && searchMatch;
+});
+    const totalPayments = filteredPayments.reduce(
+    (acc, p) => acc + p.amount,
+    0
+);
+
 
     const handleUpdate = async (id: string, payment: Partial<Payment>) => {
         try {
@@ -97,6 +115,7 @@ export default function PaymentsPage() {
 
 
     if (loading) return <p className="p-6">Loading...</p>;
+
 
     return (
         <div className="p-6">
@@ -147,6 +166,34 @@ export default function PaymentsPage() {
             <div className="mb-4">
                 <button className="bg-white px-4 py-2 rounded shadow">+ Add Payment</button>
             </div>
+            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
+                <div className="relative w-full md:w-1/3">
+                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Search by client..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
+                    />
+
+                </div>
+
+                <div className="flex flex-wrap gap-4 md:gap-6">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`bg-white dark:bg-gray-900 text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
+                                ? "text-[#29268E] border-b-2 border-[#29268E]"
+                                : "text-black hover:text-[#29268E]"
+                                }`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             <div className="overflow-x-auto bg-white rounded shadow p-4">
                 <table className="w-full text-sm border">
@@ -162,7 +209,8 @@ export default function PaymentsPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {payments.map((p) => {
+                        {filteredPayments.map((p) => {
+
                             const isEditing = editRow === p._id;
                             return (
                                 <tr key={p._id} className="text-center">
@@ -214,7 +262,7 @@ export default function PaymentsPage() {
                                         )}
                                     </td>
 
-                                   
+
 
 
                                     <td className="p-2 border">

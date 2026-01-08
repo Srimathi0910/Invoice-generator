@@ -21,6 +21,7 @@ const Dashboard = () => {
   /* ---------------- AUTH ---------------- */
   const [user, setUser] = useState<{ username: string; email?: string } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -82,10 +83,18 @@ const Dashboard = () => {
     { icon: <FaCog />, label: "Settings", path: "/settings" },
   ];
 
-  const filteredInvoices =
-    activeTab === "All"
-      ? invoices
-      : invoices.filter((i) => i.status === activeTab);
+  const filteredInvoices = invoices.filter((inv) => {
+    const statusMatch =
+      activeTab === "All" || inv.status?.trim() === activeTab;
+
+    const clientName =
+      inv.billedTo?.businessName?.toLowerCase() || "";
+
+    const searchMatch = clientName.includes(searchTerm.toLowerCase());
+
+    return statusMatch && searchMatch;
+  });
+
 
   if (loadingUser) {
     return (
@@ -176,9 +185,12 @@ const Dashboard = () => {
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search invoices..."
+              placeholder="Search by client..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
             />
+
           </div>
 
           <div className="flex flex-wrap gap-4 md:gap-6">

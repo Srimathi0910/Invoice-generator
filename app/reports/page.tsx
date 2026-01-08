@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Calendar, Download } from "lucide-react";
-import { FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog, FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
+import { FaFileInvoiceDollar, FaUsers, FaChartBar, FaSearch, FaMoneyCheckAlt, FaCog, FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
 
 export default function ReportsPage() {
     const router = useRouter();
@@ -13,6 +13,8 @@ export default function ReportsPage() {
     const [loading, setLoading] = useState(true);
     const [activeMenu, setActiveMenu] = useState("Reports");
     const [menuOpen, setMenuOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState("All");
+    const [searchTerm, setSearchTerm] = useState("");
 
     /* ---------------- AUTH ---------------- */
     useEffect(() => {
@@ -76,6 +78,18 @@ export default function ReportsPage() {
         { name: "Unpaid", value: unpaidInvoices, color: "#E06A2A" },
         { name: "Overdue", value: overdueInvoices, color: "#E51F22" },
     ];
+    const tabs = ["All", "Paid", "Unpaid", "Overdue"];
+    const filteredInvoices = invoices.filter((inv) => {
+        const statusMatch =
+            activeTab === "All" || inv.status?.trim() === activeTab;
+
+        const clientName =
+            inv.billedTo?.businessName?.toLowerCase() || "";
+
+        const searchMatch = clientName.includes(searchTerm.toLowerCase());
+
+        return statusMatch && searchMatch;
+    });
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6 text-black dark:text-white">
@@ -168,6 +182,72 @@ export default function ReportsPage() {
                     </ResponsiveContainer>
                 </div>
             </div>
+            <h2 className="text-xl font-semibold pl-2 pt-20 mb-4">Recent Invoices</h2>
+
+            <div className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
+                    <div className="relative w-full md:w-1/3">
+                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by client..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
+                        />
+
+                    </div>
+
+                    <div className="flex flex-wrap gap-4 md:gap-6">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`bg-white dark:bg-gray-900 text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
+                                    ? "text-[#29268E] border-b-2 border-[#29268E]"
+                                    : "text-black hover:text-[#29268E]"
+                                    }`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <table className="min-w-full border table-auto">
+                    <thead className="bg-gray-100 bg-white dark:bg-gray-900">
+                        <tr>
+                            <Th>Invoice</Th>
+                            <Th>Client</Th>
+                            <Th>Amount</Th>
+                            <Th>Status</Th>
+                            <Th>Date</Th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredInvoices.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="text-center py-6 text-gray-500">
+                                    No invoices created yet
+                                </td>
+                            </tr>
+                        ) : (
+                            filteredInvoices.map((inv) => (
+                                <InvoiceRow
+                                    key={inv._id}
+                                    id={inv.invoiceNumber}
+                                    client={inv.billedTo.businessName}
+                                    amount={`₹${inv.totals?.grandTotal ?? 0}`}
+                                    status={(inv.status ?? "N/A").trim()} // remove spaces
+                                    date={new Date(inv.invoiceDate).toLocaleDateString()}
+                                />
+
+                            ))
+                        )}
+                    </tbody>
+
+                </table>
+            </div>
         </div>
     );
 }
@@ -181,3 +261,30 @@ const MenuItem = ({ icon, label, isActive, onClick }: any) => (
         <span>{label}</span>
     </div>
 );
+const Th = ({ children }: { children: React.ReactNode }) => (
+    <th className="px-4 py-2 text-left whitespace-nowrap">{children}</th>
+);
+
+const InvoiceRow = ({ id, client, amount, status, date }: any) => {
+    const colors: Record<string, string> = {
+        Paid: "bg-[#05410C]",       // dark green
+        Unpaid: "bg-[#E06A2A]",     // orange
+        Overdue: "bg-[#E51F22]",    // red
+    };
+
+
+    return (
+        <tr className="border-t">
+            <td className="px-4 py-2">{id}</td>
+            <td className="px-4 py-2">{client}</td>
+            <td className="px-4 py-2">{amount}</td>
+            <td className="px-4 py-2">
+                <button className={`px-2 py-1 text-white rounded ${colors[status] ?? "bg-gray-400"}`}>
+                    {status}
+                </button>
+
+            </td>
+            <td className="px-4 py-2">{date}</td>
+        </tr>
+    );
+};
