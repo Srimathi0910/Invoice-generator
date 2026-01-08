@@ -32,23 +32,22 @@ const invoiceSchema = new mongoose.Schema({
 
   items: [
     {
-      itemName: String,
+      itemName: { type: String, required: true },
       hsn: String,
       gst: Number,
-      qty: Number,
-      rate: Number,
+      qty: { type: Number, required: true },
+      rate: { type: Number, required: true },
     },
   ],
 
-  // Extras now includes payment info explicitly
   extras: {
     discount: Number,
     charges: Number,
     round: Number,
     paymentMethod: {
       type: String,
-    enum: ["UPI", "Credit/Debit Card", "Net Banking", "Wallet"],
-    default: null,
+      enum: ["UPI", "Credit/Debit Card", "Net Banking", "Wallet"],
+      default: undefined,
     },
   },
 
@@ -66,7 +65,7 @@ const invoiceSchema = new mongoose.Schema({
 
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
-  logoUrl: String, // optional
+  logoUrl: String,
 });
 
 export default mongoose.models.Invoice || mongoose.model("Invoice", invoiceSchema);
