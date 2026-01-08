@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock } from "lucide-react";
-import { motion } from "framer-motion";
 
 export default function Login() {
   const router = useRouter();
@@ -51,12 +50,12 @@ export default function Login() {
           setErrors((prev) => ({ ...prev, general: data.error || "Login failed" }));
         }
       } else {
-        localStorage.setItem("user", JSON.stringify({
-          _id: data.user._id,       // ✅ make sure _id is stored
-          username: data.user.username,
-          email: data.user.email
-        }));
-        localStorage.setItem("token", data.token);
+localStorage.setItem("user", JSON.stringify({
+  _id: data.user._id,       // ✅ make sure _id is stored
+  username: data.user.username,
+  email: data.user.email
+}));
+localStorage.setItem("token", data.token);
         localStorage.setItem("token", data.token);
 
         if (data.role === "company") router.replace("/dashboard");
@@ -94,16 +93,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#D9D9D9] p-4">
-      <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{
-          duration: 0.7,
-          ease: "easeOut",
-        }}
-        className="flex flex-col md:flex-row w-full max-w-[900px] md:h-[586px] bg-white rounded-xl shadow-lg overflow-hidden p-3"
-      >
-
+      <div className="flex flex-col md:flex-row w-full max-w-[900px] md:h-[586px] bg-white rounded-xl shadow-lg overflow-hidden p-3">
         {/* LEFT FORM */}
         <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-8 md:px-10">
           <h2 className="text-2xl font-bold mb-6 text-black text-center">
@@ -198,8 +188,7 @@ export default function Login() {
             </h1>
           </div>
         </div>
-   </motion.div>
-
-    </div >
+      </div>
+    </div>
   );
 }
