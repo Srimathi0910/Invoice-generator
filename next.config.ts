@@ -6,9 +6,10 @@ const nextConfig: NextConfig = {
     config.resolve.alias['@'] = path.resolve(__dirname);
     return config;
   },
-  // Force Webpack instead of Turbopack
+  // Disable Turbopack by default in builds
+  // This is the proper way in Next 16+ 
   experimental: {
-    turbo: false,
+    fullySpecified: false,
   },
 };
 
