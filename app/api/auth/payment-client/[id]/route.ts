@@ -7,12 +7,12 @@ import { connectDB } from "@/lib/db";
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
 
-    const { id } = context.params;
+    const { id } = params;
 
     // Validate MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
