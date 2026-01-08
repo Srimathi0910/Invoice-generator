@@ -1,8 +1,16 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
-  // Add this to silence Turbopack vs Webpack issues
-  turbopack: {},
+  webpack: (config) => {
+    // Optional: Add alias for imports
+    config.resolve.alias['@'] = path.resolve(__dirname);
+    return config;
+  },
+  // Explicitly tell Next.js to use Webpack
+  experimental: {
+    turbo: false,
+  },
 };
 
 export default nextConfig;
