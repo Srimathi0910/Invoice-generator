@@ -3,11 +3,12 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   webpack: (config) => {
+    // Alias for imports
     config.resolve.alias['@'] = path.resolve(__dirname);
     return config;
   },
-  // Force Webpack for builds
-  turbopack: {}, // empty object disables Turbopack for this project
+  // Disable Turbopack by explicitly providing an empty config
+  turbopack: {}, 
 };
 
 export default nextConfig;
