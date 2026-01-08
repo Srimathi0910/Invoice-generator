@@ -3,11 +3,7 @@ import mongoose from "mongoose";
 import Invoice from "@/models/invoice";
 import { connectDB } from "@/lib/db";
 
-interface Params {
-  id: string;
-}
-
-export async function GET(req: NextRequest, context: { params: Params }) {
+export async function GET(req: NextRequest, context: { params: { id: string } }) {
   try {
     await connectDB();
 
