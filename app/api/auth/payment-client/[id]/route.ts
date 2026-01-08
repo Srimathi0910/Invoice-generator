@@ -7,12 +7,19 @@ import { connectDB } from "@/lib/db";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }
 ) {
   try {
+    if (!params?.id) {
+      return NextResponse.json(
+        { message: "Invoice ID is required" },
+        { status: 400 }
+      );
+    }
+
     await connectDB();
 
-    const { id } = params;
+    const id = params.id;
 
     // Validate MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
