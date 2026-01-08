@@ -78,7 +78,7 @@ export default function ReportsPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-100 p-6">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6 text-black dark:text-white">
             <div className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
                 <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
                     {/* LOGO */}
@@ -174,7 +174,7 @@ export default function ReportsPage() {
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
     <div
         onClick={onClick}
-        className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
+        className={`bg-white dark:bg-gray-900 flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
             }`}
     >
         {icon}

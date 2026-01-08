@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Akaya_Telivigala } from "next/font/google";
 import "./globals.css";
+import ThemeProvider from "./_components/ThemeProvider"; // new client component
 
 const akayaTelivigala = Akaya_Telivigala({
   subsets: ["latin"],
@@ -21,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${akayaTelivigala.className} antialiased`}>
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

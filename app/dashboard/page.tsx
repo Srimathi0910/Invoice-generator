@@ -98,7 +98,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
       {/* ---------------- TOP MENU ---------------- */}
-      <div className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
         <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
           {/* LOGO */}
         </div>
@@ -186,7 +186,7 @@ const Dashboard = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
+                className={`bg-white dark:bg-gray-900 text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
                   ? "text-[#29268E] border-b-2 border-[#29268E]"
                   : "text-black hover:text-[#29268E]"
                   }`}
@@ -198,7 +198,7 @@ const Dashboard = () => {
         </div>
 
         <table className="min-w-full border table-auto">
-          <thead className="bg-gray-100">
+          <thead className="bg-gray-100 bg-white dark:bg-gray-900">
             <tr>
               <Th>Invoice</Th>
               <Th>Client</Th>
@@ -240,7 +240,7 @@ const Dashboard = () => {
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
   <div
     onClick={onClick}
-    className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
+    className={`bg-white dark:bg-gray-900 flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
       }`}
   >
     {icon}

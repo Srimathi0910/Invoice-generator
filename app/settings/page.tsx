@@ -208,9 +208,19 @@ export default function SettingsPage() {
         }
       });
   }, []);
+  useEffect(() => {
+    if (preferences.theme === "dark") {
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
+    } else {
+      document.documentElement.classList.add("light");
+      document.documentElement.classList.remove("dark");
+    }
+  }, [preferences.theme]);
 
   return (
     <div className="min-h-screen bg-gray-200">
+
       {/* ---------------- NAVBAR ---------------- */}
       <div className="bg-white rounded-lg p-4 shadow mb-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
@@ -260,18 +270,18 @@ export default function SettingsPage() {
           <div className="flex gap-10 mb-8">
             <span
               onClick={() => setActiveTab("company")}
-              className={`cursor-pointer font-semibold pb-1 ${activeTab === "company"
-                  ? "text-[#8F90DF] underline border-purple-600"
-                  : "text-gray-800"
+              className={`bg-white dark:bg-gray-900 cursor-pointer font-semibold pb-1 ${activeTab === "company"
+                ? "text-[#8F90DF] underline border-purple-600"
+                : "text-gray-800"
                 }`}
             >
               Company Profile
             </span>
             <span
               onClick={() => setActiveTab("preferences")}
-              className={`cursor-pointer font-semibold pl-10 pb-1 ${activeTab === "preferences"
-                  ? "text-[#8F90DF] underline border-purple-600"
-                  : "text-gray-800"
+              className={`bg-white dark:bg-gray-900 cursor-pointer font-semibold pl-10 pb-1 ${activeTab === "preferences"
+                ? "text-[#8F90DF] underline border-purple-600"
+                : "text-gray-800"
                 }`}
             >
               Preferences
@@ -408,7 +418,48 @@ export default function SettingsPage() {
                   Save Changes
                 </button>
               </Card>
+              <div className="md:col-span-2">
+                <Card title="Bank Information" >
+                  <label className="block mb-1 font-medium">Bank Name</label>
+                  <input
+                    className="border px-3 py-2 w-full mb-4"
+                    placeholder="Bank Name"
+                    value={formData.bankName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, bankName: e.target.value })
+                    }
+                  />
+
+                  <label className="block mb-1 font-medium">Account Number</label>
+                  <input
+                    className="border px-3 py-2 w-full mb-4"
+                    placeholder="Account Number"
+                    value={formData.accountNumber}
+                    onChange={(e) =>
+                      setFormData({ ...formData, accountNumber: e.target.value })
+                    }
+                  />
+
+                  <label className="block mb-1 font-medium">UPI ID (Optional)</label>
+                  <input
+                    className="border px-3 py-2 w-full mb-6"
+                    placeholder="example@upi"
+                    value={formData.upiId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, upiId: e.target.value })
+                    }
+                  />
+
+                  <button
+                    className="bg-gray-300 px-6 py-2 rounded text-sm"
+                    onClick={handleSave}
+                  >
+                    Save Bank Details
+                  </button>
+                </Card>
+              </div>
             </div>
+
           )}
 
           {/* ================= PREFERENCES ================= */}
@@ -459,7 +510,7 @@ export default function SettingsPage() {
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-lg font-semibold mb-4">Appearance Preferences</h2>
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-600">Theme:</span>
+                  <span className="bg-white dark:bg-gray-900 text-sm text-gray-600">Theme:</span>
                   <select
                     name="theme"
                     value={preferences.theme}
@@ -467,7 +518,7 @@ export default function SettingsPage() {
                     className="border rounded px-3 py-2 text-sm"
                   >
                     <option value="light">Light Mode</option>
-                    <option value="dark">Dark Mode</option>
+                    {/* <option value="dark">Dark Mode</option> */}
                   </select>
                 </div>
 
@@ -492,7 +543,7 @@ export default function SettingsPage() {
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
   <div
     onClick={onClick}
-    className={`flex gap-2 items-center cursor-pointer ${isActive ? "text-[#8F90DF] underline" : "text-black"
+    className={`bg-white dark:bg-gray-900 flex gap-2 items-center cursor-pointer ${isActive ? "text-[#8F90DF] underline" : "text-black"
       }`}
   >
     {icon}

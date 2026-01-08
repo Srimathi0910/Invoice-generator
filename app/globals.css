@@ -44,3 +44,27 @@ body {
 /* .btn-outline {
   @apply border px-4 py-2 rounded-md text-sm hover:bg-gray-100;
 } */
+/* styles/globals.css */
+
+body {
+  @apply bg-white text-black; /* default light mode */
+}
+
+html.dark body {
+  @apply bg-black text-white; /* dark mode */
+}
+
+/* Optional: update cards and buttons */
+html.dark .bg-white {
+  @apply bg-gray-900 text-white;
+}
+
+html.dark .bg-gray-200 {
+  @apply bg-gray-800 text-white;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  @apply bg-gray-800 text-white border-gray-600;
+}

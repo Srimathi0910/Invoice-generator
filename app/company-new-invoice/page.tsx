@@ -465,12 +465,19 @@ export default function InvoicePage() {
         {/* INVOICE META */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">
+            <label className="ext-sm font-medium text-gray-700">
               Invoice Number
             </label>
 
             <input
-              className="input"
+              className="w-full
+    p-2
+    bg-white dark:bg-gray-900
+    text-black dark:text-white
+    border-2 border-black dark:border-white
+    rounded-md
+    focus:outline-none
+    focus:ring-0"
               placeholder="Invoice Number"
               required
               value={invoiceMeta.invoiceNumber}
@@ -485,7 +492,14 @@ export default function InvoicePage() {
             </label>
 
             <input
-              className="input"
+              className="w-full
+    p-2
+    bg-white dark:bg-gray-900
+    text-black dark:text-white
+    border-2 border-black dark:border-white
+    rounded-md
+    focus:outline-none
+    focus:ring-0"
               type="date"
               required
               value={invoiceMeta.invoiceDate}
@@ -502,7 +516,14 @@ export default function InvoicePage() {
               Due Date
             </label>
             <input
-              className="input"
+              className="w-full
+    p-2
+    bg-white dark:bg-gray-900
+    text-black dark:text-white
+    border-2 border-black dark:border-white
+    rounded-md
+    focus:outline-none
+    focus:ring-0"
               type="date"
               required
               value={invoiceMeta.dueDate}
@@ -527,226 +548,181 @@ export default function InvoicePage() {
 
 
         {/* BILLED DETAILS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-          <div className="bg-gray-50 p-5 rounded-lg">
-            <h3 className="font-semibold mb-4">Billed By (Your Details)</h3>
-            <div className="grid gap-3">
 
-
-              {Object.keys(billedBy).map((key) => (
-                <div key={key}>
-                  <input
-                    type={key === "email" ? "email" : "text"}
-                    className={`input ${errors.billedBy?.[key] ? "border-red-500" : ""
-                      }`}
-                    placeholder={
-                      key === "email"
-                        ? "Email ID"
-                        : key === "phone"
-                          ? "Mobile Number"
-                          : key.replace(/([A-Z])/g, " $1")
-                    }
-                    value={(billedBy as any)[key]}
-                    onChange={(e) => {
-                      const value = e.target.value;
-
-                      setBilledBy({ ...billedBy, [key]: value });
-
-                      // Phone validation
-                      if (key === "phone") {
-                        setErrors((prev: any) => ({
-                          ...prev,
-                          billedBy: {
-                            ...prev.billedBy,
-                            phone:
-                              value && !isValidPhone(value)
-                                ? "Mobile number must be 10 digits"
-                                : "",
-                          },
-                        }));
-                      }
-                    }}
-                  />
-
-                  {/* ERROR MESSAGE */}
-                  {errors.billedBy?.[key] && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.billedBy[key]}
-                    </p>
-                  )}
-                </div>
-              ))}
-
-            </div>
-          </div>
-
-          <div className="bg-gray-50 p-5 rounded-lg">
-
-            <h3 className="font-semibold mb-4">Billed To (Client’s Details)</h3>
-            <div className="grid gap-3">
-              {Object.keys(billedTo).map((key) => (
-                <div key={key}>
-                  <input
-                    type={key === "email" ? "email" : "text"}
-                    className={`input ${errors.billedTo?.[key] ? "border-red-500" : ""
-                      }`}
-                    placeholder={
-                      key === "email"
-                        ? "Email ID"
-                        : key === "phone"
-                          ? "Mobile Number"
-                          : key.replace(/([A-Z])/g, " $1")
-                    }
-                    value={(billedTo as any)[key]}
-                    onChange={(e) => {
-                      const value = e.target.value;
-
-                      setBilledTo({ ...billedTo, [key]: value });
-
-                      if (key === "phone") {
-                        setErrors((prev: any) => ({
-                          ...prev,
-                          billedTo: {
-                            ...prev.billedTo,
-                            phone:
-                              value && !isValidPhone(value)
-                                ? "Mobile number must be 10 digits"
-                                : "",
-                          },
-                        }));
-                      }
-                    }}
-                  />
-
-                  {/* ERROR MESSAGE */}
-                  {errors.billedTo?.[key] && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.billedTo[key]}
-                    </p>
-                  )}
-                </div>
-              ))}
-
-
-            </div>
-          </div>
-        </div>
 
 
 
 
         {/* ITEMS + SUMMARY */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {/* ITEMS TABLE */}
-          <div className="lg:col-span-2 overflow-x-auto">
-            <table className="w-full border text-sm">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="th">Item</th>
-                  <th className="th">HSN</th>
-                  <th className="th">GST%</th>
-                  <th className="th">Qty</th>
-                  <th className="th">Rate</th>
-                  <th className="th">Amount</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item, i) => {
-                  const amount = item.qty * item.rate;
-                  return (
-                    <tr key={i}>
-                      <td className="td">
-                        <input
-                          className="input-sm"
-                          required
-                          onChange={(e) =>
-                            handleChange(i, "itemName", e.target.value)
-                          }
-                        />
-                      </td>
-                      <td className="td">
-                        <input
-                          className="input-sm"
-                          required
-                          onChange={(e) =>
-                            handleChange(i, "hsn", e.target.value)
-                          }
-                        />
-                      </td>
-                      <td className="td">
-                        <input
-                          className="input-sm"
-                          type="number"
-                          value={item.gst} // will show default GST from settings
-                          required
-                          onChange={(e) => handleChange(i, "gst", e.target.value)}
-                        />
-                      </td>
-                      <td className="td">
-                        <input
-                          className="input-sm"
-                          type="number"
-                          value={item.qty}
-                          required
-                          onChange={(e) =>
-                            handleChange(i, "qty", e.target.value)
-                          }
-                        />
-                      </td>
-                      <td className="td">
-                        <input
-                          className="input-sm"
-                          type="number"
-                          required
-                          onChange={(e) =>
-                            handleChange(i, "rate", e.target.value)
-                          }
-                        />
-                      </td>
-                      <td className="td">₹{amount.toFixed(2)}</td>
-                      <td className="td">
-                        <X
-                          size={16}
-                          className="text-red-600 cursor-pointer"
-                          onClick={() => removeItem(i)}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-
-            <button
-              type="button"
-              onClick={addItem}
-              className="w-full mt-3 bg-gray-200 py-2 rounded"
-            >
-              + Add New Item
-            </button>
+        {/* ---------------- BILLED DETAILS ---------------- */}
+        <div className="flex flex-col md:flex-row gap-8 mb-10 justify-center">
+          {/* Billed By */}
+          <div className="md:w-6/12 flex flex-col p-10 gap-6 bg-gray-200">
+            <h3 className="font-semibold mb-3">Billed By (Your Details)</h3>
+            {Object.keys(billedBy).map((key) => {
+              const value = (billedBy as any)[key];
+              return (
+                <div key={key} className="relative">
+                  <input
+                    type={key === "email" ? "email" : "text"}
+                    placeholder=" "
+                    value={value}
+                    onChange={(e) =>
+                      setBilledBy({ ...billedBy, [key]: e.target.value })
+                    }
+                    className="peer w-full border-b-2 border-gray-300 bg-transparent pt-5 pb-2 text-sm text-gray-900 placeholder-transparent
+                       focus:outline-none focus:border-black transition-colors duration-200"
+                  />
+                  <label
+                    className={`dark:text-white absolute left-0 text-gray-400 text-sm transition-all
+                        ${value ? 'top-0 text-blue-500 text-sm' : 'top-5 peer-placeholder-shown:text-gray-500 peer-placeholder-shown:text-base'}
+                        peer-focus:top-0 peer-focus:text-black-500 peer-focus:text-sm`}
+                  >
+                    {key === "email"
+                      ? "Email"
+                      : key === "phone"
+                        ? "Phone"
+                        : key.replace(/([A-Z])/g, " $1")}
+                  </label>
+                </div>
+              );
+            })}
           </div>
 
-          {/* RIGHT SUMMARY */}
-
-
-
-          {/* SUMMARY + TOTAL IN WORDS */}
-
-
+          {/* Billed To */}
+          <div className="md:w-6/12 flex flex-col p-10 gap-6 bg-gray-200">
+            <h3 className="font-semibold mb-3">Billed To (Client’s Details)</h3>
+            {Object.keys(billedTo).map((key) => {
+              const value = (billedTo as any)[key];
+              return (
+                <div key={key} className="relative">
+                  <input
+                    type={key === "email" ? "email" : "text"}
+                    placeholder=" "
+                    value={value}
+                    onChange={(e) =>
+                      setBilledTo({ ...billedTo, [key]: e.target.value })
+                    }
+                    className="peer w-full border-b-2 border-gray-300 bg-transparent pt-5 pb-2 text-sm text-gray-900 placeholder-transparent
+                       focus:outline-none focus:border-black transition-colors duration-200"
+                  />
+                  <label
+                    className={`absolute left-0 text-gray-400 text-sm transition-all
+                        ${value ? 'top-0 text-blue-500 text-sm' : 'top-5 peer-placeholder-shown:text-gray-500 peer-placeholder-shown:text-base'}
+                        peer-focus:top-0 peer-focus:text-black-500 peer-focus:text-sm`}
+                  >
+                    {key === "email"
+                      ? "Email"
+                      : key === "phone"
+                        ? "Phone"
+                        : key.replace(/([A-Z])/g, " $1")}
+                  </label>
+                </div>
+              );
+            })}
+          </div>
         </div>
+
+
+        {/* ---------------- ITEMS TABLE FULL WIDTH ---------------- */}
+        <div className="mb-8 overflow-x-auto w-full">
+          <table className="w-full border border-gray-300 text-sm border-collapse">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="p-2 border border-gray-300">Item</th>
+                <th className="p-2 border border-gray-300">HSN</th>
+                <th className="p-2 border border-gray-300">GST%</th>
+                <th className="p-2 border border-gray-300">Qty</th>
+                <th className="p-2 border border-gray-300">Rate</th>
+                <th className="p-2 border border-gray-300">Amount</th>
+                <th className="p-2 border border-gray-300"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item, i) => {
+                const amount = item.qty * item.rate;
+                return (
+                  <tr key={i}>
+                    <td className="p-2 border border-gray-300">
+                      <input
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                        required
+                        value={item.itemName}
+                        onChange={(e) => handleChange(i, "itemName", e.target.value)}
+                      />
+                    </td>
+                    <td className="p-2 border border-gray-300">
+                      <input
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                        required
+                        value={item.hsn}
+                        onChange={(e) => handleChange(i, "hsn", e.target.value)}
+                      />
+                    </td>
+                    <td className="p-2 border border-gray-300">
+                      <input
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                        type="number"
+                        value={item.gst}
+                        required
+                        onChange={(e) => handleChange(i, "gst", e.target.value)}
+                      />
+                    </td>
+                    <td className="p-2 border border-gray-300">
+                      <input
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                        type="number"
+                        value={item.qty}
+                        required
+                        onChange={(e) => handleChange(i, "qty", e.target.value)}
+                      />
+                    </td>
+                    <td className="p-2 border border-gray-300">
+                      <input
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                        type="number"
+                        value={item.rate}
+                        required
+                        onChange={(e) => handleChange(i, "rate", e.target.value)}
+                      />
+                    </td>
+                    <td className="p-2 border border-gray-300">₹{amount.toFixed(2)}</td>
+                    <td className="p-2 border border-gray-300 text-center">
+                      <X
+                        size={16}
+                        className="text-red-600 cursor-pointer"
+                        onClick={() => removeItem(i)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          <button
+            type="button"
+            onClick={addItem}
+            className="w-full mt-3 bg-gray-200 py-2 rounded border border-gray-300 hover:bg-gray-300 transition"
+          >
+            + Add New Item
+          </button>
+        </div>
+
+
         <div>
-          <div className="flex flex-row justify-between p-10">
-            <div className="mb-6 bg-gray-50 w-[250px] h-[200px] p-10">
+          <div className="bg-white dark:bg-gray-900 flex flex-row justify-between p-10">
+            <div className="bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-white mb-6 bg-gray-50 w-[250px] h-[200px] p-10">
+
               <div className="flex justify-between">
-                <p className="font-medium">Total (in words)</p>
+                <p className="font-medium bg-white dark:bg-gray-900">Total (in words)</p>
                 <Eye />
               </div>
               <p className="text-sm">{numberToWords(totals.grandTotal)}</p>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-              <div className="flex justify-between items-center font-semibold">
+            <div className="bg-white dark:bg-gray-900 border-2  bg-gray-50 p-4 rounded-lg space-y-3">
+              <div className=" flex justify-between items-center font-semibold">
                 <span>Show Total (PDF)</span>
                 <Eye />
               </div>
@@ -830,7 +806,7 @@ export default function InvoicePage() {
             <div className="mb-4 flex justify-end">
               <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
                 <FileText size={18} className="text-gray-500" />
-                <span className="text-sm text-gray-600 text-center">
+                <span className="bg-white dark:bg-gray-900 text-sm text-gray-600 text-center">
                   Upload Signature (PNG / JPG)
                 </span>
                 <input type="file" accept=".png,.jpg,.jpeg" className="hidden" />
@@ -843,7 +819,7 @@ export default function InvoicePage() {
                 {/* Terms & Conditions */}
                 <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
                   <FileText size={18} className="text-gray-500" />
-                  <span className="text-sm text-gray-600 text-center">
+                  <span className="bg-white dark:bg-gray-900 text-sm text-gray-600 text-center">
                     Add Terms & Conditions
                   </span>
                   <input type="file" accept=".pdf,.doc,.docx" className="hidden" />
@@ -852,7 +828,7 @@ export default function InvoicePage() {
                 {/* Notes */}
                 <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
                   <StickyNote size={18} className="text-gray-500" />
-                  <span className="text-sm text-gray-600 text-center">
+                  <span className="bg-white dark:bg-gray-900 text-sm text-gray-600 text-center">
                     Add Notes
                   </span>
                   <input
@@ -865,7 +841,7 @@ export default function InvoicePage() {
                 {/* Attachments */}
                 <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
                   <Paperclip size={18} className="text-gray-500" />
-                  <span className="text-sm text-gray-600 text-center">
+                  <span className="bg-white dark:bg-gray-900 text-sm text-gray-600 text-center">
                     Add Attachments
                   </span>
                   <input type="file" multiple className="hidden" />
@@ -879,7 +855,7 @@ export default function InvoicePage() {
                 {/* Additional Info */}
                 <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
                   <Info size={18} className="text-gray-500" />
-                  <span className="text-sm text-gray-600 text-center">
+                  <span className="bg-white dark:bg-gray-900 text-sm text-gray-600 text-center">
                     Additional Information
                   </span>
                   <input
@@ -892,7 +868,7 @@ export default function InvoicePage() {
                 {/* Contact Details */}
                 <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
                   <Phone size={18} className="text-gray-500" />
-                  <span className="text-sm text-gray-600 text-center">
+                  <span className="bg-white dark:bg-gray-900 text-sm text-gray-600 text-center">
                     Contact Details
                   </span>
                   <input type="file" accept=".pdf,.vcf" className="hidden" />
@@ -918,7 +894,7 @@ export default function InvoicePage() {
           <button
             type="button"
             onClick={handlePreview}
-            className="w-[300px] text-black underline py-3 px-4 rounded-lg cursor-pointer"
+            className="bg-white dark:bg-gray-900 w-[300px] text-black underline py-3 px-4 rounded-lg cursor-pointer"
           >
             Preview
           </button>
@@ -947,7 +923,7 @@ export default function InvoicePage() {
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
   <div
     onClick={onClick}
-    className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
+    className={`bg-white dark:bg-gray-900 flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
       }`}
   >
     {icon}
