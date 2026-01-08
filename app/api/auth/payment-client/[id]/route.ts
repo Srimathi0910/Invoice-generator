@@ -7,7 +7,7 @@ import { connectDB } from "@/lib/db";
 
 export async function GET(
   req: NextRequest,
-  { params }
+  { params }: any
 ) {
   try {
     if (!params?.id) {
