@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
-import Invoice from "@/models/Invoice";
+import Invoice from "@/models/invoice";
 import { connectDB } from "@/lib/db";
 
 /* ---------------- GET PAYMENT INVOICE ---------------- */

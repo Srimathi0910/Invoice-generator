@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import jwt from "jsonwebtoken";
-import Invoice from "@/models/Invoice";
+import Invoice from "@/models/invoice";
 
 /* ---------------- GET COMPANY SETTINGS ---------------- */
 export async function GET(req: NextRequest) {

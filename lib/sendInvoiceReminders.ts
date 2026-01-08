@@ -1,4 +1,4 @@
-import Invoice from "@/models/Invoice";
+import Invoice from "@/models/invoice";
 import NotificationPreference from "@/models/NotificationPreference";
 import ReminderLog from "@/models/ReminderLog";
 import nodemailer from "nodemailer";

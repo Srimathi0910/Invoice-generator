@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Invoice from "../../../../models/Invoice";
+import Invoice from "@/models/invoice";
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 

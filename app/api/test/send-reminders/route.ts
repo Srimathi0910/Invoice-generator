@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/db";
-import Invoice from "@/models/Invoice";
+import Invoice from "@/models/invoice";
 import NotificationPreference from "@/models/NotificationPreference";
 import ReminderLog from "@/models/ReminderLog";
 import { NextResponse } from "next/server";
