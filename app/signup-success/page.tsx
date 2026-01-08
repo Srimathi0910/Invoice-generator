@@ -24,7 +24,7 @@ export default function SignupSuccess() {
 
         <button
           onClick={() => router.push("/login")}
-          className="bg-[#D9D9D9] !text-white px-8 py-3 rounded-lg text-lg font-semibold hover:!bg-gray-800 transition cursor-pointer"
+          className="bg-[#D9D9D9] !text-black px-8 py-3 rounded-lg text-lg font-semibold hover:!bg-gray-800 transition cursor-pointer"
         >
           Go to Login
         </button>
