@@ -8,13 +8,12 @@ import { connectDB } from "@/lib/db";
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse> {
   try {
     await connectDB();
 
     const { id } = params;
 
-    // ✅ Validate MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { message: "Invalid invoice ID" },
@@ -22,7 +21,6 @@ export async function GET(
       );
     }
 
-    // ✅ Fetch invoice by _id
     const invoice = await Invoice.findById(id).lean();
 
     if (!invoice) {
@@ -32,7 +30,6 @@ export async function GET(
       );
     }
 
-    // ✅ Optional: prevent paying already paid invoice
     if (invoice.status === "Paid") {
       return NextResponse.json(
         { message: "Invoice already paid" },
@@ -40,7 +37,6 @@ export async function GET(
       );
     }
 
-    // ✅ Return invoice
     return NextResponse.json(invoice, { status: 200 });
 
   } catch (error) {
@@ -51,3 +47,4 @@ export async function GET(
     );
   }
 }
+
