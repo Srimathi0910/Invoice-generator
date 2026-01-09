@@ -1,10 +1,11 @@
 "use client";
-
+import { authFetch} from "@/utils/authFetch"; 
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, Mail, Phone, Lock } from "lucide-react";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
 export default function Signup() {
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function Signup() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -44,9 +46,9 @@ export default function Signup() {
       valid = false;
     }
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.(com|gmail\.com)$/i;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.(com|in)$/i;
     if (!emailPattern.test(formData.email)) {
-      newErrors.email = "Email must end with .com or gmail.com";
+      newErrors.email = "Email must end with .com or .in";
       valid = false;
     }
 
@@ -63,6 +65,8 @@ export default function Signup() {
 
     if (!valid) {
       setErrors(newErrors);
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
       return;
     }
 
@@ -79,11 +83,15 @@ export default function Signup() {
 
       if (!res.ok) {
         setErrors({ ...errors, general: data.error || "Something went wrong" });
+        setShake(true);
+        setTimeout(() => setShake(false), 500);
       } else {
-        router.push("/signup-success"); // ✅ redirect
+        router.push("/signup-success");
       }
     } catch {
       setErrors({ ...errors, general: "Network error" });
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
     } finally {
       setLoading(false);
     }
@@ -96,12 +104,33 @@ export default function Signup() {
       value ? "-top-3 text-sm text-black" : "top-2 text-base"
     }`;
 
+  const shakeVariants: Variants = {
+    idle: { x: 0 },
+    shake: { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.5 } },
+  };
+
+  // Entry animation for image and form
+  const entryVariant: Variants = {
+    hidden: { opacity: 0, y: -50 },
+    visible: (delay = 0) => ({
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, delay },
+    }),
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#D9D9D9] p-4">
       <div className="flex flex-col md:flex-row w-full max-w-[1000px] md:h-[586px] bg-white rounded-xl shadow-lg overflow-hidden p-3">
 
         {/* LEFT IMAGE */}
-        <div className="relative w-full md:w-1/2 h-48 md:h-auto p-3">
+        <motion.div
+          className="relative w-full md:w-1/2 h-48 md:h-auto p-3"
+          variants={entryVariant}
+          initial="hidden"
+          animate="visible"
+          custom={0} // no delay
+        >
           <Image
             src="/assets/signup/signup-img.png"
             alt="Signup"
@@ -114,47 +143,151 @@ export default function Signup() {
               Join Us <br /> Today
             </h1>
           </div>
-        </div>
+        </motion.div>
 
         {/* RIGHT FORM */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-8 md:px-10">
+        <motion.div
+          className="w-full md:w-1/2 flex flex-col justify-center px-6 py-8 md:px-10"
+          variants={entryVariant}
+          initial="hidden"
+          animate="visible"
+          custom={0.2} // slight delay for form
+        >
           <h2 className="text-2xl font-bold mb-6 text-center">Signup</h2>
 
-          {errors.general && (
-            <p className="text-red-500 text-center mb-3">{errors.general}</p>
-          )}
+          <AnimatePresence>
+            {errors.general && (
+              <motion.p
+                key="general-error"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.25 }}
+                className="text-red-500 text-center mb-3"
+              >
+                {errors.general}
+              </motion.p>
+            )}
+          </AnimatePresence>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <motion.form
+            onSubmit={handleSubmit}
+            className="space-y-5"
+            variants={shakeVariants}
+            animate={shake ? "shake" : "idle"}
+          >
             {/* Username */}
             <div className="relative">
-              <input id="username" value={formData.username} onChange={handleChange} placeholder=" " className={inputClass} />
+              <input
+                id="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder=" "
+                className={inputClass}
+              />
               <label className={labelClass(formData.username)}>Username</label>
               <User className="absolute right-0 top-2 text-gray-500" size={18} />
-              {errors.username && <p className="text-red-500 text-sm">{errors.username}</p>}
+
+              <AnimatePresence>
+                {errors.username && (
+                  <motion.p
+                    key="username-error"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-red-500 text-sm mt-1"
+                  >
+                    {errors.username}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Email */}
             <div className="relative">
-              <input id="email" type="email" value={formData.email} onChange={handleChange} placeholder=" " className={inputClass} />
+              <input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder=" "
+                className={inputClass}
+              />
               <label className={labelClass(formData.email)}>Email</label>
               <Mail className="absolute right-0 top-2 text-gray-500" size={18} />
-              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+
+              <AnimatePresence>
+                {errors.email && (
+                  <motion.p
+                    key="email-error"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-red-500 text-sm mt-1"
+                  >
+                    {errors.email}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Phone */}
             <div className="relative">
-              <input id="phone" value={formData.phone} onChange={handleChange} placeholder=" " className={inputClass} />
+              <input
+                id="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder=" "
+                className={inputClass}
+              />
               <label className={labelClass(formData.phone)}>Phone Number</label>
               <Phone className="absolute right-0 top-2 text-gray-500" size={18} />
-              {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+
+              <AnimatePresence>
+                {errors.phone && (
+                  <motion.p
+                    key="phone-error"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-red-500 text-sm mt-1"
+                  >
+                    {errors.phone}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Password */}
             <div className="relative">
-              <input id="password" type="password" value={formData.password} onChange={handleChange} placeholder=" " className={inputClass} />
+              <input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder=" "
+                className={inputClass}
+              />
               <label className={labelClass(formData.password)}>Password</label>
               <Lock className="absolute right-0 top-2 text-gray-500" size={18} />
-              {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+
+              <AnimatePresence>
+                {errors.password && (
+                  <motion.p
+                    key="password-error"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-red-500 text-sm mt-1"
+                  >
+                    {errors.password}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Submit Button */}
@@ -174,7 +307,7 @@ export default function Signup() {
                 "Sign Up"
               )}
             </button>
-          </form>
+          </motion.form>
 
           <p className="mt-4 text-center">
             Already have an account?{" "}
@@ -182,7 +315,7 @@ export default function Signup() {
               Login
             </Link>
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

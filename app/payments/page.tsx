@@ -1,5 +1,5 @@
 "use client";
-
+import { authFetch} from "@/utils/authFetch"; 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -13,6 +13,7 @@ import {
     FaBars,
     FaTimes,
 } from "react-icons/fa";
+import { motion, Variants } from "framer-motion";
 
 type Payment = {
     _id: string;
@@ -31,7 +32,7 @@ export default function PaymentsPage() {
     const [payments, setPayments] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
     const [editRow, setEditRow] = useState<string | null>(null); // Track which row is editable
-    const [activeMenu, setActiveMenu] = useState("Invoices");
+    const [activeMenu, setActiveMenu] = useState("Payments");
     const [menuOpen, setMenuOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState("All");
@@ -55,7 +56,7 @@ export default function PaymentsPage() {
     }, [router]);
     const handleLogout = async () => {
         try {
-            await fetch("/api/auth/logout", { method: "POST" });
+            await authFetch("/api/auth/logout", { method: "POST" });
             localStorage.removeItem("user");
             localStorage.removeItem("token");
             router.push("/");
@@ -63,15 +64,18 @@ export default function PaymentsPage() {
             console.error("Logout failed:", err);
         }
     };
-    useEffect(() => {
-        fetch("/api/auth/payments")
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) setPayments(data.payments);
-                setLoading(false);
-            })
-            .catch((err) => console.error(err));
-    }, []);
+   useEffect(() => {
+    authFetch("/api/auth/payments")
+        .then((data) => {
+            if (data.success) setPayments(data.payments);
+            setLoading(false);
+        })
+        .catch((err) => {
+            console.error(err);
+            setLoading(false); // always stop loading even on error
+        });
+}, []);
+
 const filteredPayments = payments.filter((p) => {
     const statusMatch =
         activeTab === "All" || p.paymentStatus === activeTab;
@@ -89,48 +93,102 @@ const filteredPayments = payments.filter((p) => {
 );
 
 
-    const handleUpdate = async (id: string, payment: Partial<Payment>) => {
-        try {
-            const res = await fetch(`/api/auth/invoice/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    paymentDate: payment.paymentDate,
-                    paymentMethod: payment.paymentMethod,
-                    paymentStatus: payment.paymentStatus,
-                }),
-            });
+ const handleUpdate = async (id: string, payment: Partial<Payment>) => {
+  try {
+    const data = await authFetch(`/api/auth/invoice/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        paymentDate: payment.paymentDate,
+        paymentMethod: payment.paymentMethod,
+        paymentStatus: payment.paymentStatus,
+      }),
+    });
 
-            const data = await res.json();
-            if (data.success) {
-                setPayments((prev) =>
-                    prev.map((p) => (p._id === id ? { ...p, ...payment } : p))
-                );
-            }
-        } catch (err) {
-            console.error("Update failed:", err);
-        }
-    };
+    if (data.success) {
+      setPayments((prev) =>
+        prev.map((p) => (p._id === id ? { ...p, ...payment } : p))
+      );
+    } else {
+      throw new Error("Update failed");
+    }
+  } catch (err) {
+    console.error("Update failed:", err);
+  }
+};
+
 
 
 
     if (loading) return <p className="p-6">Loading...</p>;
+const navbarVariants: Variants = {
+    hidden: { y: -100, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+  };
 
+  // Summary boxes stagger
+  const summaryContainerVariants: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.15 } },
+  };
+const staggerContainer: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariant: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+
+  // Total revenue box appears after summary boxes
+
+  // Recent invoices appear last
+  const recentInvoicesVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 1 } },
+  };
+
+
+  const summaryItemVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
+  };
+
+  const revenueVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
+  };
 
     return (
-        <div className="p-6">
-            <div className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-                <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+        <motion.div
+  variants={staggerContainer}
+  initial="hidden"
+  animate="visible"className="p-6">
+            <motion.div
+        variants={navbarVariants}
+        initial="hidden"
+        animate="visible"className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+                <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
                     {/* LOGO */}
-                </div>
+                </motion.div>
 
-                <div className="md:hidden flex items-center mb-3">
+                <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
                     <button onClick={() => setMenuOpen(!menuOpen)}>
                         {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
                     </button>
-                </div>
+                </motion.div>
 
-                <div
+                <motion.div variants={itemVariant}
                     className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
                         }`}
                 >
@@ -159,14 +217,14 @@ const filteredPayments = payments.filter((p) => {
                             Logout
                         </button>
                     </div>
-                </div>
-            </div>
+                </motion.div>
+            </motion.div>
             <h1 className="text-2xl font-bold mb-4">Payments</h1>
 
-            <div className="mb-4">
+           <motion.div variants={itemVariant} className="mb-4">
                 <button className="bg-white px-4 py-2 rounded shadow">+ Add Payment</button>
-            </div>
-            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
+            </motion.div>
+          <motion.div variants={itemVariant} className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
                 <div className="relative w-full md:w-1/3">
                     <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -193,9 +251,9 @@ const filteredPayments = payments.filter((p) => {
                         </button>
                     ))}
                 </div>
-            </div>
+            </motion.div>
 
-            <div className="overflow-x-auto bg-white rounded shadow p-4">
+           <motion.div variants={itemVariant} className="overflow-x-auto bg-white rounded shadow p-4">
                 <table className="w-full text-sm border">
                     <thead className="bg-gray-200">
                         <tr>
@@ -350,8 +408,8 @@ const filteredPayments = payments.filter((p) => {
                 <div className="text-right mt-4 font-semibold">
                     Total Payments: Rs.{totalPayments.toLocaleString()}
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (

@@ -1,33 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+
 import { connectDB } from "@/lib/db";
 import Invoice from "@/models/invoice";
 import User from "@/models/User";
-import bcrypt from "bcryptjs";
 import sendEmail from "@/lib/sendEmail";
 import cloudinary from "@/lib/cloudinary";
 
+/* =========================
+   POST: Create / Update Invoice
+   ========================= */
 export async function POST(req: NextRequest) {
   await connectDB();
 
   try {
-    // Authenticate user
+    /* -------- AUTH -------- */
     const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-    const token = authHeader.split(" ")[1];
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
 
-    // Get formData
-    const formData = await req.formData();
-    const dataField = formData.get("data") as string;
-    if (!dataField) {
-      return NextResponse.json({ message: "Invoice data missing" }, { status: 400 });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
     }
+
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string
+    ) as { id: string };
+
+    /* -------- FORM DATA -------- */
+    const formData = await req.formData();
+    const dataField = formData.get("data");
+
+    if (!dataField || typeof dataField !== "string") {
+      return NextResponse.json(
+        { success: false, message: "Invoice data missing" },
+        { status: 400 }
+      );
+    }
+
     const data = JSON.parse(dataField);
 
-    // Prepare invoice object
+    /* -------- INVOICE OBJECT -------- */
     const invoiceData: any = {
       userId: decoded.id,
       invoiceNumber: data.invoiceNumber,
@@ -35,15 +53,21 @@ export async function POST(req: NextRequest) {
       dueDate: data.dueDate,
       billedBy: data.billedBy,
       billedTo: data.billedTo,
-      items: data.items || [],
-      totals: data.totals || {},
-      extras: data.extras || { paymentStatus: "Unpaid", paymentMethod: "N/A" },
-      totalInWords: data.totalInWords || "",
+      items: data.items ?? [],
+      totals: data.totals ?? {},
+      extras: data.extras ?? {
+        paymentStatus: "Unpaid",
+        paymentMethod: "N/A",
+      },
+      totalInWords: data.totalInWords ?? "",
       status: "Unpaid",
     };
 
-    // Create client user if not exists
-    let clientUser = await User.findOne({ email: invoiceData.billedTo.email });
+    /* -------- CREATE CLIENT USER -------- */
+    let clientUser = await User.findOne({
+      email: invoiceData.billedTo.email,
+    });
+
     if (!clientUser) {
       const tempPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = await bcrypt.hash(tempPassword, 10);
@@ -65,59 +89,87 @@ export async function POST(req: NextRequest) {
           <p>You have received an invoice.</p>
           <p><b>Email:</b> ${clientUser.email}</p>
           <p><b>Password:</b> ${tempPassword}</p>
-          <a href="http://localhost:3000/login">Login</a>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/login">
+            Login
+          </a>
         `,
       });
     }
 
-    // Upload logo if provided
-    const file = formData.get("file") as File;
-    if (file) {
+    /* -------- LOGO UPLOAD -------- */
+    const file = formData.get("file");
+
+    if (file && file instanceof File && file.size > 0) {
       const buffer = Buffer.from(await file.arrayBuffer());
+
       const uploadResult: any = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-          { folder: "business-logos" },
-          (err, res) => (err ? reject(err) : resolve(res))
-        ).end(buffer);
+        cloudinary.uploader
+          .upload_stream(
+            { folder: "business-logos" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          )
+          .end(buffer);
       });
 
       invoiceData.logoUrl = uploadResult.secure_url;
-      console.log("Cloudinary logo URL:", uploadResult.secure_url);
     }
 
-    // Save invoice
+    /* -------- SAVE / UPDATE INVOICE -------- */
     const invoice = data._id
-      ? await Invoice.findByIdAndUpdate(data._id, invoiceData, { new: true })
+      ? await Invoice.findByIdAndUpdate(data._id, invoiceData, {
+          new: true,
+        })
       : await Invoice.create(invoiceData);
 
-    return NextResponse.json({ success: true, invoice }, { status: 200 });
-  } catch (err: any) {
-    console.error("Invoice + logo error:", err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { success: true, invoice },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Invoice error:", error);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }
 
-// Updated GET: fetch all invoices OR a single invoice by ID
+/* =========================
+   GET: Fetch Invoices
+   ========================= */
 export async function GET(req: NextRequest) {
   await connectDB();
 
   try {
-    const url = new URL(req.url);
-    const id = url.searchParams.get("id"); // ✅ get invoice ID from query string
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
 
     if (id) {
-      // If ID is provided, return single invoice
       const invoice = await Invoice.findById(id).lean();
-      if (!invoice) return NextResponse.json({ success: false, error: "Invoice not found" }, { status: 404 });
 
-      return NextResponse.json(invoice);
-    } else {
-      // Otherwise, return all invoices
-      const invoices = await Invoice.find().sort({ invoiceDate: -1 }).lean();
-      return NextResponse.json(invoices);
+      if (!invoice) {
+        return NextResponse.json(
+          { success: false, error: "Invoice not found" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ success: true, invoice });
     }
-  } catch (err: any) {
-    console.error(err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+
+    const invoices = await Invoice.find()
+      .sort({ invoiceDate: -1 })
+      .lean();
+
+    return NextResponse.json({ success: true, invoices });
+  } catch (error: any) {
+    console.error("Fetch invoice error:", error);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }

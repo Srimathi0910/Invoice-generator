@@ -3,11 +3,13 @@
 import { useState,useEffect } from "react";
 import { Mail, Phone } from "lucide-react"; // optional icons
 import { useRouter } from "next/navigation";
-
+import { authFetch} from "@/utils/authFetch"; 
 import {
     FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog,
     FaUserCircle, FaSearch, FaBars, FaTimes
 } from "react-icons/fa";
+import { motion, Variants } from "framer-motion";
+
 const faqsData = [
     { question: "How do I create a new invoice?", answer: "To create a new invoice, go to the Dashboard, click 'New Invoice', fill out the details and click 'Save'." },
     { question: "How can I track my payments?", answer: "Go to 'My Invoices' and check the status column to track your payments." },
@@ -37,7 +39,7 @@ export default function HelpPage() {
 
     const handleLogout = async () => {
         try {
-            await fetch("/api/auth/logout", { method: "POST" });
+            await authFetch("/api/auth/logout", { method: "POST" });
             localStorage.removeItem("user");
             localStorage.removeItem("token");
             router.push("/");
@@ -60,19 +62,47 @@ export default function HelpPage() {
     const toggleFAQ = (index: number) => {
         setOpenIndex(openIndex === index ? null : index);
     };
+ // Navbar slides from top
+  const navbarVariants: Variants = {
+    hidden: { y: -100, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+  };
+  const itemVariant: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+const staggerContainer: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};
 
     return (
-        <div className="min-h-screen bg-gray-100 p-6">
-            <div className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-                <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">Invoice Dashboard</div>
+        <motion.div
+  variants={staggerContainer}
+  initial="hidden"
+  animate="visible" className="min-h-screen bg-gray-100 p-6">
+            <motion.div
+        variants={navbarVariants}
+        initial="hidden"
+        animate="visible"className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+                <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">Invoice Dashboard</motion.div>
 
-                <div className="md:hidden flex items-center mb-3">
+                <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
                     <button onClick={() => setMenuOpen(!menuOpen)}>
                         {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
                     </button>
-                </div>
+                </motion.div>
 
-                <div className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"}`}>
+                <motion.div variants={itemVariant} className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"}`}>
                     {menuItems.map(item => (
                         <MenuItem
                             key={item.label}
@@ -93,9 +123,9 @@ export default function HelpPage() {
                         </div>
                         <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">Logout</button>
                     </div>
-                </div>
-            </div>
-            <div className="max-w-3xl mx-auto">
+                </motion.div>
+            </motion.div>
+            <motion.div variants={itemVariant} className="max-w-3xl mx-auto">
                 <h1 className="text-3xl font-bold mb-6">How can we assist you?</h1>
 
                 {/* FAQ Section */}
@@ -142,8 +172,8 @@ export default function HelpPage() {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (

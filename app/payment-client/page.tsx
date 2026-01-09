@@ -1,11 +1,12 @@
 "use client";
-
+import { authFetch} from "@/utils/authFetch"; 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog,
   FaUserCircle, FaSearch, FaBars, FaTimes
 } from "react-icons/fa";
+import { motion, Variants } from "framer-motion";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -26,7 +27,7 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await authFetch("/api/auth/logout", { method: "POST" });
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       router.push("/");
@@ -38,14 +39,27 @@ const Dashboard = () => {
   /* ---------------- INVOICES ---------------- */
   const [invoices, setInvoices] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (!user?.email) return;
+ useEffect(() => {
+  if (!user?.email) return;
 
-    fetch(`/api/auth/invoice?email=${user.email}`)
-      .then(res => res.json())
-      .then(data => setInvoices(data))
-      .catch(err => console.error("Failed to fetch invoices", err));
-  }, [user]);
+  authFetch(`/api/auth/invoice?email=${user.email}`)
+    .then((data) => {
+      console.log("Fetched invoices:", data);
+
+      if (Array.isArray(data)) {
+        setInvoices(data);
+      } else if (Array.isArray(data.invoices)) {
+        setInvoices(data.invoices);
+      } else {
+        setInvoices([]);
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to fetch invoices", err);
+      setInvoices([]);
+    });
+}, [user]);
+
 
   /* ---------------- CALCULATIONS ---------------- */
   
@@ -81,12 +95,39 @@ const Dashboard = () => {
         return "bg-gray-400";
     }
   };
+  const navbarVariants: Variants = {
+    hidden: { y: -100, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+  };
+const staggerContainer: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};
+const itemVariant: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
 
   return (
-    <div className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
+    <motion.div
+  variants={staggerContainer}
+  initial="hidden"
+  animate="visible" className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
 
       {/* ---------------- TOP MENU ---------------- */}
-      <div className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+      <motion.div
+        variants={navbarVariants}
+        initial="hidden"
+        animate="visible"className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
         <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">Invoice Dashboard</div>
 
         <div className="md:hidden flex items-center mb-3">
@@ -117,14 +158,14 @@ const Dashboard = () => {
             <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">Logout</button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ---------------- SUMMARY ---------------- */}
       
 
       {/* ---------------- RECENT INVOICES ---------------- */}
       <h2 className="text-xl font-semibold pl-2 pt-14 mb-4">Recent Invoices</h2>
-      <div className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
+      <motion.div variants={itemVariant}  className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
           <div className="relative w-full md:w-1/3">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -157,7 +198,7 @@ const Dashboard = () => {
               <th className="px-4 py-2 w-1/6">Amount</th>
               <th className="px-4 py-2 w-1/6">Status</th>
               <th className="px-4 py-2 w-1/6">Date</th>
-              <th className="px-4 py-2 w-1/6">Action</th> {/* NEW COLUMN */}
+              <th className="px-4 py-2 w-1/6">Action</th> 
             </tr>
           </thead>
           <tbody>
@@ -195,9 +236,9 @@ const Dashboard = () => {
             )}
           </tbody>
         </table>
-      </div>
+      </motion.div>
 
-    </div>
+    </motion.div>
   );
 };
 

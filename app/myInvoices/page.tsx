@@ -1,11 +1,12 @@
 "use client";
-
+import { authFetch} from "@/utils/authFetch"; 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
     FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog,
     FaUserCircle, FaSearch, FaBars, FaTimes
 } from "react-icons/fa";
+import { motion, Variants } from "framer-motion";
 
 const Dashboard = () => {
     const router = useRouter();
@@ -26,7 +27,7 @@ const Dashboard = () => {
 
     const handleLogout = async () => {
         try {
-            await fetch("/api/auth/logout", { method: "POST" });
+            await authFetch("/api/auth/logout", { method: "POST" });
             localStorage.removeItem("user");
             localStorage.removeItem("token");
             router.push("/");
@@ -39,16 +40,26 @@ const Dashboard = () => {
     const [invoices, setInvoices] = useState<any[]>([]);
 
     useEffect(() => {
-        if (!user?.email) return;
+    if (!user?.email) return;
 
-        fetch(`/api/auth/invoice?email=${user.email}`)
-            .then(res => res.json())
-            .then(data => {
-                console.log("Fetched invoices:", data); // Check console
+    authFetch(`/api/auth/invoice?email=${user.email}`)
+        .then((data) => {
+            console.log("Fetched invoices:", data);
+
+            if (Array.isArray(data)) {
                 setInvoices(data);
-            })
-            .catch(err => console.error("Failed to fetch invoices", err));
-    }, [user]);
+            } else if (Array.isArray(data.invoices)) {
+                setInvoices(data.invoices);
+            } else {
+                setInvoices([]);
+            }
+        })
+        .catch((err) => {
+            console.error("Failed to fetch invoices", err);
+            setInvoices([]);
+        });
+}, [user]);
+
 
     /* ---------------- CALCULATIONS ---------------- */
 
@@ -84,21 +95,60 @@ const Dashboard = () => {
                 return "bg-gray-400";
         }
     };
+const navbarVariants: Variants = {
+    hidden: { y: -100, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+  };
+
+  // Summary boxes stagger
+const itemVariant: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+const staggerContainer: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+
+
+
+  // Total revenue box appears after summary boxes
+
+  // Recent invoices appear last
+  
+
+  
 
     return (
-        <div className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
+        <motion.div
+  variants={staggerContainer}
+  initial="hidden"
+  animate="visible" className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
 
             {/* ---------------- TOP MENU ---------------- */}
-            <div className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+          <motion.div
+        variants={navbarVariants}
+        initial="hidden"
+        animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
                 <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">Invoice Dashboard</div>
 
-                <div className="md:hidden flex items-center mb-3">
+                <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
                     <button onClick={() => setMenuOpen(!menuOpen)}>
                         {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
                     </button>
-                </div>
+                </motion.div>
 
-                <div className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"}`}>
+                <motion.div variants={itemVariant} className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"}`}>
                     {menuItems.map(item => (
                         <MenuItem
                             key={item.label}
@@ -112,22 +162,23 @@ const Dashboard = () => {
                         />
                     ))}
 
-                    <div className="flex flex-col items-end space-y-2">
+                    <motion.div variants={itemVariant} className="flex flex-col items-end space-y-2">
                         <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
                             <FaUserCircle size={28} />
                             <span className="font-medium">{user?.username || "User"}</span>
                         </div>
                         <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">Logout</button>
-                    </div>
-                </div>
-            </div>
+                    </motion.div>
+                </motion.div>
+            </motion.div>
 
             {/* ---------------- SUMMARY ---------------- */}
 
 
             {/* ---------------- RECENT INVOICES ---------------- */}
-            <h2 className="text-xl font-semibold pl-2 pt-20 mb-4">Mu Invoices</h2>
-            <div className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
+            
+            <motion.h2 variants={itemVariant} className="text-xl font-semibold pl-2 pt-20 mb-4">My Invoices</motion.h2>
+            <motion.div variants={itemVariant} className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
                 <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
                     <div className="relative w-full md:w-1/3">
                         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -195,9 +246,9 @@ const Dashboard = () => {
                         )}
                     </tbody>
                 </table>
-            </div>
+            </motion.div>
 
-        </div>
+        </motion.div>
     );
 };
 

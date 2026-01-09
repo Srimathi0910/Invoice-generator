@@ -1,4 +1,5 @@
 "use client";
+import { authFetch} from "@/utils/authFetch"; 
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -35,29 +36,53 @@ const Dashboard = () => {
   }, [router]);
 
   const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      router.push("/");
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include", // ✅ important for cookies
+    });
+
+    if (!res.ok) throw new Error("Logout failed");
+
+    const data = await res.json();
+    console.log(data.message); // "Logged out successfully"
+
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    router.push("/login"); // redirect to login
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+
 
   /* ---------------- INVOICES ---------------- */
   const [invoices, setInvoices] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (!user?.email) return;
+useEffect(() => {
+  if (!user?.email) return;
 
-    fetch(`/api/auth/invoice?email=${user.email}`, {
-      credentials: "include",
+  authFetch(`/api/auth/invoice?email=${user.email}`, {
+    credentials: "include",
+  })
+    .then((data) => {
+      console.log("Invoices response:", data); // ✅ debug once
+
+      if (Array.isArray(data)) {
+        setInvoices(data);
+      } else if (Array.isArray(data.invoices)) {
+        setInvoices(data.invoices);
+      } else {
+        setInvoices([]);
+      }
     })
-      .then((res) => res.json())
-      .then(setInvoices)
-      .catch((err) => console.error("Failed to fetch invoices", err));
-  }, [user]);
+    .catch((err) => {
+      console.error("Failed to fetch invoices", err);
+      setInvoices([]);
+    });
+}, [user]);
+
+
 
   /* ---------------- CALCULATIONS ---------------- */
   const totalInvoices = invoices.length;
@@ -118,7 +143,7 @@ const Dashboard = () => {
 
 
   // Total revenue box appears after summary boxes
- 
+
   // Recent invoices appear last
   const recentInvoicesVariants: Variants = {
     hidden: { y: -50, opacity: 0 },
@@ -126,15 +151,16 @@ const Dashboard = () => {
   };
 
 
-const summaryItemVariants: Variants = {
-  hidden: { y: -50, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
-};
+  const summaryItemVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
+  };
 
-const revenueVariants: Variants = {
-  hidden: { y: -50, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
-};
+  const revenueVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
+  };
+
   return (
     <div className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
       {/* ---------------- TOP MENU ---------------- */}
@@ -144,7 +170,7 @@ const revenueVariants: Variants = {
         animate="visible"
         className="bg-white dark:bg-gray-900 rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
       >
-        {/* ...your navbar content */}
+
 
 
         <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
@@ -191,47 +217,48 @@ const revenueVariants: Variants = {
 
       {/* ---------------- SUMMARY ---------------- */}
       <motion.div
-  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-12 auto-rows-[120px]"
-  variants={summaryContainerVariants}
-  initial="hidden"
-  animate="visible"
->
-  <motion.div variants={summaryItemVariants}>
-    <SummaryBox title="Total Invoices" value={totalInvoices} bg="#29268E" innerBg="#2326AF" />
-  </motion.div>
-
-  <motion.div variants={summaryItemVariants}>
-    <SummaryBox title="Paid Invoices" value={paidInvoices} bg="#05410C" innerBg="#086212" />
-  </motion.div>
-
-  <motion.div variants={summaryItemVariants}>
-    <SummaryBox title="Unpaid Invoices" value={unpaidInvoices} bg="#E06A2A" innerBg="#F87731" />
-  </motion.div>
-
-  <motion.div variants={summaryItemVariants}>
-    <SummaryBox title="Overdue Invoices" value={overdueInvoices} bg="#E51F22" innerBg="#F91A1E" />
-  </motion.div>
-
-  <motion.div variants={revenueVariants}>
-    <div className="bg-white text-black rounded shadow p-4 flex flex-col min-h-[200px]">
-      <span className="text-sm text-center text-[20px] font-medium">
-        Total Revenue
-      </span>
-      <hr className="border-gray-300 my-2" />
-      <div className="text-center text-xl font-semibold mb-3">
-        ${totalRevenue}
-      </div>
-
-      <Link
-        href="/company-new-invoice"
-        className="mt-auto bg-[#D9D9D9] text-black py-2 px-4 rounded-[12px] 
-            hover:bg-[#2326AF] hover:text-white transition inline-block text-center"
+      variants={summaryContainerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-12 auto-rows-[120px]"
+        
       >
-        Create Invoice
-      </Link>
-    </div>
-  </motion.div>
-</motion.div>
+        <motion.div variants={summaryItemVariants}>
+          <SummaryBox title="Total Invoices" value={totalInvoices} bg="#29268E" innerBg="#2326AF" />
+        </motion.div>
+
+        <motion.div variants={summaryItemVariants}>
+          <SummaryBox title="Paid Invoices" value={paidInvoices} bg="#05410C" innerBg="#086212" />
+        </motion.div>
+
+        <motion.div variants={summaryItemVariants}>
+          <SummaryBox title="Unpaid Invoices" value={unpaidInvoices} bg="#E06A2A" innerBg="#F87731" />
+        </motion.div>
+
+        <motion.div variants={summaryItemVariants}>
+          <SummaryBox title="Overdue Invoices" value={overdueInvoices} bg="#E51F22" innerBg="#F91A1E" />
+        </motion.div>
+
+        <motion.div variants={revenueVariants}>
+          <div className="bg-white text-black rounded shadow p-4 flex flex-col min-h-[200px]">
+            <span className="text-sm text-center text-[20px] font-medium">
+              Total Revenue
+            </span>
+            <hr className="border-gray-300 my-2" />
+            <div className="text-center text-xl font-semibold mb-3">
+              ${totalRevenue}
+            </div>
+
+            <Link
+              href="/company-new-invoice"
+              className="mt-auto bg-[#D9D9D9] text-black py-2 px-4 rounded-[12px] 
+            hover:bg-[#2326AF] hover:text-white transition inline-block text-center"
+            >
+              Create Invoice
+            </Link>
+          </div>
+        </motion.div>
+      </motion.div>
       {/* ---------------- RECENT INVOICES ---------------- */}
       <h2 className="text-xl font-semibold pl-2 pt-20 mb-4">Recent Invoices</h2>
 
@@ -303,7 +330,7 @@ const revenueVariants: Variants = {
           </tbody>
 
         </table>
-    </motion.div>
+      </motion.div>
     </div >
   );
 };

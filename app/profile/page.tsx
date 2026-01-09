@@ -1,5 +1,5 @@
 "use client";
-
+import { authFetch} from "@/utils/authFetch"; 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -12,6 +12,7 @@ import {
   FaBars,
   FaTimes,
 } from "react-icons/fa";
+import { motion, Variants } from "framer-motion";
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -55,7 +56,7 @@ const ProfilePage = () => {
   };
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await authFetch("/api/auth/logout", { method: "POST" });
     localStorage.clear();
     router.push("/");
   };
@@ -84,33 +85,35 @@ const ProfilePage = () => {
     if (formData.password) payload.password = formData.password;
 
     try {
-      const res = await fetch("/api/auth/profile-update", {
-        method: "PUT",
-        credentials: "include", // important for cookies
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+  const data = await authFetch("/api/auth/profile-update", {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 
-      if (!res.ok) throw new Error("Update failed");
+  if (!data?.user) {
+    throw new Error("Invalid response");
+  }
 
-      const data = await res.json();
+  const updatedUser = {
+    ...user,
+    phone: data.user.phone,
+    contactPerson: data.user.contactPerson,
+  };
 
-      const updatedUser = {
-        ...user,
-        phone: data.user.phone,
-        contactPerson: data.user.contactPerson,
-      };
+  localStorage.setItem("user", JSON.stringify(updatedUser));
+  setUser(updatedUser);
 
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
+  alert("Profile updated successfully!");
+  setFormData({ ...formData, password: "", confirmPassword: "" });
+} catch (err) {
+  console.error(err);
+  alert("Failed to update profile");
+} finally {
+  setLoading(false);
+}
 
-      alert("Profile updated successfully!");
-      setLoading(false)
-      setFormData({ ...formData, password: "", confirmPassword: "" });
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update profile");
-    }
   };
 
   // ---------------- MENU ----------------
@@ -121,16 +124,58 @@ const ProfilePage = () => {
     { icon: <FaMoneyCheckAlt />, label: "Profile", path: "/profile" },
     { icon: <FaCog />, label: "Help", path: "/help" },
   ];
+ // Navbar slides from top
+  const navbarVariants: Variants = {
+    hidden: { y: -100, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+  };
+  const staggerContainer: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};
+const itemVariant: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
 
   return (
-    <div className="min-h-screen bg-gray-200 p-6">
+    <motion.div
+  variants={staggerContainer}
+  initial="hidden"
+  animate="visible" className="min-h-screen bg-gray-200 p-6">
       {/* TOP BAR */}
-      <div className="bg-white rounded-lg p-4 flex justify-between items-center shadow mb-6">
-        <h1 className="text-xl font-bold">Invoice Dashboard</h1>
-        <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
-          {menuOpen ? <FaTimes size={22} /> : <FaBars size={22} />}
-        </button>
-        <div className={`md:flex gap-8 ${menuOpen ? "block" : "hidden md:flex"}`}>
+      <motion.div
+        variants={navbarVariants}
+        initial="hidden"
+        animate="visible"
+        className="bg-white dark:bg-gray-900 rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
+      >
+
+
+
+        <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+          {/* LOGO */}
+        </motion.div>
+
+        <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
+          <button onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          </button>
+        </motion.div>
+
+        <motion.div variants={itemVariant}
+          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
+            }`}
+        >
           {menuItems.map((item) => (
             <MenuItem
               key={item.label}
@@ -138,23 +183,29 @@ const ProfilePage = () => {
               label={item.label}
               isActive={activeMenu === item.label}
               onClick={() => {
-                setActiveMenu(item.label);
-                router.push(item.path);
+                setActiveMenu(item.label); // set active menu
+                if (item.path) router.push(item.path); // navigate to page
               }}
             />
           ))}
-          <div className="flex items-center gap-2">
-            <FaUserCircle size={26} />
-            <span>{user?.username || "User"}</span>
-            <button onClick={handleLogout} className="text-sm text-red-600 ml-3">
+
+          <div className="flex flex-col items-end space-y-2">
+            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+              <FaUserCircle size={28} />
+              <span className="font-medium">{user?.username || "User"}</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-red-600 hover:underline"
+            >
               Logout
             </button>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* PROFILE CARD */}
-      <div className="bg-white max-w-4xl mx-auto p-8 rounded shadow">
+      <motion.div variants={itemVariant} className="bg-white max-w-4xl mx-auto p-8 rounded shadow">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center text-3xl font-bold">
             {user?.username?.charAt(0).toUpperCase() || "U"}
@@ -180,8 +231,8 @@ const ProfilePage = () => {
             {loading?"Updating":"Update profile"}
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

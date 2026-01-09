@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock } from "lucide-react";
-
+import { motion, Variants, AnimatePresence } from "framer-motion";
+import { authFetch} from "@/utils/authFetch"; 
 export default function Login() {
   const router = useRouter();
 
@@ -21,67 +22,100 @@ export default function Login() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
     setErrors((prev) => ({ ...prev, [id]: "", general: "" }));
   };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setErrors({ email: "", password: "", general: "" });
+  setLoading(true);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({ email: "", password: "", general: "" });
-    setLoading(true);
+  try {
+    const data = await authFetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
 
-    try {
-      // fetch call
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+    if (data.error) {
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+
+      setErrors({
+        email: data?.errors?.email || "",
+        password: data?.errors?.password || "",
+        general: data.error || "Invalid email or password",
       });
+    } else {
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("token", data.token);
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (data.field) {
-          setErrors((prev) => ({ ...prev, [data.field]: data.message }));
-        } else {
-          setErrors((prev) => ({ ...prev, general: data.error || "Login failed" }));
-        }
-      } else {
-localStorage.setItem("user", JSON.stringify({
-  _id: data.user._id,       // ✅ make sure _id is stored
-  username: data.user.username,
-  email: data.user.email
-}));
-localStorage.setItem("token", data.token);
-        localStorage.setItem("token", data.token);
-
-        if (data.role === "company") router.replace("/dashboard");
-        else if (data.role === "client") router.replace("/dashboard-client");
-        else setErrors((prev) => ({ ...prev, general: "Invalid user role" }));
-
-        if (data.role === "company") {
-          router.replace("/dashboard");
-        } else if (data.role === "client") {
-          router.replace("/dashboard-client");
-        } else {
-          setErrors((prev) => ({
-            ...prev,
-            general: "Invalid user role",
-          }));
-        }
-
-      }
-    } catch {
-      setErrors((prev) => ({
-        ...prev,
-        general: "Network error. Please try again.",
-      }));
-    } finally {
-      setLoading(false);
+      if (data.role === "company") router.replace("/dashboard");
+      else if (data.role === "client") router.replace("/dashboard-client");
+      else
+        setErrors((prev) => ({
+          ...prev,
+          general: "Invalid user role",
+        }));
     }
+  } catch {
+    setErrors({ email: "", password: "", general: "Network error" });
+  } finally {
+    setLoading(false);
+  }
+};
+
+  /* ---------------- ANIMATIONS ---------------- */
+
+  const pageVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 },
+  };
+
+  const formPanelVariants: Variants = {
+    hidden: { y: -80, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.7, ease: "easeOut" },
+    },
+  };
+
+  const containerVariants: Variants = {
+    hidden: {},
+    visible: {
+      transition: { staggerChildren: 0.15 },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { y: -30, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
+  };
+
+  const imageVariants: Variants = {
+    hidden: { y: -120, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.8, ease: "easeOut" },
+    },
+  };
+
+  const shakeVariants: Variants = {
+    idle: { x: 0 },
+    shake: {
+      x: [0, -10, 10, -10, 10, 0],
+      transition: { duration: 0.5 },
+    },
   };
 
   const inputClass =
@@ -93,88 +127,133 @@ localStorage.setItem("token", data.token);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#D9D9D9] p-4">
-      <div className="flex flex-col md:flex-row w-full max-w-[900px] md:h-[586px] bg-white rounded-xl shadow-lg overflow-hidden p-3">
-        {/* LEFT FORM */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-8 md:px-10">
-          <h2 className="text-2xl font-bold mb-6 text-black text-center">
-            Login
-          </h2>
-
-          {errors.general && (
-            <p className="text-red-500 text-center mb-4">
-              {errors.general}
-            </p>
-          )}
-
-          <form className="space-y-6 md:p-10" onSubmit={handleSubmit}>
-            {/* Email */}
-            <div className="relative">
-              <input
-                type="email"
-                id="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder=" "
-                className={inputClass}
-                autoComplete="email"
-              />
-              <label htmlFor="email" className={labelClass(formData.email)}>
-                Email
-              </label>
-              <Mail className="absolute right-0 top-2 text-gray-500" size={18} />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
-            </div>
-
-            {/* Password */}
-            <div className="relative">
-              <input
-                type="password"
-                id="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder=" "
-                className={inputClass}
-                autoComplete="current-password"
-              />
-              <label htmlFor="password" className={labelClass(formData.password)}>
-                Password
-              </label>
-              <Lock className="absolute right-0 top-2 text-gray-500" size={18} />
-              {errors.password && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.password}
-                </p>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className={`bg-[#D9D9D9] text-[20px] text-black py-2 rounded-lg hover:bg-gray-300 transition w-full md:w-3/4 mx-auto block ${loading ? "opacity-70 cursor-not-allowed" : "cursor-pointer"
-                }`}
+      <motion.div
+        variants={pageVariants}
+        initial="hidden"
+        animate="visible"
+        className="flex flex-col md:flex-row w-full max-w-[900px] md:h-[586px] bg-white rounded-xl shadow-lg overflow-hidden p-3"
+      >
+        {/* LEFT FORM (TOP → BOTTOM) */}
+        <motion.div
+          variants={formPanelVariants}
+          initial="hidden"
+          animate="visible"
+          className="w-full md:w-1/2 flex flex-col justify-center px-6 py-8 md:px-10"
+        >
+          <motion.div
+            variants={shakeVariants}
+            animate={shake ? "shake" : "idle"}
+          >
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="space-y-6 md:p-10"
             >
-              {loading ? "Logging in..." : "Login"}
-            </button>
-          </form>
+              <motion.h2
+                variants={itemVariants}
+                className="text-2xl font-bold text-center"
+              >
+                Login
+              </motion.h2>
 
-          <p className="mt-4 text-center text-[16px] md:text-[20px]">
-            <Link href="/forgot-password-email" className="underline">
-              Forgot Password?
-            </Link>
-          </p>
+              <AnimatePresence>
+                {errors.general && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="text-red-500 text-center"
+                  >
+                    {errors.general}
+                  </motion.p>
+                )}
+              </AnimatePresence>
 
-          <p className="mt-2 text-center text-[16px] md:text-[20px]">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="underline font-medium">
-              Signup
-            </Link>
-          </p>
-        </div>
+              <motion.form
+                onSubmit={handleSubmit}
+                variants={containerVariants}
+                className="space-y-6"
+              >
+                {/* Email */}
+                <motion.div variants={itemVariants} className="relative">
+                  <input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder=" "
+                    className={inputClass}
+                  />
+                  <label className={labelClass(formData.email)}>Email</label>
+                  <Mail
+                    className="absolute right-0 top-2 text-gray-500"
+                    size={18}
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.email}
+                    </p>
+                  )}
+                </motion.div>
 
-        {/* RIGHT IMAGE */}
-        <div className="relative w-full md:w-1/2 h-48 md:h-auto p-3">
+                {/* Password */}
+                <motion.div variants={itemVariants} className="relative">
+                  <input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder=" "
+                    className={inputClass}
+                  />
+                  <label className={labelClass(formData.password)}>
+                    Password
+                  </label>
+                  <Lock
+                    className="absolute right-0 top-2 text-gray-500"
+                    size={18}
+                  />
+                  {errors.password && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.password}
+                    </p>
+                  )}
+                </motion.div>
+
+                <motion.button
+                  variants={itemVariants}
+                  type="submit"
+                  disabled={loading}
+                  className="bg-[#D9D9D9] py-2 rounded-lg w-full md:w-3/4 mx-auto block hover:bg-gray-300"
+                >
+                  {loading ? "Logging in..." : "Login"}
+                </motion.button>
+
+                <motion.p variants={itemVariants} className="text-center">
+                  <Link href="/forgot-password-email" className="underline">
+                    Forgot Password?
+                  </Link>
+                </motion.p>
+
+                <motion.p variants={itemVariants} className="text-center">
+                  Don&apos;t have an account?{" "}
+                  <Link href="/signup" className="underline font-medium">
+                    Signup
+                  </Link>
+                </motion.p>
+              </motion.form>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+
+        {/* RIGHT IMAGE (TOP → BOTTOM) */}
+        <motion.div
+          variants={imageVariants}
+          initial="hidden"
+          animate="visible"
+          className="relative w-full md:w-1/2 h-48 md:h-auto p-3"
+        >
           <Image
             src="/assets/login/login-img.png"
             alt="Login"
@@ -182,13 +261,13 @@ localStorage.setItem("token", data.token);
             className="object-cover rounded-xl"
             priority
           />
-          <div className="absolute inset-0 flex items-center justify-center rounded-xl p-4">
-            <h1 className="text-white text-2xl md:text-4xl font-bold tracking-wide bg-white/20 px-8 py-4 md:px-16 md:py-8 backdrop-blur-md rounded-2xl shadow-lg text-center">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <h1 className="text-white text-3xl md:text-4xl font-bold bg-white/20 px-10 py-6 backdrop-blur rounded-xl">
               Welcome <br /> Back
             </h1>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

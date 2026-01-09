@@ -1,5 +1,5 @@
 "use client";
-
+import { authFetch} from "@/utils/authFetch"; 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
@@ -92,7 +92,7 @@ export default function InvoicePage() {
         const fetchInvoice = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await fetch(`/api/auth/invoice/${id}`, {
+                const res = await authFetch(`/api/auth/invoice/${id}`, {
                     headers: {
                         Authorization: token ? `Bearer ${token}` : "",
                     },
@@ -123,7 +123,7 @@ export default function InvoicePage() {
 
     const handleLogout = async () => {
         try {
-            await fetch("/api/auth/logout", { method: "POST" });
+            await authFetch("/api/auth/logout", { method: "POST" });
             localStorage.removeItem("user");
             localStorage.removeItem("token");
             router.push("/");
@@ -152,7 +152,6 @@ export default function InvoicePage() {
         try {
             const html2canvasModule = (await import("html2canvas")).default;
             const { jsPDF } = await import("jspdf");
-
             const element = invoiceRef.current;
             const images = element.getElementsByTagName("img");
             await Promise.all(

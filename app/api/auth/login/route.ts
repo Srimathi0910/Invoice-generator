@@ -37,10 +37,19 @@ export async function POST(req: Request) {
       {
         id: user._id.toString(),
         role: user.role, // 🔥 REQUIRED
-        email: user.email, 
+        email: user.email,
       },
       process.env.JWT_SECRET!,
       { expiresIn: "15m" }
+    );
+    const refreshToken = jwt.sign(
+      {
+        id: user._id.toString(),
+        role: user.role,
+        email: user.email,
+      },
+      process.env.JWT_REFRESH_SECRET!,
+      { expiresIn: "7d" } // long-lived
     );
 
     const response = NextResponse.json({
@@ -66,6 +75,13 @@ export async function POST(req: Request) {
       path: "/",
       maxAge: 60 * 15,
     });
+    response.cookies.set("refreshToken", refreshToken, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict",
+  path: "/", // ✅ make it available for all endpoints
+  maxAge: 60 * 60 * 24 * 7, // 7 days
+});
 
     return response;
   } catch (err) {
@@ -76,3 +92,13 @@ export async function POST(req: Request) {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+

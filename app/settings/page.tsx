@@ -12,6 +12,7 @@ import {
   FaBars,
   FaTimes,
 } from "react-icons/fa";
+import { authFetch } from "@/utils/authFetch";
 
 /* ---------------- MAIN PAGE ---------------- */
 export default function SettingsPage() {
@@ -85,15 +86,13 @@ export default function SettingsPage() {
 
     const loadCompany = async () => {
       try {
-        const res = await fetch("/api/auth/company/settings", {
+        const data = await authFetch("/api/auth/company/settings", {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
         });
-        if (!res.ok) return console.error("GET failed:", res.status);
 
-        const data = await res.json();
-
+        // Use data directly
         setFormData((prev) => ({
           ...prev,
           companyName: data.billedBy?.businessName || "",
@@ -113,7 +112,6 @@ export default function SettingsPage() {
 
         setLogoPreview(data.logoUrl || null);
 
-        // Load preferences if available
         if (data.preferences) {
           setPreferences({
             ...preferences,
@@ -121,6 +119,7 @@ export default function SettingsPage() {
             reminderPeriod: Number(data.preferences.reminderPeriod) || 3,
           });
         }
+
       } catch (err) {
         console.error("Error loading company settings:", err);
       }
@@ -130,27 +129,45 @@ export default function SettingsPage() {
   }, []);
 
   /* ---------------- SAVE COMPANY SETTINGS ---------------- */
-  const handleSave = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return alert("Unauthorized");
+ const handleSave = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) return alert("Unauthorized");
 
-    try {
-      const res = await fetch("/api/auth/company/settings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+  try {
+    const data = await authFetch("/api/auth/company/settings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        billedBy: {
+          businessName: formData.companyName,
+          email: formData.email,
+          phone: formData.phone,
+          gstin: formData.gstin,
+          address: formData.address,
+          city: formData.city,
+          country: formData.country,
+          currency: formData.currency,
+          gstRate: formData.gstRate,
+          invoicePrefix: formData.invoicePrefix,
+          bankName: formData.bankName,
+          accountNumber: formData.accountNumber,
         },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
-      if (res.ok) alert("Settings updated successfully!");
-      else alert("Error: " + data.message);
-    } catch (err) {
-      console.error(err);
-      alert("Error saving settings");
-    }
-  };
+        logoUrl: formData.logoUrl,
+      }),
+    });
+
+    if (data?.success) alert("Settings updated successfully!");
+    else alert("Error: " + (data?.message || "Unknown error"));
+  } catch (err) {
+    console.error("Error saving settings:", err);
+    alert("Error saving settings");
+  }
+};
+
+
 
   /* ---------------- SAVE PREFERENCES ---------------- */
   const savePreferences = async () => {
@@ -158,7 +175,7 @@ export default function SettingsPage() {
     if (!token) return alert("Unauthorized");
 
     try {
-      const res = await fetch("/api/auth/company/preferences", {
+      const res = await authFetch("/api/auth/company/preferences", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -195,18 +212,17 @@ export default function SettingsPage() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    fetch("/api/auth/company/preferences", {
+    authFetch("/api/auth/company/preferences", {
       headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.preferences) {
-          setPreferences({
-            ...preferences,
-            ...data.preferences,
-          });
-        }
-      });
+    }).then(data => {
+      if (data.preferences) {
+        setPreferences({
+          ...preferences,
+          ...data.preferences,
+        });
+      }
+    });
+
   }, []);
   useEffect(() => {
     if (preferences.theme === "dark") {
@@ -321,7 +337,7 @@ export default function SettingsPage() {
                       const uploadData = new FormData();
                       uploadData.append("logo", file);
                       const token = localStorage.getItem("token");
-                      const res = await fetch("/api/auth/company/upload-logo", {
+                      const res = await authFetch("/api/auth/company/upload-logo", {
                         method: "POST",
                         headers: { Authorization: `Bearer ${token}` },
                         body: uploadData,

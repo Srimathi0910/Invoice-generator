@@ -1,10 +1,11 @@
 "use client";
-
+import { authFetch} from "@/utils/authFetch"; 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Calendar, Download } from "lucide-react";
 import { FaFileInvoiceDollar, FaUsers, FaChartBar, FaSearch, FaMoneyCheckAlt, FaCog, FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
+import { motion, Variants } from "framer-motion";
 
 export default function ReportsPage() {
     const router = useRouter();
@@ -24,23 +25,35 @@ export default function ReportsPage() {
     }, [router]);
 
     /* ---------------- FETCH INVOICES ---------------- */
-    useEffect(() => {
-        if (!user?.email) return;
+ useEffect(() => {
+  if (!user?.email) return;
 
-        fetch(`/api/auth/invoice?email=${user.email}`, { credentials: "include" })
-            .then(res => res.json())
-            .then(data => {
-                setInvoices(data || []);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error(err);
-                setLoading(false);
-            });
-    }, [user]);
+  authFetch(`/api/auth/invoice?email=${user.email}`, {
+    credentials: "include",
+  })
+    .then((data) => {
+      console.log("Reports invoices response:", data); // 🔍 debug once
+
+      if (Array.isArray(data)) {
+        setInvoices(data);
+      } else if (Array.isArray(data.invoices)) {
+        setInvoices(data.invoices);
+      } else {
+        setInvoices([]);
+      }
+
+      setLoading(false);
+    })
+    .catch((err) => {
+      console.error("Failed to fetch invoices:", err);
+      setInvoices([]);
+      setLoading(false);
+    });
+}, [user]);
+
     const handleLogout = async () => {
         try {
-            await fetch("/api/auth/logout", { method: "POST" });
+            await authFetch("/api/auth/logout", { method: "POST" });
             localStorage.removeItem("user");
             localStorage.removeItem("token");
             router.push("/");
@@ -90,21 +103,74 @@ export default function ReportsPage() {
 
         return statusMatch && searchMatch;
     });
+const navbarVariants: Variants = {
+    hidden: { y: -100, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+  };
+
+  // Summary boxes stagger
+  const summaryContainerVariants: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.15 } },
+  };
+
+
+  // Total revenue box appears after summary boxes
+
+  // Recent invoices appear last
+  const recentInvoicesVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 1 } },
+  };
+
+
+  const summaryItemVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
+  };
+
+  const revenueVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
+  };
+const staggerContainer: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};const itemVariant: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6 text-black dark:text-white">
-            <div className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-                <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+        <motion.div
+  variants={staggerContainer}
+  initial="hidden"
+  animate="visible" className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6 text-black dark:text-white">
+            <motion.div
+        variants={navbarVariants}
+        initial="hidden"
+        animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+                <motion.div variants={itemVariant}className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
                     {/* LOGO */}
-                </div>
+                </motion.div>
 
-                <div className="md:hidden flex items-center mb-3">
+              <motion.div variants={itemVariant}className="md:hidden flex items-center mb-3">
                     <button onClick={() => setMenuOpen(!menuOpen)}>
                         {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
                     </button>
-                </div>
+                </motion.div>
 
-                <div
+                <motion.div variants={itemVariant}
                     className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
                         }`}
                 >
@@ -133,12 +199,13 @@ export default function ReportsPage() {
                             Logout
                         </button>
                     </div>
-                </div>
-            </div>
+                </motion.div>
+            </motion.div>
+            <motion.div variants={itemVariant}>
             <h1 className="text-3xl font-bold mb-6">Reports</h1>
-
+</motion.div>
             {/* Summary Cards */}
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-white p-6 rounded shadow">
                     <p className="text-sm text-gray-500 mb-2">Total Revenues</p>
                     <h2 className="text-3xl font-bold text-blue-600">₹{totalRevenue}</h2>
@@ -152,10 +219,10 @@ export default function ReportsPage() {
                         <span className="text-red-500">Overdue Invoices: {overdueInvoices}</span>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Charts */}
-            <div className="grid md:grid-cols-2 gap-6 mb-10">
+            <motion.div variants={itemVariant}className="grid md:grid-cols-2 gap-6 mb-10">
                 <div className="bg-white p-6 rounded shadow">
                     <h3 className="font-bold mb-4">Monthly Revenue</h3>
                     <ResponsiveContainer width="100%" height={250}>
@@ -181,10 +248,10 @@ export default function ReportsPage() {
                         </PieChart>
                     </ResponsiveContainer>
                 </div>
-            </div>
+            </motion.div>
             <h2 className="text-xl font-semibold pl-2 pt-20 mb-4">Recent Invoices</h2>
 
-            <div className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
+           <motion.div variants={itemVariant} className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
                 <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
                     <div className="relative w-full md:w-1/3">
                         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -247,8 +314,8 @@ export default function ReportsPage() {
                     </tbody>
 
                 </table>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Lock, Mail, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { authFetch } from "@/utils/authFetch";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -19,31 +20,30 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/forgot-password-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+    const res = await fetch("/api/auth/forgot-password-email", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email }),
+});
 
       const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "Something went wrong");
-      } else {
-        setSuccess("OTP sent to your email address");
-        localStorage.setItem("resetEmail", email);
-
-        setTimeout(() => {
+if (!res.ok || data.success === false) {
+  setError(data.message || data.error || "Something went wrong");
+} else {
+  setSuccess(data.message || "OTP sent to your email address");
+  setTimeout(() => {
           router.push("/verify-email");
-        }, 1500);
-      }
+        }, 1000);
+}
+
     } catch {
       setError("Network error");
     } finally {
       setLoading(false);
     }
   };
-
+ 
   return (
     // Added p-4 to ensure the card has a gutter on mobile screens
     <div className="min-h-screen flex items-center justify-center bg-[#D9D9D9] p-4">

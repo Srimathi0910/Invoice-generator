@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { authFetch} from "@/utils/authFetch"; // adjust the path based on your project
+
 import { useRouter } from "next/navigation";
 import {
   FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog,
   FaUserCircle, FaSearch, FaBars, FaTimes
 } from "react-icons/fa";
+import { motion, Variants } from "framer-motion";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -26,7 +29,7 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await authFetch("/api/auth/logout", { method: "POST" });
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       router.push("/");
@@ -38,14 +41,17 @@ const Dashboard = () => {
   /* ---------------- INVOICES ---------------- */
   const [invoices, setInvoices] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (!user?.email) return;
+useEffect(() => {
+  if (!user?.email) return;
 
-    fetch(`/api/auth/invoice?email=${user.email}`)
-      .then(res => res.json())
-      .then(data => setInvoices(data))
-      .catch(err => console.error("Failed to fetch invoices", err));
-  }, [user]);
+  authFetch(`/api/auth/invoice?email=${user.email}`)
+    .then(data => {
+      setInvoices(Array.isArray(data) ? data : (data.invoices ?? []));
+    })
+    .catch(err => console.error("Failed to fetch invoices", err));
+}, [user]);
+
+
 
   /* ---------------- CALCULATIONS ---------------- */
   const totalInvoices = invoices.length;
@@ -89,12 +95,45 @@ const Dashboard = () => {
         return "bg-gray-400";
     }
   };
+  const navbarVariants: Variants = {
+    hidden: { y: -100, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+  };
+
+  // Summary boxes stagger
+  const summaryContainerVariants: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.15 } },
+  };
+
+
+  // Total revenue box appears after summary boxes
+
+  // Recent invoices appear last
+  const recentInvoicesVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 1 } },
+  };
+
+
+  const summaryItemVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
+  };
+
+  const revenueVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
+  };
 
   return (
     <div className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
 
       {/* ---------------- TOP MENU ---------------- */}
-      <div className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+      <motion.div variants={navbarVariants}
+        initial="hidden"
+        animate="visible"
+        className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
         <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">Invoice Dashboard</div>
 
         <div className="md:hidden flex items-center mb-3">
@@ -125,25 +164,40 @@ const Dashboard = () => {
             <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">Logout</button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ---------------- SUMMARY ---------------- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-12 auto-rows-[120px]">
-        <SummaryBox title="Total Invoices" value={totalInvoices} bg="#29268E" innerBg="#2326AF" />
-        <SummaryBox title="Paid Invoices" value={paidInvoices} bg="#05410C" innerBg="#086212" />
-        <SummaryBox title="Unpaid Invoices" value={unpaidInvoices} bg="#E06A2A" innerBg="#F87731" />
-        <SummaryBox title="Overdue Invoices" value={overdueInvoices} bg="#E51F22" innerBg="#F91A1E" />
+      <motion.div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-12 auto-rows-[120px]" variants={summaryContainerVariants}
+        initial="hidden"
+        animate="visible">
+        <motion.div variants={summaryItemVariants}>
+          <SummaryBox title="Total Invoices" value={totalInvoices} bg="#29268E" innerBg="#2326AF" />
+        </motion.div>
+        <motion.div variants={summaryItemVariants}>
+          <SummaryBox title="Paid Invoices" value={paidInvoices} bg="#05410C" innerBg="#086212" />
+        </motion.div>
+        <motion.div variants={summaryItemVariants}>
+          <SummaryBox title="Unpaid Invoices" value={unpaidInvoices} bg="#E06A2A" innerBg="#F87731" />
+        </motion.div>
+        <motion.div variants={summaryItemVariants}>
+          <SummaryBox title="Overdue Invoices" value={overdueInvoices} bg="#E51F22" innerBg="#F91A1E" />
+        </motion.div>
+        <motion.div variants={revenueVariants}>
+          <div className="bg-white text-black rounded shadow p-4 flex flex-col min-h-[200px]">
+            <span className="text-sm text-center text-[20px] font-medium">Total Revenue</span>
+            <hr className="border-gray-300 my-2" />
+            <div className="text-center text-xl font-semibold mb-3">₹{totalRevenue.toFixed(2)}</div>
+          </div>
+        </motion.div>
 
-        <div className="bg-white text-black rounded shadow p-4 flex flex-col min-h-[200px]">
-          <span className="text-sm text-center text-[20px] font-medium">Total Revenue</span>
-          <hr className="border-gray-300 my-2" />
-          <div className="text-center text-xl font-semibold mb-3">₹{totalRevenue.toFixed(2)}</div>
-        </div>
-      </div>
+      </motion.div>
 
       {/* ---------------- RECENT INVOICES ---------------- */}
       <h2 className="text-xl font-semibold pl-2 pt-20 mb-4">Recent Invoices</h2>
-      <div className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
+      <motion.div
+        variants={recentInvoicesVariants}
+        initial="hidden"
+        animate="visible" className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
           <div className="relative w-full md:w-1/3">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -176,7 +230,7 @@ const Dashboard = () => {
               <th className="px-4 py-2 w-1/6">Amount</th>
               <th className="px-4 py-2 w-1/6">Status</th>
               <th className="px-4 py-2 w-1/6">Date</th>
-              <th className="px-4 py-2 w-1/6">Action</th> {/* NEW COLUMN */}
+              <th className="px-4 py-2 w-1/6">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -214,9 +268,9 @@ const Dashboard = () => {
             )}
           </tbody>
         </table>
-      </div>
+    </motion.div>
 
-    </div>
+    </div >
   );
 };
 

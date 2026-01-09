@@ -1,5 +1,5 @@
 "use client";
-
+import { authFetch} from "@/utils/authFetch"; 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { HelpCircle, User } from "lucide-react";
@@ -56,7 +56,7 @@ export default function PayInvoicePage() {
 
         async function fetchInvoice() {
             try {
-                const res = await fetch(`/api/auth/invoice/${id}`, {
+                const res = await authFetch(`/api/auth/invoice/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data: Invoice = await res.json();
@@ -74,7 +74,7 @@ export default function PayInvoicePage() {
     useEffect(() => {
         if (!user?.email) return;
 
-        fetch(`/api/auth/invoice?email=${user.email}`)
+        authFetch(`/api/auth/invoice?email=${user.email}`)
             .then(res => res.json())
             .then(data => setInvoices(data))
             .catch(err => console.error("Failed to fetch invoices", err));
@@ -83,7 +83,7 @@ export default function PayInvoicePage() {
     if (!invoice) return <div className="min-h-screen flex items-center justify-center">Invoice not found.</div>;
     const handleLogout = async () => {
         try {
-            await fetch("/api/auth/logout", { method: "POST" });
+            await authFetch("/api/auth/logout", { method: "POST" });
             localStorage.removeItem("user");
             localStorage.removeItem("token");
             router.push("/");
