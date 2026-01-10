@@ -1,38 +1,9 @@
-:global(:root) {
-  --w: 96px;
-  --h: 112px;
-  --xspace: calc(var(--w) / 2);
-  --yspace: calc(var(--h) / 4 - 1px);
-  --speed: 1.5s;
-}
 .tetrominos {
   display: flex;
   gap: 5px;
   justify-content: center;
   align-items: center;
   height: 100px;
-}
-
-.tetromino {
-  width: 20px;
-  height: 20px;
-  background-color: #29268E;
-  animation: bounce 1s infinite ease-in-out;
-}
-
-.box1 { animation-delay: 0s; }
-.box2 { animation-delay: 0.2s; }
-.box3 { animation-delay: 0.4s; }
-.box4 { animation-delay: 0.6s; }
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
-}
-
-
-
-.tetrominos {
   position: absolute;
   top: 50%;
   left: 50%;

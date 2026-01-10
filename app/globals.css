@@ -3,6 +3,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+   --w: 96px;
+  --h: 112px;
+  --xspace: calc(var(--w) / 2);
+  --yspace: calc(var(--h) / 4 - 1px);
+  --speed: 1.5s;
 }
 
 @theme inline {
