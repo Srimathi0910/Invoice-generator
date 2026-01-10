@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Edit2, Download, Send, FileText, StickyNote, Paperclip, Info, Phone } from "lucide-react";
 import { FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog, FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
+import TetrominosLoader from "../_components/TetrominosLoader";
 
 type InvoiceFiles = {
   signature?: File | null;
@@ -31,7 +32,15 @@ const InvoicePreview = () => {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+ const [showLoader, setShowLoader] = useState(true);
+  useEffect(() => {
+    // Show loader for 3 seconds
+    const timer = setTimeout(() => {
+      setShowLoader(false);
+    }, 1200); // 3000ms = 3 seconds
 
+    return () => clearTimeout(timer); // cleanup
+  }, []);
   const [invoiceFiles, setInvoiceFiles] = useState<InvoiceFiles>({
     signature: null,
     notes: null,
@@ -169,16 +178,14 @@ const sendInvoice = async () => {
 
   try {
     setSending(true);
-    const token = localStorage.getItem("token");
-    const formData = new FormData();
 
+    const formData = new FormData();
     formData.append("email", email);
     formData.append("invoice", JSON.stringify(invoice));
     formData.append("totals", JSON.stringify(totals));
     formData.append("totalInWords", totalInWords);
     formData.append("logoUrl", invoice.logoUrl || "");
 
-    // Combine all uploaded files from invoiceFiles
     const allFiles: File[] = [
       ...(invoiceFiles.terms || []),
       ...(invoiceFiles.attachments || []),
@@ -190,17 +197,18 @@ const sendInvoice = async () => {
 
     allFiles.forEach((file) => formData.append("files", file));
 
-    const res = await authFetch("/api/auth/send-invoice", {
+    // ✅ authFetch already returns parsed JSON
+    const data = await authFetch("/api/auth/send-invoice", {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to send invoice");
+    if (!data?.success) {
+      throw new Error(data?.error || "Failed to send invoice");
+    }
 
     setSuccessMsg("Invoice sent successfully!");
-    // Clear files and email
+
     setInvoiceFiles({
       signature: null,
       notes: null,
@@ -209,6 +217,7 @@ const sendInvoice = async () => {
       additionalInfo: [],
       contactDetails: [],
     });
+
     setEmail("");
   } catch (err: any) {
     alert(err.message);
@@ -216,6 +225,7 @@ const sendInvoice = async () => {
     setSending(false);
   }
 };
+
 
 
   /* ---------------- ITEMS ---------------- */
@@ -243,18 +253,30 @@ const sendInvoice = async () => {
     return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
   };
 
-  const handleLogout = async () => {
-    try {
-      await authFetch("/api/auth/logout", { method: "POST" });
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      router.push("/");
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
 
-  if (!invoice) return <div>Loading...</div>;
+const handleLogout = async () => {
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include", // ✅ REQUIRED
+    });
+
+    if (!res.ok) throw new Error("Logout failed");
+
+    const data = await res.json();
+    console.log(data.message);
+
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+
+    router.replace("/"); 
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+
+
+ 
 
   const menuItems = [
     { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/dashboard" },
@@ -320,7 +342,13 @@ const staggerContainer: Variants = {
     },
   },
 };
-
+  if (showLoader) {
+    return (
+      <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
+        <TetrominosLoader />
+      </div>
+    );
+  }
   return (
     <motion.div
   variants={staggerContainer}

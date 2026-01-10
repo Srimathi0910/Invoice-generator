@@ -7,6 +7,7 @@ import {
     FaUserCircle, FaSearch, FaBars, FaTimes
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
+import TetrominosLoader from "../_components/TetrominosLoader";
 
 const Dashboard = () => {
     const router = useRouter();
@@ -14,6 +15,15 @@ const Dashboard = () => {
     /* ---------------- AUTH ---------------- */
     const [user, setUser] = useState<{ username: string; email: string } | null>(null);
     const [loadingUser, setLoadingUser] = useState(true);
+     const [showLoader, setShowLoader] = useState(true);
+      useEffect(() => {
+        // Show loader for 3 seconds
+        const timer = setTimeout(() => {
+          setShowLoader(false);
+        }, 1200); // 3000ms = 3 seconds
+    
+        return () => clearTimeout(timer); // cleanup
+      }, []);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
@@ -25,16 +35,28 @@ const Dashboard = () => {
         setLoadingUser(false);
     }, [router]);
 
-    const handleLogout = async () => {
-        try {
-            await authFetch("/api/auth/logout", { method: "POST" });
-            localStorage.removeItem("user");
-            localStorage.removeItem("token");
-            router.push("/");
-        } catch (err) {
-            console.error("Logout failed:", err);
-        }
-    };
+   
+const handleLogout = async () => {
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include", // ✅ REQUIRED
+    });
+
+    if (!res.ok) throw new Error("Logout failed");
+
+    const data = await res.json();
+    console.log(data.message);
+
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+
+    router.replace("/"); 
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+
 
     /* ---------------- INVOICES ---------------- */
     const [invoices, setInvoices] = useState<any[]>([]);
@@ -80,9 +102,13 @@ const Dashboard = () => {
 
     const filteredInvoices = activeTab === "All" ? invoices : invoices.filter(i => i.status === activeTab);
 
-    if (loadingUser) {
-        return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-    }
+     if (showLoader) {
+    return (
+      <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
+        <TetrominosLoader />
+      </div>
+    );
+  }
     const getStatusColor = (status: string) => {
         switch (status) {
             case "Paid":

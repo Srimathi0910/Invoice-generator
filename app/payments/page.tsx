@@ -1,5 +1,5 @@
 "use client";
-import { authFetch} from "@/utils/authFetch"; 
+import { authFetch } from "@/utils/authFetch";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -14,6 +14,7 @@ import {
     FaTimes,
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
+import TetrominosLoader from "../_components/TetrominosLoader";
 
 type Payment = {
     _id: string;
@@ -37,6 +38,7 @@ export default function PaymentsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState("All");
     const tabs = ["All", "Paid", "Unpaid", "Overdue"];
+    
 
     const menuItems = [
         { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/dashboard" },
@@ -45,6 +47,17 @@ export default function PaymentsPage() {
         { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
         { icon: <FaCog />, label: "Settings", path: "/settings" },
     ];
+    const [showLoader, setShowLoader] = useState(true);
+    useEffect(() => {
+        // Show loader for 3 seconds
+        const timer = setTimeout(() => {
+            setShowLoader(false);
+        }, 1200); // 3000ms = 3 seconds
+
+        return () => clearTimeout(timer); // cleanup
+    }, []);
+
+
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
         if (!storedUser) {
@@ -54,130 +67,161 @@ export default function PaymentsPage() {
         }
         setLoadingUser(false);
     }, [router]);
+
+
     const handleLogout = async () => {
         try {
-            await authFetch("/api/auth/logout", { method: "POST" });
+            const res = await fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: "include", // ✅ REQUIRED
+            });
+
+            if (!res.ok) throw new Error("Logout failed");
+
+            const data = await res.json();
+            console.log(data.message);
+
             localStorage.removeItem("user");
             localStorage.removeItem("token");
-            router.push("/");
+
+            router.replace("/");
         } catch (err) {
             console.error("Logout failed:", err);
         }
     };
-   useEffect(() => {
-    authFetch("/api/auth/payments")
-        .then((data) => {
-            if (data.success) setPayments(data.payments);
-            setLoading(false);
-        })
-        .catch((err) => {
-            console.error(err);
-            setLoading(false); // always stop loading even on error
-        });
-}, []);
+    useEffect(() => {
+        // Show loader for 3 seconds
+        const timer = setTimeout(() => {
+            setShowLoader(false);
+        }, 1200); // 3000ms = 3 seconds
 
-const filteredPayments = payments.filter((p) => {
-    const statusMatch =
-        activeTab === "All" || p.paymentStatus === activeTab;
+        return () => clearTimeout(timer); // cleanup
+    }, []);
 
-   const searchMatch =
-    p.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase());
+    useEffect(() => {
+        // fetch payments after loader
+        if (!showLoader) {
+            authFetch("/api/auth/payments")
+                .then((data) => {
+                    if (data.success) setPayments(data.payments);
+                    setLoading(false);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    setLoading(false);
+                });
+        }
+    }, [showLoader]);
+
+    const filteredPayments = payments.filter((p) => {
+        const statusMatch =
+            activeTab === "All" || p.paymentStatus === activeTab;
+
+        const searchMatch =
+            p.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase());
 
 
-    return statusMatch && searchMatch;
-});
-    const totalPayments = filteredPayments.reduce(
-    (acc, p) => acc + p.amount,
-    0
-);
-
-
- const handleUpdate = async (id: string, payment: Partial<Payment>) => {
-  try {
-    const data = await authFetch(`/api/auth/invoice/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        paymentDate: payment.paymentDate,
-        paymentMethod: payment.paymentMethod,
-        paymentStatus: payment.paymentStatus,
-      }),
+        return statusMatch && searchMatch;
     });
+    const totalPayments = filteredPayments.reduce(
+        (acc, p) => acc + p.amount,
+        0
+    );
 
-    if (data.success) {
-      setPayments((prev) =>
-        prev.map((p) => (p._id === id ? { ...p, ...payment } : p))
-      );
-    } else {
-      throw new Error("Update failed");
+
+    const handleUpdate = async (id: string, payment: Partial<Payment>) => {
+        try {
+            const data = await authFetch(`/api/auth/invoice/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    paymentDate: payment.paymentDate,
+                    paymentMethod: payment.paymentMethod,
+                    paymentStatus: payment.paymentStatus,
+                }),
+            });
+
+            if (data.success) {
+                setPayments((prev) =>
+                    prev.map((p) => (p._id === id ? { ...p, ...payment } : p))
+                );
+            } else {
+                throw new Error("Update failed");
+            }
+        } catch (err) {
+            console.error("Update failed:", err);
+        }
+    };
+
+
+
+
+    if (loadingUser || loading) {
+        // Show loader when either user or payments are loading
+        return (
+            <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
+                <TetrominosLoader />
+            </div>
+        );
     }
-  } catch (err) {
-    console.error("Update failed:", err);
-  }
-};
+    const navbarVariants: Variants = {
+        hidden: { y: -100, opacity: 0 },
+        visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+    };
+
+    // Summary boxes stagger
+    const summaryContainerVariants: Variants = {
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.15 } },
+    };
+    const staggerContainer: Variants = {
+        hidden: {},
+        visible: {
+            transition: {
+                staggerChildren: 0.15,
+                delayChildren: 0.1,
+            },
+        },
+    };
+
+    const itemVariant: Variants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: { duration: 0.4, ease: "easeOut" },
+        },
+    };
+
+    // Total revenue box appears after summary boxes
+
+    // Recent invoices appear last
+    const recentInvoicesVariants: Variants = {
+        hidden: { y: -50, opacity: 0 },
+        visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 1 } },
+    };
 
 
+    const summaryItemVariants: Variants = {
+        hidden: { y: -50, opacity: 0 },
+        visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
+    };
 
-
-    if (loading) return <p className="p-6">Loading...</p>;
-const navbarVariants: Variants = {
-    hidden: { y: -100, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
-  };
-
-  // Summary boxes stagger
-  const summaryContainerVariants: Variants = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.15 } },
-  };
-const staggerContainer: Variants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-const itemVariant: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
-};
-
-  // Total revenue box appears after summary boxes
-
-  // Recent invoices appear last
-  const recentInvoicesVariants: Variants = {
-    hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 1 } },
-  };
-
-
-  const summaryItemVariants: Variants = {
-    hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
-  };
-
-  const revenueVariants: Variants = {
-    hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
-  };
+    const revenueVariants: Variants = {
+        hidden: { y: -50, opacity: 0 },
+        visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
+    };
 
     return (
         <motion.div
-  variants={staggerContainer}
-  initial="hidden"
-  animate="visible"className="p-6">
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible" className="p-6">
             <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible"className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+                variants={navbarVariants}
+                initial="hidden"
+                animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
                 <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
                     {/* LOGO */}
                 </motion.div>
@@ -221,10 +265,10 @@ const itemVariant: Variants = {
             </motion.div>
             <h1 className="text-2xl font-bold mb-4">Payments</h1>
 
-           <motion.div variants={itemVariant} className="mb-4">
+            <motion.div variants={itemVariant} className="mb-4">
                 <button className="bg-white px-4 py-2 rounded shadow">+ Add Payment</button>
             </motion.div>
-          <motion.div variants={itemVariant} className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
+            <motion.div variants={itemVariant} className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
                 <div className="relative w-full md:w-1/3">
                     <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -253,7 +297,7 @@ const itemVariant: Variants = {
                 </div>
             </motion.div>
 
-           <motion.div variants={itemVariant} className="overflow-x-auto bg-white rounded shadow p-4">
+            <motion.div variants={itemVariant} className="overflow-x-auto bg-white rounded shadow p-4">
                 <table className="w-full text-sm border">
                     <thead className="bg-gray-200">
                         <tr>
@@ -369,7 +413,7 @@ const itemVariant: Variants = {
                                         {isEditing ? (
                                             <>
                                                 <button
-                                                    className="bg-green-500 text-white px-2 py-1 rounded mr-2"
+                                                    className="bg-green-500 text-white px-2 py-1 rounded mr-2 cursor-pointer"
                                                     onClick={async () => {
                                                         await handleUpdate(p._id, {
                                                             paymentDate: p.paymentDate,
@@ -384,7 +428,7 @@ const itemVariant: Variants = {
                                                 </button>
 
                                                 <button
-                                                    className="bg-gray-400 text-white px-2 py-1 rounded"
+                                                    className="bg-gray-400 text-white px-2 py-1 rounded cursor-pointer"
                                                     onClick={() => setEditRow(null)}
                                                 >
                                                     Cancel
@@ -392,7 +436,7 @@ const itemVariant: Variants = {
                                             </>
                                         ) : (
                                             <button
-                                                className="bg-blue-500 text-white px-2 py-1 rounded"
+                                                className="bg-blue-500 text-white px-2 py-1 rounded cursor-pointer"
                                                 onClick={() => setEditRow(p._id)}
                                             >
                                                 Edit

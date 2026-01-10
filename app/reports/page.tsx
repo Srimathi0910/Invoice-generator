@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveCo
 import { Calendar, Download } from "lucide-react";
 import { FaFileInvoiceDollar, FaUsers, FaChartBar, FaSearch, FaMoneyCheckAlt, FaCog, FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
+import TetrominosLoader from "../_components/TetrominosLoader";
 
 export default function ReportsPage() {
     const router = useRouter();
@@ -16,6 +17,15 @@ export default function ReportsPage() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("All");
     const [searchTerm, setSearchTerm] = useState("");
+     const [showLoader, setShowLoader] = useState(true);
+      useEffect(() => {
+        // Show loader for 3 seconds
+        const timer = setTimeout(() => {
+          setShowLoader(false);
+        }, 1200); // 3000ms = 3 seconds
+    
+        return () => clearTimeout(timer); // cleanup
+      }, []);
 
     /* ---------------- AUTH ---------------- */
     useEffect(() => {
@@ -51,16 +61,28 @@ export default function ReportsPage() {
     });
 }, [user]);
 
-    const handleLogout = async () => {
-        try {
-            await authFetch("/api/auth/logout", { method: "POST" });
-            localStorage.removeItem("user");
-            localStorage.removeItem("token");
-            router.push("/");
-        } catch (err) {
-            console.error("Logout failed:", err);
-        }
-    };
+
+const handleLogout = async () => {
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include", // ✅ REQUIRED
+    });
+
+    if (!res.ok) throw new Error("Logout failed");
+
+    const data = await res.json();
+    console.log(data.message);
+
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+
+    router.replace("/"); 
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+
     if (loading) return <p>Loading...</p>;
 
     /* ---------------- CALCULATIONS ---------------- */
@@ -150,7 +172,13 @@ const staggerContainer: Variants = {
   },
 };
 
-
+if (showLoader) {
+  return (
+    <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
+      <TetrominosLoader />
+    </div>
+  );
+}
     return (
         <motion.div
   variants={staggerContainer}

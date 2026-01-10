@@ -2,13 +2,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const accessToken = req.cookies.get("accessToken")?.value;
-  const role = req.cookies.get("role")?.value; // 👈 NEW
-  const pathname = req.nextUrl.pathname;
+  let pathname = req.nextUrl.pathname;
+  if (pathname !== "/" && pathname.endsWith("/")) {
+    pathname = pathname.slice(0, -1);
+  }
 
-  /* ---------------- PUBLIC ROUTES ---------------- */
   const publicRoutes = [
-    "/",
     "/login",
     "/signup",
     "/forgot-password-email",
@@ -16,14 +15,34 @@ export function middleware(req: NextRequest) {
     "/change-password",
   ];
 
-  /* ---------------- ROLE ROUTES ---------------- */
-  const companyRoutes = ["/dashboard", "/invoices", "/settings"];
-  const clientRoutes = ["/dashboard-client", "/client-invoices"];
+  const companyRoutes = [
+    "/dashboard",
+    "/clients",
+    "/reports",
+    "/payments",
+    "/settings",
+    "/preview",
+    "/company-new-invoice",
+  ];
 
-  /* ---------------- AUTH LOGIC ---------------- */
+  const clientRoutes = [
+    "/dashboard-client",
+    "/myInvoices",
+    "/payment-client",
+    "/profile",
+    "/help",
+  ];
 
-  // Logged in user should not visit auth pages
-  if (accessToken && publicRoutes.includes(pathname)) {
+  const accessToken = req.cookies.get("accessToken")?.value;
+  const role = req.cookies.get("role")?.value;
+
+  /* ---------------- NOT LOGGED IN ---------------- */
+  if (!accessToken && !publicRoutes.includes(pathname)) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  /* ---------------- LOGGED IN ---------------- */
+  if (accessToken && role && publicRoutes.includes(pathname)) {
     return NextResponse.redirect(
       new URL(
         role === "company" ? "/dashboard" : "/dashboard-client",
@@ -32,20 +51,18 @@ export function middleware(req: NextRequest) {
     );
   }
 
-  // Not logged in → block protected routes
-  if (!accessToken && !publicRoutes.includes(pathname)) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
   /* ---------------- ROLE PROTECTION ---------------- */
-
-  // Company trying to access client routes
-  if (role === "company" && clientRoutes.some(r => pathname.startsWith(r))) {
+  if (
+    role === "company" &&
+    clientRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"))
+  ) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  // Client trying to access company routes
-  if (role === "client" && companyRoutes.some(r => pathname.startsWith(r))) {
+  if (
+    role === "client" &&
+    companyRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"))
+  ) {
     return NextResponse.redirect(new URL("/dashboard-client", req.url));
   }
 
@@ -55,11 +72,17 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
-    "/invoices/:path*",
+    "/clients/:path*",
+    "/reports/:path*",
+    "/payments/:path*",
     "/settings/:path*",
-    "/client-dashboard/:path*",
-    "/client-invoices/:path*",
+    "/preview/:path*",
+    "/company-new-invoice/:path*",
+    "/dashboard-client/:path*",
+    "/myInvoices/:path*",
+    "/payment-client/:path*",
     "/profile/:path*",
+    "/help/:path*",
     "/login",
     "/signup",
     "/forgot-password-email",

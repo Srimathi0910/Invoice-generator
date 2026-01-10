@@ -81,16 +81,28 @@ export default function PayInvoicePage() {
     }, [user]);
     if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
     if (!invoice) return <div className="min-h-screen flex items-center justify-center">Invoice not found.</div>;
-    const handleLogout = async () => {
-        try {
-            await authFetch("/api/auth/logout", { method: "POST" });
-            localStorage.removeItem("user");
-            localStorage.removeItem("token");
-            router.push("/");
-        } catch (err) {
-            console.error("Logout failed:", err);
-        }
-    };
+
+const handleLogout = async () => {
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include", // ✅ REQUIRED
+    });
+
+    if (!res.ok) throw new Error("Logout failed");
+
+    const data = await res.json();
+    console.log(data.message);
+
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+
+    router.replace("/"); 
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+
     return (
         <div className="min-h-screen bg-gray-200 flex justify-center p-10">
             <div className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">

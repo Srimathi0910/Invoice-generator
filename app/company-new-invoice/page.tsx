@@ -1,5 +1,6 @@
 "use client";
 import { authFetch } from "@/utils/authFetch";
+import TetrominosLoader from "../_components/TetrominosLoader";
 
 import { useState, useEffect, useRef } from "react";
 import { X, Eye, FileText, StickyNote, Paperclip, Info, Phone } from "lucide-react";
@@ -40,6 +41,15 @@ export default function InvoicePage() {
   const [user, setUser] = useState<{ _id: string; username: string; email?: string } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+   const [showLoader, setShowLoader] = useState(true);
+    useEffect(() => {
+      // Show loader for 3 seconds
+      const timer = setTimeout(() => {
+        setShowLoader(false);
+      }, 1200); // 3000ms = 3 seconds
+  
+      return () => clearTimeout(timer); // cleanup
+    }, []);
 
   /* ---------------- Logo ---------------- */
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -293,10 +303,28 @@ export default function InvoicePage() {
   };
 
   /* ---------------- Logout ---------------- */
-  const handleLogout = async () => {
-    try { await authFetch("/api/auth/logout", { method: "POST" }); localStorage.removeItem("user"); localStorage.removeItem("token"); router.push("/"); }
-    catch (err) { console.error("Logout failed:", err); }
-  };
+
+const handleLogout = async () => {
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include", // ✅ REQUIRED
+    });
+
+    if (!res.ok) throw new Error("Logout failed");
+
+    const data = await res.json();
+    console.log(data.message);
+
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+
+    router.replace("/"); 
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+
 useEffect(() => {
   const token = localStorage.getItem("token");
   if (!token) return router.push("/login"); // redirect if no token
@@ -391,7 +419,13 @@ useEffect(() => {
       },
     },
   };
-
+  if (showLoader) {
+    return (
+      <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
+        <TetrominosLoader />
+      </div>
+    );
+  }
   return (
     <motion.div
       variants={staggerContainer}
@@ -519,7 +553,8 @@ useEffect(() => {
                     placeholder=" "
                     value={value}
                     onChange={(e) => setBilledBy({ ...billedBy, [key]: e.target.value })}
-                    className="peer w-full border-b-2 border-gray-300 bg-transparent pt-5 pb-2 text-sm text-gray-900 placeholder-transparentfocus:outline-none focus:border-black transition-colors duration-200"
+                    className="peer w-full border-b-2 border-gray-300 bg-transparent pt-5 pb-2 text-sm text-gray-900 placeholder-transparent
+                       focus:outline-none focus:border-black transition-colors duration-200"
                   />
                   <label
                     className={`absolute left-0 text-gray-400 text-sm transition-all

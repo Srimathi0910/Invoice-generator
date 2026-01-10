@@ -1,5 +1,6 @@
 "use client";
-import { authFetch} from "@/utils/authFetch"; 
+import { authFetch } from "@/utils/authFetch";
+import TetrominosLoader from "../_components/TetrominosLoader";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -24,6 +25,15 @@ const Dashboard = () => {
   const [user, setUser] = useState<{ username: string; email?: string } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showLoader, setShowLoader] = useState(true);
+  useEffect(() => {
+    
+    const timer = setTimeout(() => {
+      setShowLoader(false);
+    }, 1200); 
+
+    return () => clearTimeout(timer); // cleanup
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -36,51 +46,53 @@ const Dashboard = () => {
   }, [router]);
 
   const handleLogout = async () => {
-  try {
-    const res = await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include", // ✅ important for cookies
-    });
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include", // ✅ REQUIRED
+      });
 
-    if (!res.ok) throw new Error("Logout failed");
+      if (!res.ok) throw new Error("Logout failed");
 
-    const data = await res.json();
-    console.log(data.message); // "Logged out successfully"
+      const data = await res.json();
+      console.log(data.message);
 
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    router.push("/login"); // redirect to login
-  } catch (err) {
-    console.error("Logout failed:", err);
-  }
-};
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+
+      router.replace("/");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
 
 
   /* ---------------- INVOICES ---------------- */
   const [invoices, setInvoices] = useState<any[]>([]);
 
-useEffect(() => {
-  if (!user?.email) return;
+  useEffect(() => {
+    if (!user?.email) return;
 
-  authFetch(`/api/auth/invoice?email=${user.email}`, {
-    credentials: "include",
-  })
-    .then((data) => {
-      console.log("Invoices response:", data); // ✅ debug once
-
-      if (Array.isArray(data)) {
-        setInvoices(data);
-      } else if (Array.isArray(data.invoices)) {
-        setInvoices(data.invoices);
-      } else {
-        setInvoices([]);
-      }
+    authFetch(`/api/auth/invoice?email=${user.email}`, {
+      credentials: "include",
     })
-    .catch((err) => {
-      console.error("Failed to fetch invoices", err);
-      setInvoices([]);
-    });
-}, [user]);
+      .then((data) => {
+        console.log("Invoices response:", data); // ✅ debug once
+
+        if (Array.isArray(data)) {
+          setInvoices(data);
+        } else if (Array.isArray(data.invoices)) {
+          setInvoices(data.invoices);
+        } else {
+          setInvoices([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch invoices", err);
+        setInvoices([]);
+      });
+  }, [user]);
 
 
 
@@ -122,13 +134,7 @@ useEffect(() => {
   });
 
 
-  if (loadingUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    );
-  }
+
   // Navbar slides from top
   const navbarVariants: Variants = {
     hidden: { y: -100, opacity: 0 },
@@ -160,6 +166,13 @@ useEffect(() => {
     hidden: { y: -50, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
   };
+  if (showLoader) {
+    return (
+      <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
+        <TetrominosLoader />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
@@ -217,11 +230,11 @@ useEffect(() => {
 
       {/* ---------------- SUMMARY ---------------- */}
       <motion.div
-      variants={summaryContainerVariants}
+        variants={summaryContainerVariants}
         initial="hidden"
         animate="visible"
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-12 auto-rows-[120px]"
-        
+
       >
         <motion.div variants={summaryItemVariants}>
           <SummaryBox title="Total Invoices" value={totalInvoices} bg="#29268E" innerBg="#2326AF" />
@@ -260,7 +273,10 @@ useEffect(() => {
         </motion.div>
       </motion.div>
       {/* ---------------- RECENT INVOICES ---------------- */}
-      <h2 className="text-xl font-semibold pl-2 pt-20 mb-4">Recent Invoices</h2>
+      <motion.h2
+        variants={navbarVariants}
+        initial="hidden"
+        animate="visible" className="text-xl font-semibold pl-2 pt-20 mb-4">Recent Invoices</motion.h2>
 
       <motion.div
         variants={recentInvoicesVariants}

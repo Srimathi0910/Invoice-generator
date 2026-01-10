@@ -88,8 +88,8 @@ export default function SettingsPage() {
       try {
         const data = await authFetch("/api/auth/company/settings", {
           method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
+           credentials: "include",
         });
 
         // Use data directly
@@ -136,9 +136,10 @@ export default function SettingsPage() {
   try {
     const data = await authFetch("/api/auth/company/settings", {
       method: "POST",
+       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        
       },
       body: JSON.stringify({
         billedBy: {
@@ -170,28 +171,32 @@ export default function SettingsPage() {
 
 
   /* ---------------- SAVE PREFERENCES ---------------- */
-  const savePreferences = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return alert("Unauthorized");
+const savePreferences = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) return alert("Unauthorized");
 
-    try {
-      const res = await authFetch("/api/auth/company/preferences", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(preferences),
-      });
-      const data = await res.json();
+  try {
+    const data = await authFetch("/api/auth/company/preferences", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(preferences),
+    });
 
-      if (res.ok) alert("Preferences saved successfully!");
-      else alert("Error saving preferences: " + data.message);
-    } catch (err) {
-      console.error("Error saving preferences:", err);
-      alert("Error saving preferences");
+    // ✅ data is already the parsed JSON
+    if (data.message === "Preferences saved") {
+      alert("Preferences saved successfully!");
+    } else {
+      alert("Error saving preferences: " + data.message);
     }
-  };
+  } catch (err) {
+    console.error("Error saving preferences:", err);
+    alert("Error saving preferences");
+  }
+};
+
 
   /* ---------------- LOGOUT ---------------- */
   const handleLogout = () => {
@@ -213,7 +218,7 @@ export default function SettingsPage() {
     if (!token) return;
 
     authFetch("/api/auth/company/preferences", {
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
     }).then(data => {
       if (data.preferences) {
         setPreferences({
@@ -339,8 +344,9 @@ export default function SettingsPage() {
                       const token = localStorage.getItem("token");
                       const res = await authFetch("/api/auth/company/upload-logo", {
                         method: "POST",
-                        headers: { Authorization: `Bearer ${token}` },
+                        
                         body: uploadData,
+                         credentials: "include",
                       });
                       const data = await res.json();
                       setFormData({ ...formData, logoUrl: data.logoUrl });

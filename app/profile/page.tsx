@@ -13,6 +13,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
+import TetrominosLoader from "../_components/TetrominosLoader";
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -20,7 +21,16 @@ const ProfilePage = () => {
   const [user, setUser] = useState<any>(null);
   const [activeMenu, setActiveMenu] = useState("Profile");
   const [menuOpen, setMenuOpen] = useState(false);
-  const[loading,setLoading]=useState(false)
+  const[loading,setLoading]=useState(false);
+    const [showLoader, setShowLoader] = useState(true);
+    useEffect(() => {
+      
+      const timer = setTimeout(() => {
+        setShowLoader(false);
+      }, 1200); 
+  
+      return () => clearTimeout(timer); // cleanup
+    }, []);
 
   const [formData, setFormData] = useState({
     contactPerson: "",
@@ -55,11 +65,27 @@ const ProfilePage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleLogout = async () => {
-    await authFetch("/api/auth/logout", { method: "POST" });
-    localStorage.clear();
-    router.push("/");
-  };
+const handleLogout = async () => {
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include", // ✅ REQUIRED
+    });
+
+    if (!res.ok) throw new Error("Logout failed");
+
+    const data = await res.json();
+    console.log(data.message);
+
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+
+    router.replace("/"); 
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+
 
   // ---------------- UPDATE PROFILE ----------------
   const handleUpdate = async () => {
@@ -146,7 +172,13 @@ const itemVariant: Variants = {
     transition: { duration: 0.4, ease: "easeOut" },
   },
 };
-
+  if (showLoader) {
+    return (
+      <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
+        <TetrominosLoader />
+      </div>
+    );
+  }
   return (
     <motion.div
   variants={staggerContainer}

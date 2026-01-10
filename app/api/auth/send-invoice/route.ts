@@ -74,9 +74,19 @@ export async function POST(req: Request) {
     `;
 
     // Generate PDF using Puppeteer
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+    const browser = await puppeteer.launch({
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+  ],
+  headless: true,
+});
+
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html, { waitUntil: "load", timeout: 0 });
+
     const pdfBuffer = await page.pdf({ format: "A4" });
     await browser.close();
 

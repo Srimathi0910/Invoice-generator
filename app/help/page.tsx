@@ -9,6 +9,7 @@ import {
     FaUserCircle, FaSearch, FaBars, FaTimes
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
+import TetrominosLoader from "../_components/TetrominosLoader";
 
 const faqsData = [
     { question: "How do I create a new invoice?", answer: "To create a new invoice, go to the Dashboard, click 'New Invoice', fill out the details and click 'Save'." },
@@ -24,6 +25,15 @@ export default function HelpPage() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [user, setUser] = useState<{ username: string; email: string } | null>(null);
     const [loadingUser, setLoadingUser] = useState(true);
+      const [showLoader, setShowLoader] = useState(true);
+      useEffect(() => {
+        
+        const timer = setTimeout(() => {
+          setShowLoader(false);
+        }, 1200); 
+    
+        return () => clearTimeout(timer); // cleanup
+      }, []);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
@@ -37,16 +47,28 @@ export default function HelpPage() {
 
 
 
-    const handleLogout = async () => {
-        try {
-            await authFetch("/api/auth/logout", { method: "POST" });
-            localStorage.removeItem("user");
-            localStorage.removeItem("token");
-            router.push("/");
-        } catch (err) {
-            console.error("Logout failed:", err);
-        }
-    };
+  
+const handleLogout = async () => {
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include", // ✅ REQUIRED
+    });
+
+    if (!res.ok) throw new Error("Logout failed");
+
+    const data = await res.json();
+    console.log(data.message);
+
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+
+    router.replace("/"); 
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+
 
 
 
@@ -84,7 +106,13 @@ const staggerContainer: Variants = {
     },
   },
 };
-
+  if (showLoader) {
+    return (
+      <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
+        <TetrominosLoader />
+      </div>
+    );
+  }
     return (
         <motion.div
   variants={staggerContainer}

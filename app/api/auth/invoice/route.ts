@@ -15,22 +15,25 @@ export async function POST(req: NextRequest) {
   await connectDB();
 
   try {
-    /* -------- AUTH -------- */
-    const authHeader = req.headers.get("authorization");
+    /* -------- AUTH (COOKIE BASED) -------- */
+    const token = req.cookies.get("accessToken")?.value;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!token) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const token = authHeader.split(" ")[1];
-
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string
-    ) as { id: string };
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    } catch {
+      return NextResponse.json(
+        { success: false, message: "Invalid token" },
+        { status: 401 }
+      );
+    }
 
     /* -------- FORM DATA -------- */
     const formData = await req.formData();
@@ -89,9 +92,7 @@ export async function POST(req: NextRequest) {
           <p>You have received an invoice.</p>
           <p><b>Email:</b> ${clientUser.email}</p>
           <p><b>Password:</b> ${tempPassword}</p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/login">
-            Login
-          </a>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/login">Login</a>
         `,
       });
     }
@@ -104,13 +105,10 @@ export async function POST(req: NextRequest) {
 
       const uploadResult: any = await new Promise((resolve, reject) => {
         cloudinary.uploader
-          .upload_stream(
-            { folder: "business-logos" },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          )
+          .upload_stream({ folder: "business-logos" }, (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+          })
           .end(buffer);
       });
 
@@ -119,15 +117,10 @@ export async function POST(req: NextRequest) {
 
     /* -------- SAVE / UPDATE INVOICE -------- */
     const invoice = data._id
-      ? await Invoice.findByIdAndUpdate(data._id, invoiceData, {
-          new: true,
-        })
+      ? await Invoice.findByIdAndUpdate(data._id, invoiceData, { new: true })
       : await Invoice.create(invoiceData);
 
-    return NextResponse.json(
-      { success: true, invoice },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, invoice });
   } catch (error: any) {
     console.error("Invoice error:", error);
     return NextResponse.json(
