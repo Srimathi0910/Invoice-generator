@@ -1,3 +1,10 @@
+:global(:root) {
+  --w: 96px;
+  --h: 112px;
+  --xspace: calc(var(--w) / 2);
+  --yspace: calc(var(--h) / 4 - 1px);
+  --speed: 1.5s;
+}
 .tetrominos {
   display: flex;
   gap: 5px;
@@ -23,13 +30,7 @@
   50% { transform: translateY(-20px); }
 }
 
-:root {
-  --w: 96px;
-  --h: 112px;
-  --xspace: calc(var(--w) / 2);
-  --yspace: calc(var(--h) / 4 - 1px);
-  --speed: 1.5s;
-}
+
 
 .tetrominos {
   position: absolute;
