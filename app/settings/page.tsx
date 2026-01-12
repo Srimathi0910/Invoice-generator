@@ -199,11 +199,27 @@ const savePreferences = async () => {
 
 
   /* ---------------- LOGOUT ---------------- */
-  const handleLogout = () => {
+ const handleLogout = async () => {
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include", // ✅ REQUIRED
+    });
+
+    if (!res.ok) throw new Error("Logout failed");
+
+    const data = await res.json();
+    console.log(data.message);
+
     localStorage.removeItem("user");
     localStorage.removeItem("token");
-    router.push("/");
-  };
+
+    router.replace("/"); 
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+
 
   /* ---------------- MENU ITEMS ---------------- */
   const menuItems = [
