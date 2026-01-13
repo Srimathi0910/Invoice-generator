@@ -9,22 +9,33 @@ export async function POST(req: Request) {
   const { email, password } = await req.json();
 
   if (!email || !password) {
-    return NextResponse.json(
-      { error: "Email and password required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Email and password required" }, { status: 400 });
   }
 
   const user = await User.findOne({ email });
+
+  // -------------------- INVALID EMAIL --------------------
   if (!user) {
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    // Clear any old cookies
+    const res = NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    res.cookies.delete("accessToken");
+    res.cookies.delete("refreshToken");
+    res.cookies.delete("role");
+    return res;
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
+
+  // -------------------- INVALID PASSWORD --------------------
   if (!isMatch) {
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    const res = NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    res.cookies.delete("accessToken");
+    res.cookies.delete("refreshToken");
+    res.cookies.delete("role");
+    return res;
   }
 
+  // -------------------- SUCCESSFUL LOGIN --------------------
   const accessToken = jwt.sign(
     { id: user._id, role: user.role, email: user.email },
     process.env.JWT_SECRET!,
@@ -37,11 +48,10 @@ export async function POST(req: Request) {
     { expiresIn: "7d" }
   );
 
-  // Include token in JSON response for frontend
   const response = NextResponse.json({
     message: "Login successful",
     role: user.role,
-    token: accessToken, // <--- add this
+    token: accessToken,
     user: {
       _id: user._id,
       username: user.username,
@@ -50,13 +60,13 @@ export async function POST(req: Request) {
     },
   });
 
-  // Set cookies
+  // Set cookies only after successful login
   response.cookies.set("accessToken", accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 15, // 15 minutes
+    maxAge: 60 * 15,
   });
 
   response.cookies.set("refreshToken", refreshToken, {
@@ -64,15 +74,15 @@ export async function POST(req: Request) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 7,
   });
 
   response.cookies.set("role", user.role, {
-    httpOnly: false, // frontend can access it
+    httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 7,
   });
 
   return response;

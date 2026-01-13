@@ -1,85 +1,117 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import jwt from "jsonwebtoken";
+import CompanySettings from "@/models/CompanySetting";
 import Invoice from "@/models/invoice";
+import jwt from "jsonwebtoken";
+import cloudinary from "@/lib/cloudinary";
 
-/* ---------------- GET COMPANY SETTINGS ---------------- */
+/* ------------------ AUTH ------------------ */
+const getUserIdFromToken = (req: NextRequest) => {
+  const token = req.cookies.get("accessToken")?.value;
+  if (!token) return null;
+
+  try {
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    return decoded.id;
+  } catch {
+    return null;
+  }
+};
+
+/* ------------------ GET SETTINGS ------------------ */
 export async function GET(req: NextRequest) {
   await connectDB();
 
-  try {
-    const token = req.cookies.get("accessToken")?.value;
-
-    if (!token) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-    const userId = decoded.id || decoded.userId || decoded._id;
-
-    const invoice = await Invoice.findOne({ userId })
-      .sort({ createdAt: -1 })
-      .lean();
-
-    if (!invoice || !invoice.billedBy) {
-      return NextResponse.json({ billedBy: {}, logoUrl: "" });
-    }
-
-    return NextResponse.json({
-      billedBy: invoice.billedBy,
-      logoUrl: invoice.logoUrl || "",
-    });
-  } catch (err: any) {
-    console.error("SETTINGS GET ERROR:", err);
-
-    return NextResponse.json(
-      {
-        error:
-          err.name === "TokenExpiredError"
-            ? "ACCESS_TOKEN_EXPIRED"
-            : "Unauthorized",
-      },
-      { status: 401 }
-    );
+  const userId = getUserIdFromToken(req);
+  if (!userId) {
+    return NextResponse.json({ success: false }, { status: 401 });
   }
+
+  const settings = await CompanySettings.findOne({ userId });
+
+  return NextResponse.json({
+    success: true,
+    data: settings || {},
+  });
 }
 
-/* ---------------- UPDATE COMPANY SETTINGS ---------------- */
+/* ------------------ UPDATE SETTINGS ------------------ */
 export async function POST(req: NextRequest) {
   await connectDB();
 
+  const userId = getUserIdFromToken(req);
+  if (!userId) {
+    return NextResponse.json({ success: false }, { status: 401 });
+  }
+
   try {
-    const token = req.cookies.get("accessToken")?.value;
+    const formData = await req.formData();
+    const raw = formData.get("data");
 
-    if (!token) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (!raw || typeof raw !== "string") {
+      return NextResponse.json(
+        { success: false, message: "Invalid data" },
+        { status: 400 }
+      );
     }
 
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-    const userId = decoded.id || decoded.userId || decoded._id;
+    const data = JSON.parse(raw);
+    let logoUrl = data.logoUrl || "";
 
-    if (!userId) {
-      return NextResponse.json({ message: "Invalid token" }, { status: 401 });
+    /* ---------- Cloudinary upload ---------- */
+    const logo = formData.get("logo");
+    if (logo instanceof File && logo.size > 0) {
+      const buffer = Buffer.from(await logo.arrayBuffer());
+
+      const upload: any = await new Promise((resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream({ folder: "company-logos" }, (err, res) =>
+            err ? reject(err) : resolve(res)
+          )
+          .end(buffer);
+      });
+
+      logoUrl = upload.secure_url;
     }
 
-    const { billedBy, logoUrl } = await req.json();
-
-    await Invoice.updateMany(
+    /* ---------- SAVE (MATCHES FLAT SCHEMA) ---------- */
+    const updated = await CompanySettings.findOneAndUpdate(
       { userId },
       {
-        $set: {
-          billedBy,
-          logoUrl,
-        },
-      }
+        userId,
+        companyName: data.companyName,
+        email: data.email,
+        address: data.address,
+        gstin: data.gstin,
+        stateCode: data.stateCode,
+
+        currency: data.currency || "INR",
+        gstRate: data.gstRate ?? 18,
+        invoicePrefix: data.invoicePrefix || "INV-",
+
+        bankName: data.bankName,
+        accountNumber: data.accountNumber,
+        upiId: data.upiId || "",
+
+        logoUrl,
+      },
+      { upsert: true, new: true }
     );
 
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error("SETTINGS POST ERROR:", err);
+    /* ---------- UPDATE LOGO IN INVOICES ---------- */
+    await Invoice.updateMany(
+      { userId },
+      { $set: { logoUrl } }
+    );
 
+    return NextResponse.json({
+      success: true,
+      data: updated,
+    });
+  } catch (err) {
+    console.error("Settings update error:", err);
     return NextResponse.json(
-      { success: false, message: "Error updating settings" },
+      { success: false },
       { status: 500 }
     );
   }

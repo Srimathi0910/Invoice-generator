@@ -1,5 +1,5 @@
 "use client";
-import { authFetch} from "@/utils/authFetch"; 
+import { authFetch } from "@/utils/authFetch";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Edit2, Download, Send, FileText, StickyNote, Paperclip, Info, Phone } from "lucide-react";
@@ -32,7 +32,10 @@ const InvoicePreview = () => {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
- const [showLoader, setShowLoader] = useState(true);
+  const [showLoader, setShowLoader] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [downloading,setDownloading]=useState(false)
+
   useEffect(() => {
     // Show loader for 3 seconds
     const timer = setTimeout(() => {
@@ -64,7 +67,8 @@ const InvoicePreview = () => {
   useEffect(() => {
     const dataFromStorage = localStorage.getItem("invoiceData");
     if (dataFromStorage) {
-      setInvoice(JSON.parse(dataFromStorage));
+      const parsed = JSON.parse(dataFromStorage);
+      setInvoice(parsed);  // parsed should include _id if it exists in DB
       return;
     }
     const data = searchParams.get("data");
@@ -90,49 +94,108 @@ const InvoicePreview = () => {
   }, [invoice]);
 
   const totalInWords = `${totals.grandTotal} rupees only`;
-
-  /* ---------------- SAVE INVOICE ---------------- */
- const saveInvoice = async () => {
-  if (!user) return alert("Please login");
-  if (!invoice) return alert("Invoice not loaded");
-
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) return alert("Unauthorized. Please login again.");
-
-    const formData = new FormData();
-    formData.append(
-      "data",
-      JSON.stringify({
-        ...invoice,
-        totals,
-        totalInWords,
-        logoUrl: logoPreview || invoice.logoUrl || "",
-      })
-    );
-
-    attachments.forEach((file) => formData.append("files", file));
-
-    // 🔥 authFetch ALREADY RETURNS JSON
-    const data = await authFetch("/api/auth/invoice", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
-
-    if (data?.error) {
-      return alert(data.error);
+  const saveInvoice = async () => {
+    if (!user) {
+      alert("Please login");
+      return;
     }
 
-    alert("Invoice saved successfully!");
-    localStorage.setItem("invoiceData", JSON.stringify(data.invoice));
-    setInvoice(data.invoice);
-    setAttachments([]);
-  } catch (err) {
-    console.error("Save invoice error:", err);
-    alert("Network error. Invoice not saved.");
-  }
-};
+    if (!invoice) {
+      alert("Invoice not loaded");
+      return;
+    }
+
+    try {
+      setSaving(true)
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Unauthorized. Please login again.");
+        return;
+      }
+
+      const formData = new FormData();
+
+      // ---------- Invoice data ----------
+      formData.append(
+        "data",
+        JSON.stringify({
+          ...invoice,
+          totals,
+          totalInWords,
+          logoUrl: logoPreview || invoice.logoUrl || "",
+        })
+      );
+
+      // ---------- Logo ----------
+
+
+      // ---------- File uploads (KEY FIX) ----------
+      if (invoiceFiles.signature) {
+        formData.append("signature", invoiceFiles.signature);
+      }
+
+      if (invoiceFiles.notes) {
+        formData.append("notes", invoiceFiles.notes);
+      }
+
+      invoiceFiles.terms?.forEach((file) =>
+        formData.append("terms", file)
+      );
+
+      invoiceFiles.attachments?.forEach((file) =>
+        formData.append("attachments", file)
+      );
+
+      invoiceFiles.additionalInfo?.forEach((file) =>
+        formData.append("additionalInfo", file)
+      );
+
+      invoiceFiles.contactDetails?.forEach((file) =>
+        formData.append("contactDetails", file)
+      );
+
+      // ---------- Update existing invoice ----------
+      if (invoice._id) {
+        formData.append("_id", invoice._id);
+      }
+
+      const data = await authFetch("/api/auth/invoice", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!data?.success) {
+        alert(data?.error || "Failed to save invoice");
+        return;
+      }
+
+      alert("Invoice saved successfully!");
+
+      setInvoice(data.invoice);
+      localStorage.setItem("invoiceData", JSON.stringify(data.invoice));
+
+      // ---------- Reset files ----------
+      setInvoiceFiles({
+        signature: null,
+        notes: null,
+        terms: [],
+        attachments: [],
+        additionalInfo: [],
+        contactDetails: [],
+      });
+
+    } catch (err) {
+      console.error("Save invoice error:", err);
+      alert("Network error. Invoice not saved.");
+    }
+    finally{
+      setSaving(false)
+    }
+  };
+
+
+
 
 
   /* ---------------- PDF GENERATION ---------------- */
@@ -140,6 +203,7 @@ const InvoicePreview = () => {
     if (!invoiceRef.current) return alert("Invoice content not found");
 
     try {
+      setDownloading(true)
       const html2canvasModule = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
 
@@ -170,61 +234,64 @@ const InvoicePreview = () => {
       console.error("PDF generation error:", err);
       alert("Failed to generate PDF.");
     }
+    finally{
+      setDownloading(false)
+    }
   };
 
   /* ---------------- SEND INVOICE ---------------- */
-const sendInvoice = async () => {
-  if (!email) return alert("Enter recipient email");
+  const sendInvoice = async () => {
+    if (!email) return alert("Enter recipient email");
 
-  try {
-    setSending(true);
+    try {
+      setSending(true);
 
-    const formData = new FormData();
-    formData.append("email", email);
-    formData.append("invoice", JSON.stringify(invoice));
-    formData.append("totals", JSON.stringify(totals));
-    formData.append("totalInWords", totalInWords);
-    formData.append("logoUrl", invoice.logoUrl || "");
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("invoice", JSON.stringify(invoice));
+      formData.append("totals", JSON.stringify(totals));
+      formData.append("totalInWords", totalInWords);
+      formData.append("logoUrl", invoice.logoUrl || "");
 
-    const allFiles: File[] = [
-      ...(invoiceFiles.terms || []),
-      ...(invoiceFiles.attachments || []),
-      ...(invoiceFiles.additionalInfo || []),
-      ...(invoiceFiles.contactDetails || []),
-      ...(invoiceFiles.notes ? [invoiceFiles.notes] : []),
-      ...(invoiceFiles.signature ? [invoiceFiles.signature] : []),
-    ];
+      const allFiles: File[] = [
+        ...(invoiceFiles.terms || []),
+        ...(invoiceFiles.attachments || []),
+        ...(invoiceFiles.additionalInfo || []),
+        ...(invoiceFiles.contactDetails || []),
+        ...(invoiceFiles.notes ? [invoiceFiles.notes] : []),
+        ...(invoiceFiles.signature ? [invoiceFiles.signature] : []),
+      ];
 
-    allFiles.forEach((file) => formData.append("files", file));
+      allFiles.forEach((file) => formData.append("files", file));
 
-    // ✅ authFetch already returns parsed JSON
-    const data = await authFetch("/api/auth/send-invoice", {
-      method: "POST",
-      body: formData,
-    });
+      // ✅ authFetch already returns parsed JSON
+      const data = await authFetch("/api/auth/send-invoice", {
+        method: "POST",
+        body: formData,
+      });
 
-    if (!data?.success) {
-      throw new Error(data?.error || "Failed to send invoice");
+      if (!data?.success) {
+        throw new Error(data?.error || "Failed to send invoice");
+      }
+
+      setSuccessMsg("Invoice sent successfully!");
+
+      setInvoiceFiles({
+        signature: null,
+        notes: null,
+        terms: [],
+        attachments: [],
+        additionalInfo: [],
+        contactDetails: [],
+      });
+
+      setEmail("");
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSending(false);
     }
-
-    setSuccessMsg("Invoice sent successfully!");
-
-    setInvoiceFiles({
-      signature: null,
-      notes: null,
-      terms: [],
-      attachments: [],
-      additionalInfo: [],
-      contactDetails: [],
-    });
-
-    setEmail("");
-  } catch (err: any) {
-    alert(err.message);
-  } finally {
-    setSending(false);
-  }
-};
+  };
 
 
 
@@ -254,29 +321,29 @@ const sendInvoice = async () => {
   };
 
 
-const handleLogout = async () => {
-  try {
-    const res = await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include", // ✅ REQUIRED
-    });
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include", // ✅ REQUIRED
+      });
 
-    if (!res.ok) throw new Error("Logout failed");
+      if (!res.ok) throw new Error("Logout failed");
 
-    const data = await res.json();
-    console.log(data.message);
+      const data = await res.json();
+      console.log(data.message);
 
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
 
-    router.replace("/"); 
-  } catch (err) {
-    console.error("Logout failed:", err);
-  }
-};
+      router.replace("/");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
 
 
- 
+
 
   const menuItems = [
     { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/dashboard" },
@@ -326,22 +393,22 @@ const handleLogout = async () => {
     visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
   };
   const itemVariant: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
-};
-const staggerContainer: Variants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.1,
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.4, ease: "easeOut" },
     },
-  },
-};
+  };
+  const staggerContainer: Variants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.1,
+      },
+    },
+  };
   if (showLoader) {
     return (
       <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
@@ -351,11 +418,11 @@ const staggerContainer: Variants = {
   }
   return (
     <motion.div
-  variants={staggerContainer}
-  initial="hidden"
-  animate="visible" className="min-h-screen bg-gray-100 p-6">
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible" className="min-h-screen bg-gray-100 p-6">
       {/* Navbar */}
-        <motion.div
+      <motion.div
         variants={navbarVariants}
         initial="hidden"
         animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
@@ -391,32 +458,32 @@ const staggerContainer: Variants = {
       </motion.div>
 
       {/* Invoice Preview */}
-      <motion.div variants={itemVariant}ref={invoiceRef} className="max-w-5xl mx-auto bg-white p-6 rounded shadow space-y-6">
+      <motion.div variants={itemVariant} ref={invoiceRef} className="max-w-5xl mx-auto bg-white p-6 rounded shadow space-y-6">
         {/* Billed By */}
         <div className="flex justify-between mb-6">
           <div>
-            <h2 className="font-bold">{invoice.billedBy.businessName || "Your Business"}</h2>
-            <p>{invoice.billedBy.address}, {invoice.billedBy.city}</p>
-            <p>{invoice.billedBy.country}</p>
-            <p>Phone: {invoice.billedBy.phone}</p>
-            <p>GSTIN: {invoice.billedBy.gstin}</p>
+            <h2 className="font-bold">{invoice?.billedBy?.businessName || "Your Business"}</h2>
+            <p>{invoice?.billedBy?.address}, {invoice?.billedBy?.city}</p>
+            <p>{invoice?.billedBy?.country}</p>
+            <p>Phone: {invoice?.billedBy?.phone}</p>
+            <p>GSTIN: {invoice?.billedBy?.gstin}</p>
           </div>
           <div className="text-right">
-            {invoice.logoUrl && <img src={invoice.logoUrl} alt="Company Logo" className="h-16 object-contain mb-2" />}
-            <p>Invoice Number: {invoice.invoiceNumber}</p>
-            <p>Date: {formatDate(invoice.invoiceDate)}</p>
-            <p>Due Date: {formatDate(invoice.dueDate)}</p>
+            {invoice?.logoUrl && <img src={invoice.logoUrl} alt="Company Logo" className="h-16 object-contain mb-2" />}
+            <p>Invoice Number: {invoice?.invoiceNumber}</p>
+            <p>Date: {formatDate(invoice?.invoiceDate)}</p>
+            <p>Due Date: {formatDate(invoice?.dueDate)}</p>
           </div>
         </div>
 
         {/* Billed To */}
         <div>
           <h3 className="font-semibold">Billed To (Client)</h3>
-          <p>{invoice.billedTo.businessName || "Client Name"}</p>
-          <p>{invoice.billedTo.address}, {invoice.billedTo.city}</p>
-          <p>{invoice.billedTo.country}</p>
-          <p>Phone: {invoice.billedTo.phone}</p>
-          <p>GSTIN: {invoice.billedTo.gstin}</p>
+          <p>{invoice?.billedTo?.businessName || "Client Name"}</p>
+          <p>{invoice?.billedTo?.address}, {invoice?.billedTo?.city}</p>
+          <p>{invoice?.billedTo?.country}</p>
+          <p>Phone: {invoice?.billedTo?.phone}</p>
+          <p>GSTIN: {invoice?.billedTo?.gstin}</p>
         </div>
 
         {/* Items Table */}
@@ -433,7 +500,7 @@ const staggerContainer: Variants = {
             </tr>
           </thead>
           <tbody>
-            {invoice.items.map((item: any, i: number) => (
+            {invoice?.items.map((item: any, i: number) => (
               <tr key={i}>
                 <td className="border px-3 py-2">{editMode ? <input className="w-full px-1 py-1" value={item.itemName} onChange={(e) => handleItemChange(i, "itemName", e.target.value)} /> : item.itemName}</td>
                 <td className="border px-3 py-2">{editMode ? <input className="w-full px-1 py-1" value={item.hsn} onChange={(e) => handleItemChange(i, "hsn", e.target.value)} /> : item.hsn}</td>
@@ -459,9 +526,9 @@ const staggerContainer: Variants = {
             <p>Amount: ₹{totals.amount.toFixed(2)}</p>
             <p>CGST: ₹{totals.cgst.toFixed(2)}</p>
             <p>SGST: ₹{totals.sgst.toFixed(2)}</p>
-            <p className="font-semibold">Discount: ₹{invoice.extras?.discount || 0}</p>
-            <p className="font-semibold">Additional Charges: ₹{invoice.extras?.charges || 0}</p>
-            <p className="font-bold text-lg">Grand Total: ₹{totals.grandTotal.toFixed(2)}</p>
+            <p className="font-semibold">Discount: ₹{invoice?.extras?.discount || 0}</p>
+            <p className="font-semibold">Additional Charges: ₹{invoice?.extras?.charges || 0}</p>
+            <p className="font-bold text-lg">Grand Total: ₹{totals?.grandTotal.toFixed(2)}</p>
             <p className="italic">Total in words: {totalInWords}</p>
           </div>
         </div>
@@ -470,7 +537,35 @@ const staggerContainer: Variants = {
         {/* ... Your existing file upload JSX remains unchanged ... */}
 
       </motion.div>
-     <motion.div variants={itemVariant} className="p-10">
+      <div className="mb-4 w-64">
+        <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-full h-10">
+          <FileText size={18} className="text-gray-500" />
+          <span className="bg-white dark:bg-gray-900 text-sm text-gray-600 text-center">
+            Add Signature
+          </span>
+          <input
+            type="file"
+            accept=".png,.jpg,.jpeg,.pdf"
+            className="hidden"
+            onChange={(e) => handleFileChange("signature", e.target.files ?? null)}
+          />
+        </label>
+
+        {invoiceFiles.signature && (
+          <div className="mt-2 text-sm text-gray-700 flex justify-between items-center bg-gray-100 px-2 py-1 rounded">
+            <span>{invoiceFiles.signature.name}</span>
+            <button
+              type="button"
+              onClick={() => setInvoiceFiles({ ...invoiceFiles, signature: null })}
+              className="text-red-500 font-bold ml-2"
+            >
+              X
+            </button>
+          </div>
+        )}
+      </div>
+
+      <motion.div variants={itemVariant} className="p-10">
         <div className="grid md:grid-cols-3 gap-4 justify-items-center">
           {/* Terms & Conditions */}
           {/* Terms & Conditions */}
@@ -603,7 +698,7 @@ const staggerContainer: Variants = {
 
         </div>
       </motion.div>
- <motion.div variants={itemVariant}className="grid md:grid-cols-2 gap-4 justify-items-center mt-4">
+      <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-4 justify-items-center mt-4">
         {/* Additional Info */}
         <div className="mb-4">
           <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
@@ -678,8 +773,17 @@ const staggerContainer: Variants = {
           )}
         </div>
       </motion.div>
-<motion.div variants={itemVariant} className="flex justify-center gap-4 m-4">
-        <button className="btn bg-gray-300 px-4 py-2 rounded flex items-center gap-2" onClick={saveInvoice}><Edit2 size={16} /> Save Invoice</button>
+      <motion.div variants={itemVariant} className="flex justify-center gap-4 m-4">
+        <button
+          disabled={saving}
+          onClick={saveInvoice}
+          className={`btn px-4 py-2 rounded flex items-center gap-2 ${saving ? "bg-gray-400 cursor-not-allowed" : "bg-gray-300"
+            }`}
+        >
+          <Edit2 size={16} />
+          {saving ? "Saving..." : "Save Invoice"}
+        </button>
+
         <button className="btn bg-gray-300 px-4 py-2 rounded flex items-center gap-2" onClick={async () => { if (editMode) await saveInvoice(); setEditMode(!editMode); }}><Edit2 size={16} /> {editMode ? "Finish Edit" : "Edit Invoice"}</button>
         <button className="btn bg-gray-300 px-4 py-2 rounded flex items-center gap-2" onClick={() => setShowEmailForm(!showEmailForm)}><Send size={16} /> Send Invoice</button>
       </motion.div>
@@ -702,7 +806,7 @@ const staggerContainer: Variants = {
       )}
 
       <div className="flex justify-center mb-6">
-        <button className="bg-gray-300 text-black px-6 py-2 rounded flex items-center gap-2 cursor-pointer" onClick={generatePDF}><Download size={16} /> Download PDF</button>
+        <button className={`bg-gray-300 text-black px-6 py-2 rounded flex items-center gap-2 ${downloading?"bg-gray-400 cursor-not-allowed":"bg-gray-300"}`} onClick={generatePDF}><Download size={16} />{downloading?"Downloading PDF":"Download PDF"}</button>
       </div>
     </motion.div>
   );

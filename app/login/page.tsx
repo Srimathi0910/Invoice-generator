@@ -41,33 +41,26 @@ const handleSubmit = async (e: React.FormEvent) => {
       body: JSON.stringify(formData),
     });
 
-    if (data.error) {
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
+    // Successful login
+    localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("token", data.token);
 
-      setErrors({
-        email: data?.errors?.email || "",
-        password: data?.errors?.password || "",
-        general: data.error || "Invalid email or password",
-      });
-    } else {
-      localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("token", data.token);
+    if (data.role === "company") router.replace("/dashboard");
+    else if (data.role === "client") router.replace("/dashboard-client");
+  } catch (err: any) {
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
 
-      if (data.role === "company") router.replace("/dashboard");
-      else if (data.role === "client") router.replace("/dashboard-client");
-      else
-        setErrors((prev) => ({
-          ...prev,
-          general: "Invalid user role",
-        }));
-    }
-  } catch {
-    setErrors({ email: "", password: "", general: "Network error" });
+    setErrors({
+      email: err?.errors?.email || "",
+      password: err?.errors?.password || "",
+      general: err?.error || "Invalid email or password",
+    });
   } finally {
     setLoading(false);
   }
 };
+
 
   /* ---------------- ANIMATIONS ---------------- */
 

@@ -1,26 +1,34 @@
 // utils/authFetch.ts
 export async function authFetch(url: string, options: RequestInit = {}) {
   let res = await fetch(url, { ...options, credentials: "include" });
+  let data = await res.json();
 
-  // If access token expired
+  // If access token expired, try refresh
   if (res.status === 401) {
-    // Call refresh token endpoint
     const refreshRes = await fetch("/api/auth/refresh", {
       method: "POST",
       credentials: "include",
     });
 
     if (refreshRes.ok) {
-      // Retry original request
+      // Retry original request after refresh
       res = await fetch(url, { ...options, credentials: "include" });
+      data = await res.json();
+
+      if (!res.ok) throw data;
     } else {
-      // Logout user if refresh fails
+      // Refresh failed → logout
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       window.location.href = "/login";
-      return;
+      throw { error: "Session expired. Please login again." };
     }
   }
 
-  return res.json();
+  // Other errors
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
 }

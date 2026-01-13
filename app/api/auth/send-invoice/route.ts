@@ -6,6 +6,7 @@ import puppeteer from "puppeteer";
 
 export async function POST(req: Request) {
   try {
+    /* ---------------- READ FORM DATA ---------------- */
     const formData = await req.formData();
 
     const email = formData.get("email") as string;
@@ -14,22 +15,25 @@ export async function POST(req: Request) {
     const totalInWords = formData.get("totalInWords") as string;
     const logoUrl = formData.get("logoUrl") as string;
 
-    // Get all uploaded files
     const files = formData.getAll("files") as File[];
 
-    // Generate invoice table rows
-    const itemsRows = invoice.items.map((item: any) => `
-      <tr>
-        <td>${item.itemName}</td>
-        <td>${item.hsn}</td>
-        <td>${item.gst}%</td>
-        <td>${item.qty}</td>
-        <td>&#8377;${item.rate.toFixed(2)}</td>
-        <td>&#8377;${(item.qty * item.rate).toFixed(2)}</td>
-      </tr>
-    `).join("");
+    /* ---------------- BUILD INVOICE TABLE ---------------- */
+    const itemsRows = invoice.items
+      .map(
+        (item: any) => `
+        <tr>
+          <td>${item.itemName}</td>
+          <td>${item.hsn}</td>
+          <td>${item.gst}%</td>
+          <td>${item.qty}</td>
+          <td>&#8377;${item.rate.toFixed(2)}</td>
+          <td>&#8377;${(item.qty * item.rate).toFixed(2)}</td>
+        </tr>
+      `
+      )
+      .join("");
 
-    // HTML template for PDF
+    /* ---------------- HTML FOR PDF ---------------- */
     const html = `
       <!DOCTYPE html>
       <html>
@@ -51,14 +55,29 @@ export async function POST(req: Request) {
           ${logoUrl ? `<img src="${logoUrl}" class="logo" />` : ""}
         </div>
 
-        <p><b>Billed By:</b><br/>${invoice.billedBy.businessName}<br/>${invoice.billedBy.address}, ${invoice.billedBy.city}, ${invoice.billedBy.country}<br/>Phone: ${invoice.billedBy.phone}<br/>GSTIN: ${invoice.billedBy.gstin}</p>
-        <p><b>Billed To:</b><br/>${invoice.billedTo.businessName}<br/>${invoice.billedTo.address}, ${invoice.billedTo.city}, ${invoice.billedTo.country}<br/>Phone: ${invoice.billedTo.phone}<br/>GSTIN: ${invoice.billedTo.gstin}</p>
+        <p><b>Billed By:</b><br/>
+          ${invoice.billedBy.businessName}<br/>
+          ${invoice.billedBy.address}, ${invoice.billedBy.city}, ${invoice.billedBy.country}<br/>
+          Phone: ${invoice.billedBy.phone}<br/>
+          GSTIN: ${invoice.billedBy.gstin}
+        </p>
+
+        <p><b>Billed To:</b><br/>
+          ${invoice.billedTo.businessName}<br/>
+          ${invoice.billedTo.address}, ${invoice.billedTo.city}, ${invoice.billedTo.country}<br/>
+          Phone: ${invoice.billedTo.phone}<br/>
+          GSTIN: ${invoice.billedTo.gstin}
+        </p>
 
         <table>
           <thead>
             <tr>
-              <th>Item</th><th>HSN</th><th>GST%</th>
-              <th>Qty</th><th>Rate</th><th>Amount</th>
+              <th>Item</th>
+              <th>HSN</th>
+              <th>GST%</th>
+              <th>Qty</th>
+              <th>Rate</th>
+              <th>Amount</th>
             </tr>
           </thead>
           <tbody>${itemsRows}</tbody>
@@ -68,21 +87,22 @@ export async function POST(req: Request) {
         <p class="right">CGST: &#8377;${totals.cgst.toFixed(2)}</p>
         <p class="right">SGST: &#8377;${totals.sgst.toFixed(2)}</p>
         <p class="right"><b>Grand Total: &#8377;${totals.grandTotal.toFixed(2)}</b></p>
+
         <p><i>${totalInWords}</i></p>
       </body>
       </html>
     `;
 
-    // Generate PDF using Puppeteer
+    /* ---------------- GENERATE PDF ---------------- */
     const browser = await puppeteer.launch({
-  args: [
-    "--no-sandbox",
-    "--disable-setuid-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-gpu",
-  ],
-  headless: true,
-});
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+      ],
+    });
 
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "load", timeout: 0 });
@@ -90,16 +110,21 @@ export async function POST(req: Request) {
     const pdfBuffer = await page.pdf({ format: "A4" });
     await browser.close();
 
-    // Nodemailer setup
+    /* ---------------- NODEMAILER (FIXED SSL ISSUE) ---------------- */
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true, // SSL
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS, // App Password recommended if using 2FA
+        pass: process.env.EMAIL_PASS, // Gmail App Password
+      },
+      tls: {
+        rejectUnauthorized: false, // ✅ fixes self-signed cert error
       },
     });
 
-    // Convert uploaded files to nodemailer attachments
+    /* ---------------- EXTRA ATTACHMENTS ---------------- */
     const extraAttachments = await Promise.all(
       files.map(async (file) => ({
         filename: file.name,
@@ -108,7 +133,7 @@ export async function POST(req: Request) {
       }))
     );
 
-    // Send email
+    /* ---------------- SEND EMAIL ---------------- */
     await transporter.sendMail({
       from: `"Invoice App" <${process.env.EMAIL_USER}>`,
       to: email,
@@ -117,16 +142,19 @@ export async function POST(req: Request) {
       attachments: [
         {
           filename: `Invoice-${invoice.invoiceNumber}.pdf`,
-          content: Buffer.from(pdfBuffer), // ensure it's a Buffer
+          content: Buffer.from(pdfBuffer),
           contentType: "application/pdf",
         },
-        ...extraAttachments, // ✅ send all uploaded files
+        ...extraAttachments,
       ],
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Failed to send invoice" }, { status: 500 });
+    console.error("SEND INVOICE ERROR:", error);
+    return NextResponse.json(
+      { error: "Failed to send invoice" },
+      { status: 500 }
+    );
   }
 }

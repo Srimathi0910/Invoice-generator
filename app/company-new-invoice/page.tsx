@@ -41,20 +41,23 @@ export default function InvoicePage() {
   const [user, setUser] = useState<{ _id: string; username: string; email?: string } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-   const [showLoader, setShowLoader] = useState(true);
-    useEffect(() => {
-      // Show loader for 3 seconds
-      const timer = setTimeout(() => {
-        setShowLoader(false);
-      }, 1200); // 3000ms = 3 seconds
-  
-      return () => clearTimeout(timer); // cleanup
-    }, []);
+  const [showLoader, setShowLoader] = useState(true);
+  const [invoice, setInvoice] = useState<any>(null); // <-- store saved invoice
+
+  useEffect(() => {
+    // Show loader for 3 seconds
+    const timer = setTimeout(() => {
+      setShowLoader(false);
+    }, 1200); // 3000ms = 3 seconds
+
+    return () => clearTimeout(timer); // cleanup
+  }, []);
 
   /* ---------------- Logo ---------------- */
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currency, setCurrency] = useState("₹");
 
   /* ---------------- Invoice Files ---------------- */
   const [invoiceFiles, setInvoiceFiles] = useState<InvoiceFiles>({
@@ -112,6 +115,8 @@ export default function InvoicePage() {
     address: "",
     city: "",
   });
+
+
 
   /* ---------------- User Validation ---------------- */
   useEffect(() => {
@@ -227,6 +232,7 @@ export default function InvoicePage() {
     };
 
     const invoiceData = {
+      _id: invoice?._id || undefined, // <-- add this
       invoiceNumber: invoiceMeta.invoiceNumber.trim(),
       invoiceDate: new Date(invoiceMeta.invoiceDate),
       dueDate: new Date(invoiceMeta.dueDate),
@@ -237,8 +243,9 @@ export default function InvoicePage() {
       totals: calculatedTotals,
       totalInWords: `${calculatedTotals.grandTotal} rupees only`,
       logoUrl: logoPreview || "",
-      files: invoiceFilesBase64,  // ✅ include all files for preview
+      files: invoiceFilesBase64,
     };
+
 
     localStorage.setItem("invoiceData", JSON.stringify(invoiceData));
     router.push("/preview");
@@ -248,15 +255,29 @@ export default function InvoicePage() {
   /* ---------------- Save Invoice ---------------- */
   const handleSaveInvoice = async (e?: React.FormEvent) => {
     e?.preventDefault();
+
+    // 1️⃣ Validate invoice first
     if (!validateInvoice()) return;
-    if (!user?._id) { alert("User not logged in"); return router.push("/login"); }
+
+    // 2️⃣ Ensure user is logged in
+    if (!user?._id) {
+      alert("User not logged in");
+      return router.push("/login");
+    }
+
     const token = localStorage.getItem("token");
     if (!token) return router.push("/login");
+
     setIsSaving(true);
 
     try {
+      // 3️⃣ Compute totals
       const calculatedTotals = computeTotals();
-      const invoiceData = {
+
+      // 4️⃣ Prepare invoice object
+
+      const invoiceData: any = {
+        _id: invoice?._id || undefined, // <-- important: include _id if updating
         invoiceNumber: invoiceMeta.invoiceNumber.trim(),
         invoiceDate: new Date(invoiceMeta.invoiceDate),
         dueDate: new Date(invoiceMeta.dueDate),
@@ -270,20 +291,21 @@ export default function InvoicePage() {
         userId: user._id,
       };
 
+      // 5️⃣ Prepare FormData
       const formData = new FormData();
       formData.append("data", JSON.stringify(invoiceData));
 
-      // Files
+      // 6️⃣ Append files if any
       if (invoiceFiles.signature) formData.append("signature", invoiceFiles.signature);
       if (invoiceFiles.notes) formData.append("notes", invoiceFiles.notes);
       if (invoiceFiles.terms) invoiceFiles.terms.forEach(f => formData.append("terms", f));
       if (invoiceFiles.attachments) invoiceFiles.attachments.forEach(f => formData.append("attachments", f));
       if (invoiceFiles.additionalInfo) invoiceFiles.additionalInfo.forEach(f => formData.append("additionalInfo", f));
       if (invoiceFiles.contactDetails) invoiceFiles.contactDetails.forEach(f => formData.append("contactDetails", f));
-
       if (logoFile) formData.append("file", logoFile);
 
-      const result = await authFetch("/api/auth/invoice", {
+      // 7️⃣ Call API
+      const res = await fetch("/api/auth/invoice", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -291,76 +313,106 @@ export default function InvoicePage() {
         body: formData,
       });
 
-      // If authFetch already returns JSON
-      if (result?.success || result?.message || !result?.error) {
+      const result = await res.json();
+
+      // 8️⃣ Handle response
+      if (result.success && result.invoice) {
         alert("Invoice saved successfully!");
-      } else {
-        alert(`Failed: ${result.error}`);
+        setInvoice(result.invoice); // update invoice state with returned data
+        localStorage.setItem("invoiceData", JSON.stringify(result.invoice)); // for review page
+      }
+      else {
+        alert(`Failed to save invoice: ${result.error || result.message || "Unknown error"}`);
       }
 
-    } catch (err) { console.error(err); alert("Error saving invoice."); }
-    finally { setIsSaving(false); }
-  };
-
-  /* ---------------- Logout ---------------- */
-
-const handleLogout = async () => {
-  try {
-    const res = await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include", // ✅ REQUIRED
-    });
-
-    if (!res.ok) throw new Error("Logout failed");
-
-    const data = await res.json();
-    console.log(data.message);
-
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-
-    router.replace("/"); 
-  } catch (err) {
-    console.error("Logout failed:", err);
-  }
-};
-
-useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (!token) return router.push("/login"); // redirect if no token
-
-  const loadCompanySettings = async () => {
-    try {
-      const res = await authFetch("/api/auth/company/settings", {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-      });
-
-      if (res.status === 401) {
-        return router.push("/login"); // redirect if token invalid
-      }
-
-      const data = await res.json();
-      setInvoiceMeta((prev) => ({ ...prev, invoiceNumber: data.billedBy?.invoicePrefix || "" }));
-      setItems((prev) => prev.map((item) => ({ ...item, gst: data.billedBy?.gstRate || 18 })));
-      if (data.logoUrl) setLogoPreview(data.logoUrl);
-      setBilledBy({
-        country: data.billedBy?.country || "",
-        businessName: data.billedBy?.businessName || "",
-        email: data.billedBy?.email || "",
-        phone: data.billedBy?.phone || "",
-        gstin: data.billedBy?.gstin || "",
-        address: data.billedBy?.address || "",
-        city: data.billedBy?.city || "",
-      });
-    } catch (err) {
-      console.error("Error loading company settings:", err);
+    } catch (err: any) {
+      console.error(err);
+      alert("Error saving invoice.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  loadCompanySettings();
-}, []);
+
+  /* ---------------- Logout ---------------- */
+
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include", // ✅ REQUIRED
+      });
+
+      if (!res.ok) throw new Error("Logout failed");
+
+      const data = await res.json();
+      console.log(data.message);
+
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+
+      router.replace("/");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/login");
+
+    const loadCompanySettings = async () => {
+      try {
+        const res = await fetch("/api/auth/company/settings", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+
+        if (res.status === 401) return router.push("/login");
+
+        const json = await res.json();
+        const data = json.data;
+
+        // 1️⃣ Set default invoice prefix in invoice number
+        setInvoiceMeta((prev) => ({
+          ...prev,
+          invoiceNumber: (data.invoicePrefix || "INV-"),
+        }));
+
+        // 2️⃣ Set default GST rate for all items
+        setItems((prev) =>
+          prev.map((item) => ({
+            ...item,
+            gst: data.gstRate ?? 18,
+          }))
+        );
+
+        // 3️⃣ Set currency
+        setCurrency(data.currency || "₹");
+
+        // 4️⃣ Set Billed By details
+        setBilledBy({
+          country: data.country || "",
+          businessName: data.companyName || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          gstin: data.gstin || "",
+          address: data.address || "",
+          city: data.city || "",
+        });
+
+        // 5️⃣ Set logo
+        if (data.logoUrl) setLogoPreview(data.logoUrl);
+
+      } catch (err) {
+        console.error("Error loading company settings:", err);
+      }
+    };
+
+    loadCompanySettings();
+  }, [router]);
+
 
   /* ---------------- Menu Items ---------------- */
   const menuItems = [
@@ -371,7 +423,7 @@ useEffect(() => {
     { icon: <FaCog />, label: "Settings", path: "/settings" },
   ];
 
-  if (loadingUser) return <div>Loading...</div>;
+
   const navbarVariants: Variants = {
     hidden: { y: -100, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
@@ -476,7 +528,7 @@ useEffect(() => {
             </label>
 
             <input
-              className="w-full p-2 bg-white dark:bg-gray-900 text-black dark:text-white border-2 border-black dark:border-white rounded-md focus:outline-none focus:ring-0"
+              className="w-full p-2 border-2 border-black rounded-md"
               placeholder="Invoice Number"
               required
               value={invoiceMeta.invoiceNumber}
@@ -484,6 +536,7 @@ useEffect(() => {
                 setInvoiceMeta({ ...invoiceMeta, invoiceNumber: e.target.value })
               }
             />
+
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">
@@ -648,6 +701,8 @@ useEffect(() => {
                         onChange={(e) => handleChange(i, "gst", e.target.value)}
                       />
                     </td>
+
+
                     <td className="p-2 border border-gray-300">
                       <input
                         className="w-full p-2 border border-gray-300 rounded text-sm"

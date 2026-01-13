@@ -28,6 +28,7 @@ const invoiceSchema = new mongoose.Schema({
     gstin: String,
     address: String,
     city: String,
+    contactPerson: String,
   },
 
   items: [
@@ -66,6 +67,48 @@ const invoiceSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
   logoUrl: String,
+
+  /* --------------------------
+     Optional Uploaded Files
+     -------------------------- */
+  files: {
+    signature: [
+      {
+        filename: String,
+        url: String,
+      },
+    ],
+    notes: [
+      {
+        filename: String,
+        url: String,
+      },
+    ],
+    terms: [
+      {
+        filename: String,
+        url: String,
+      },
+    ],
+    attachments: [
+      {
+        filename: String,
+        url: String,
+      },
+    ],
+    additionalInfo: [
+      {
+        filename: String,
+        url: String,
+      },
+    ],
+    contactDetails: [
+      {
+        filename: String,
+        url: String,
+      },
+    ],
+  },
 });
 
 export default mongoose.models.Invoice || mongoose.model("Invoice", invoiceSchema);

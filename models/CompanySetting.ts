@@ -1,4 +1,3 @@
-// models/CompanySettings.ts
 import mongoose from "mongoose";
 
 const CompanySettingsSchema = new mongoose.Schema(
@@ -7,7 +6,7 @@ const CompanySettingsSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true, // one company per user
+      unique: true,
     },
 
     companyName: String,
@@ -16,7 +15,7 @@ const CompanySettingsSchema = new mongoose.Schema(
     gstin: String,
     stateCode: String,
 
-    logoUrl: String, // store IMAGE URL, not file
+    logoUrl: String,
 
     currency: {
       type: String,
