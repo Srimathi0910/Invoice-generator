@@ -17,6 +17,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // ================= PASSWORD LENGTH CHECK =================
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters long" },
+        { status: 400 }
+      );
+    }
+
     // ================= CHECK EXISTING USER =================
     const existingUser = await User.findOne({ email });
 

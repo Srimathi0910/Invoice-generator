@@ -8,15 +8,26 @@ export async function POST(req: Request) {
   await connectDB();
   const { email, password } = await req.json();
 
+  // -------------------- CHECK EMAIL AND PASSWORD --------------------
   if (!email || !password) {
-    return NextResponse.json({ error: "Email and password required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Email and password are required" },
+      { status: 400 }
+    );
+  }
+
+  // -------------------- PASSWORD LENGTH CHECK --------------------
+  if (password.length < 8) {
+    return NextResponse.json(
+      { error: "Password must be at least 8 characters long" },
+      { status: 400 }
+    );
   }
 
   const user = await User.findOne({ email });
 
   // -------------------- INVALID EMAIL --------------------
   if (!user) {
-    // Clear any old cookies
     const res = NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     res.cookies.delete("accessToken");
     res.cookies.delete("refreshToken");
@@ -60,7 +71,7 @@ export async function POST(req: Request) {
     },
   });
 
-  // Set cookies only after successful login
+  // -------------------- SET COOKIES --------------------
   response.cookies.set("accessToken", accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

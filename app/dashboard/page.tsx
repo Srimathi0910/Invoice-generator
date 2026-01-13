@@ -27,10 +27,10 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showLoader, setShowLoader] = useState(true);
   useEffect(() => {
-    
+
     const timer = setTimeout(() => {
       setShowLoader(false);
-    }, 1200); 
+    }, 1200);
 
     return () => clearTimeout(timer); // cleanup
   }, []);
@@ -313,39 +313,41 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <table className="min-w-full border table-auto">
-          <thead className="bg-gray-100 bg-white dark:bg-gray-900">
-            <tr>
-              <Th>Invoice</Th>
-              <Th>Client</Th>
-              <Th>Amount</Th>
-              <Th>Status</Th>
-              <Th>Date</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredInvoices.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-500">
-                  No invoices created yet
-                </td>
+        <div className="overflow-x-auto w-full">
+          <table className="min-w-full border table-auto text-sm md:text-base">
+            <thead className="bg-gray-100 dark:bg-gray-900">
+              <tr className="hidden md:table-row"> {/* Hide headers on small screens */}
+                <Th>Invoice</Th>
+                <Th>Client</Th>
+                <Th>Amount</Th>
+                <Th>Status</Th>
+                <Th>Date</Th>
               </tr>
-            ) : (
-              filteredInvoices.map((inv) => (
-                <InvoiceRow
-                  key={inv._id}
-                  id={inv.invoiceNumber}
-                  client={inv.billedTo.businessName}
-                  amount={`₹${inv.totals?.grandTotal ?? 0}`}
-                  status={(inv.status ?? "N/A").trim()} // remove spaces
-                  date={new Date(inv.invoiceDate).toLocaleDateString()}
-                />
+            </thead>
+            <tbody>
+              {filteredInvoices.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-6 text-gray-500">
+                    No invoices created yet
+                  </td>
+                </tr>
+              ) : (
+                filteredInvoices.map((inv) => (
+                  <InvoiceRow
+                    key={inv._id}
+                    id={inv.invoiceNumber}
+                    client={inv.billedTo.businessName}
+                    amount={`₹${inv.totals?.grandTotal ?? 0}`}
+                    status={(inv.status ?? "N/A").trim()}
+                    date={new Date(inv.invoiceDate).toLocaleDateString()}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-              ))
-            )}
-          </tbody>
 
-        </table>
       </motion.div>
     </div >
   );
@@ -380,32 +382,44 @@ const SummaryBox = ({ title, value, bg, innerBg }: any) => (
 );
 
 const Th = ({ children }: { children: React.ReactNode }) => (
-  <th className="px-4 py-2 text-left whitespace-nowrap">{children}</th>
+  <th className="px-2 md:px-4 py-1 md:py-2 text-left whitespace-nowrap text-sm md:text-base">
+    {children}
+  </th>
 );
+
 
 const InvoiceRow = ({ id, client, amount, status, date }: any) => {
   const colors: Record<string, string> = {
-    Paid: "bg-[#05410C]",       // dark green
-    Unpaid: "bg-[#E06A2A]",     // orange
-    Overdue: "bg-[#E51F22]",    // red
+    Paid: "bg-[#05410C]",
+    Unpaid: "bg-[#E06A2A]",
+    Overdue: "bg-[#E51F22]",
   };
 
-
   return (
-    <tr className="border-t">
-      <td className="px-4 py-2">{id}</td>
-      <td className="px-4 py-2">{client}</td>
-      <td className="px-4 py-2">{amount}</td>
-      <td className="px-4 py-2">
+    <tr className="border-t md:table-row block md:table-row mb-4 md:mb-0"> {/* block on small screens */}
+      <td className="px-2 md:px-6 py-1 md:py-4 block md:table-cell">
+        <span className="font-semibold md:hidden">Invoice:</span> {id}
+      </td>
+      <td className="px-2 md:px-4 py-1 md:py-2 block md:table-cell">
+        <span className="font-semibold md:hidden">Client:</span> {client}
+      </td>
+      <td className="px-2 md:px-4 py-1 md:py-2 block md:table-cell">
+        <span className="font-semibold md:hidden">Amount:</span> {amount}
+      </td>
+      <td className="px-2 md:px-4 py-1 md:py-2 block md:table-cell">
+        <span className="font-semibold md:hidden">Status:</span>
         <button className={`px-2 py-1 text-white rounded ${colors[status] ?? "bg-gray-400"}`}>
           {status}
         </button>
-
       </td>
-      <td className="px-4 py-2">{date}</td>
+      <td className="px-2 md:px-4 py-1 md:py-2 block md:table-cell">
+        <span className="font-semibold md:hidden">Date:</span> {date}
+      </td>
     </tr>
   );
 };
+
+
 
 
 export default Dashboard;
