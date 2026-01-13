@@ -176,21 +176,32 @@ const handleSave = async () => {
 
 
   // -------------------- Save preferences --------------------
-  const savePreferences = async () => {
-    try {
-      const data = await authFetch("/api/auth/company/preferences", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(preferences),
-      });
-      if (data.message === "Preferences saved") alert("Preferences saved successfully!");
-      else alert("Error saving preferences: " + data.message);
-    } catch (err) {
-      console.error(err);
-      alert("Error saving preferences");
+const savePreferences = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) return router.push("/login");
+
+  try {
+    const data = await authFetch("/api/auth/company/preferences", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: "include", // <- this must be outside headers
+      body: JSON.stringify(preferences),
+    });
+
+    if (data.message === "Preferences saved") {
+      alert("Preferences saved successfully!");
+    } else {
+      alert("Error saving preferences: " + data.message);
     }
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Error saving preferences");
+  }
+};
+
 
   // -------------------- Logout --------------------
   const handleLogout = async () => {
