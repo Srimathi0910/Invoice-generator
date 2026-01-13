@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       status: "Unpaid",
     };
 
-    // ---------- CREATE CLIENT USER ----------
+    // ---------- CREATE CLIENT USER IF NOT EXISTS ----------
     let clientUser = await User.findOne({ email: invoiceData.billedTo.email });
     if (!clientUser) {
       const tempPassword = Math.random().toString(36).slice(-8);
@@ -103,10 +103,22 @@ export async function POST(req: NextRequest) {
       invoiceData.logoUrl = uploadResult.secure_url;
     }
 
-    // ---------- SAVE / UPDATE INVOICE ----------
-    const invoice = data._id
-      ? await Invoice.findByIdAndUpdate(data._id, invoiceData, { new: true })
-      : await Invoice.create(invoiceData);
+    // ---------- CREATE OR UPDATE INVOICE ----------
+    let invoice: any;
+
+    // Check if invoice number exists for this client
+    const existingInvoice = await Invoice.findOne({
+      invoiceNumber: invoiceData.invoiceNumber,
+      "billedTo.email": invoiceData.billedTo.email,
+    });
+
+    if (existingInvoice) {
+      // Update existing invoice
+      invoice = await Invoice.findByIdAndUpdate(existingInvoice._id, invoiceData, { new: true });
+    } else {
+      // Create new invoice
+      invoice = await Invoice.create(invoiceData);
+    }
 
     return NextResponse.json({ success: true, invoice });
   } catch (error: any) {
@@ -127,7 +139,8 @@ export async function GET(req: NextRequest) {
 
     if (id) {
       const invoice = await Invoice.findById(id).lean();
-      if (!invoice) return NextResponse.json({ success: false, error: "Invoice not found" }, { status: 404 });
+      if (!invoice)
+        return NextResponse.json({ success: false, error: "Invoice not found" }, { status: 404 });
       return NextResponse.json({ success: true, invoice });
     }
 

@@ -26,6 +26,8 @@ const Dashboard = () => {
   const [loadingUser, setLoadingUser] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showLoader, setShowLoader] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
 
     const timer = setTimeout(() => {
@@ -133,6 +135,21 @@ const Dashboard = () => {
     return statusMatch && searchMatch;
   });
 
+  /* ---------------- PAGINATION STATE ---------------- */
+  const invoicesPerPage = 5;
+
+  const totalPages = Math.ceil(filteredInvoices.length / invoicesPerPage);
+
+  // Slice invoices for current page
+  const paginatedInvoices = filteredInvoices.slice(
+    (currentPage - 1) * invoicesPerPage,
+    currentPage * invoicesPerPage
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
 
 
   // Navbar slides from top
@@ -332,7 +349,7 @@ const Dashboard = () => {
                   </td>
                 </tr>
               ) : (
-                filteredInvoices.map((inv) => (
+                paginatedInvoices.map((inv) => (
                   <InvoiceRow
                     key={inv._id}
                     id={inv.invoiceNumber}
@@ -342,9 +359,42 @@ const Dashboard = () => {
                     date={new Date(inv.invoiceDate).toLocaleDateString()}
                   />
                 ))
+
               )}
             </tbody>
           </table>
+          {/* ---------------- PAGINATION CONTROLS ---------------- */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-4 gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+              >
+                &lt;
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
+                    }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+              >
+                &gt;
+              </button>
+            </div>
+          )}
+
         </div>
 
 
@@ -396,29 +446,53 @@ const InvoiceRow = ({ id, client, amount, status, date }: any) => {
   };
 
   return (
-    <tr className="border-t md:table-row block md:table-row mb-4 md:mb-0"> {/* block on small screens */}
-      <td className="px-2 md:px-6 py-1 md:py-4 block md:table-cell">
-        <span className="font-semibold md:hidden">Invoice:</span> {id}
+    <tr className="border-t md:table-row block md:table-row mb-4 md:mb-0">
+      {/* Mobile layout */}
+      <td colSpan={5} className="block md:hidden px-2 py-2">
+        <div className="flex flex-col items-center gap-2">
+          {/* Each row: label on left, value on right */}
+          <div className="flex justify-between w-full px-4">
+            <span className="font-semibold">Invoice:</span>
+            <span className="text-left">{id}</span>
+          </div>
+          <div className="flex justify-between w-full px-4">
+            <span className="font-semibold">Client:</span>
+            <span className="text-left">{client}</span>
+          </div>
+          <div className="flex justify-between w-full px-4">
+            <span className="font-semibold">Amount:</span>
+            <span className="text-left">{amount}</span>
+          </div>
+          <div className="flex justify-between w-full px-4">
+            <span className="font-semibold">Status:</span>
+            <span
+              className={`px-2 py-1 text-white rounded ${colors[status] ?? "bg-gray-400"}`}
+            >
+              {status}
+            </span>
+          </div>
+          <div className="flex justify-between w-full px-4">
+            <span className="font-semibold">Date:</span>
+            <span className="text-left">{date}</span>
+          </div>
+        </div>
       </td>
-      <td className="px-2 md:px-4 py-1 md:py-2 block md:table-cell">
-        <span className="font-semibold md:hidden">Client:</span> {client}
-      </td>
-      <td className="px-2 md:px-4 py-1 md:py-2 block md:table-cell">
-        <span className="font-semibold md:hidden">Amount:</span> {amount}
-      </td>
-      <td className="px-2 md:px-4 py-1 md:py-2 block md:table-cell">
-        <span className="font-semibold md:hidden">Status:</span>
-        <button className={`px-2 py-1 text-white rounded ${colors[status] ?? "bg-gray-400"}`}>
+
+      {/* Desktop layout */}
+      <td className="hidden md:table-cell px-2 md:px-6 py-1 md:py-4 text-left">{id}</td>
+      <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">{client}</td>
+      <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">{amount}</td>
+      <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">
+        <button
+          className={`px-2 py-1 text-white rounded ${colors[status] ?? "bg-gray-400"}`}
+        >
           {status}
         </button>
       </td>
-      <td className="px-2 md:px-4 py-1 md:py-2 block md:table-cell">
-        <span className="font-semibold md:hidden">Date:</span> {date}
-      </td>
+      <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">{date}</td>
     </tr>
   );
 };
-
 
 
 
