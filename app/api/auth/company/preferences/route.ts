@@ -21,12 +21,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Invalid token" }, { status: 401 });
     }
 
+    // Parse preferences from request body
     const preferences = await req.json();
 
+    // Use only userId for upsert, do NOT include email
     await NotificationPreference.findOneAndUpdate(
-      { userId },
-      { $set: preferences },
-      { upsert: true, new: true }
+      { userId },           // filter by userId
+      { $set: preferences }, // set preferences
+      { upsert: true, new: true } // create if not exists
     );
 
     return NextResponse.json({ message: "Preferences saved" });
@@ -62,6 +64,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Invalid token" }, { status: 401 });
     }
 
+    // Fetch preferences by userId
     const preferences = await NotificationPreference.findOne({ userId }).lean();
 
     return NextResponse.json({ preferences: preferences || {} });
