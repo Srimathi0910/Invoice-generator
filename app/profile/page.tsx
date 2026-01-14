@@ -43,22 +43,45 @@ const ProfilePage = () => {
   const [errors, setErrors] = useState<any>({});
 
   // ---------------- LOAD USER ----------------
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+  
+// ---------------- LOAD USER ----------------
+useEffect(() => {
+  const storedUser = localStorage.getItem("user");
     if (!storedUser) {
       router.replace("/login");
       return;
     }
-    const parsedUser = JSON.parse(storedUser);
-    setUser(parsedUser);
-    setFormData({
-      contactPerson: parsedUser.contactPerson || "",
-      phone: parsedUser.phone || "",
-      email: parsedUser.email || "",
-      password: "",
-      confirmPassword: "",
-    });
-  }, [router]);
+  const fetchUser = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/auth/profile-update", {
+        method: "GET",
+        credentials: "include",
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch user");
+      }
+
+      setUser(data.user);
+      setFormData({
+        contactPerson: data.user.contactPerson || "",
+        phone: data.user.phone || "",
+        email: data.user.email || "",
+        password: "",
+        confirmPassword: "",
+      });
+    } catch (err) {
+      console.error(err);
+      router.replace("/login"); // redirect if not authorized
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchUser();
+}, [router]);
 
   // ---------------- HANDLERS ----------------
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
