@@ -252,7 +252,7 @@ export default function ReportsPage() {
             <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-white p-6 rounded shadow">
                     <p className="text-sm text-gray-500 mb-2">Total Revenues</p>
-                    <h2 className="text-3xl font-bold text-blue-600">₹{totalRevenue}</h2>
+                    <h2 className="text-3xl font-bold text-blue-600">${Number(totalRevenue).toFixed(2)}</h2>
                 </div>
 
                 <div className="bg-white p-6 rounded shadow">
