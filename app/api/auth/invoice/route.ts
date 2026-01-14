@@ -130,24 +130,88 @@ export async function POST(req: NextRequest) {
 /* =========================
    GET: Fetch Invoices
    ========================= */
+/* =========================
+   GET: Fetch Invoices (Only Logged-in User = billedBy.email)
+   ========================= */
 export async function GET(req: NextRequest) {
   await connectDB();
 
   try {
+    // ---------- AUTH ----------
+    const token = req.cookies.get("accessToken")?.value;
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    } catch {
+      return NextResponse.json(
+        { success: false, message: "Invalid token" },
+        { status: 401 }
+      );
+    }
+
+    const { email, role } = decoded;
+
+    if (!email || !role) {
+      return NextResponse.json(
+        { success: false, message: "Invalid token data" },
+        { status: 401 }
+      );
+    }
+
+    // ---------- ROLE BASED FILTER ----------
+    let filter: any = {};
+
+    if (role === "company") {
+      // Company dashboard → invoices CREATED by company
+      filter = { "billedBy.email": email };
+    } else if (role === "client") {
+      // Client dashboard → invoices RECEIVED by client
+      filter = { "billedTo.email": email };
+    } else {
+      return NextResponse.json(
+        { success: false, message: "Invalid role" },
+        { status: 403 }
+      );
+    }
+
+    // ---------- OPTIONAL: FETCH SINGLE INVOICE ----------
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
     if (id) {
-      const invoice = await Invoice.findById(id).lean();
-      if (!invoice)
-        return NextResponse.json({ success: false, error: "Invoice not found" }, { status: 404 });
+      const invoice = await Invoice.findOne({
+        _id: id,
+        ...filter,
+      }).lean();
+
+      if (!invoice) {
+        return NextResponse.json(
+          { success: false, message: "Invoice not found or unauthorized" },
+          { status: 404 }
+        );
+      }
+
       return NextResponse.json({ success: true, invoice });
     }
 
-    const invoices = await Invoice.find().sort({ invoiceDate: -1 }).lean();
+    // ---------- FETCH ALL USER INVOICES ----------
+    const invoices = await Invoice.find(filter)
+      .sort({ invoiceDate: -1 })
+      .lean();
+
     return NextResponse.json({ success: true, invoices });
   } catch (error: any) {
     console.error("Fetch invoice error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }

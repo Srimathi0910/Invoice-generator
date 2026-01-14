@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { authFetch} from "@/utils/authFetch"; // adjust the path based on your project
+import { authFetch } from "@/utils/authFetch"; // adjust the path based on your project
 import TetrominosLoader from "../_components/TetrominosLoader";
 
 import { useRouter } from "next/navigation";
@@ -17,15 +17,19 @@ const Dashboard = () => {
   /* ---------------- AUTH ---------------- */
   const [user, setUser] = useState<{ username: string; email: string } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
-   const [showLoader, setShowLoader] = useState(true);
-    useEffect(() => {
-      // Show loader for 3 seconds
-      const timer = setTimeout(() => {
-        setShowLoader(false);
-      }, 1200); // 3000ms = 3 seconds
-  
-      return () => clearTimeout(timer); // cleanup
-    }, []);
+  const [showLoader, setShowLoader] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  useEffect(() => {
+    // Show loader for 3 seconds
+    const timer = setTimeout(() => {
+      setShowLoader(false);
+    }, 1200); // 3000ms = 3 seconds
+
+    return () => clearTimeout(timer); // cleanup
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -38,40 +42,40 @@ const Dashboard = () => {
   }, [router]);
 
 
-const handleLogout = async () => {
-  try {
-    const res = await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include", // ✅ REQUIRED
-    });
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include", // ✅ REQUIRED
+      });
 
-    if (!res.ok) throw new Error("Logout failed");
+      if (!res.ok) throw new Error("Logout failed");
 
-    const data = await res.json();
-    console.log(data.message);
+      const data = await res.json();
+      console.log(data.message);
 
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
 
-    router.replace("/"); 
-  } catch (err) {
-    console.error("Logout failed:", err);
-  }
-};
+      router.replace("/");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
 
 
   /* ---------------- INVOICES ---------------- */
   const [invoices, setInvoices] = useState<any[]>([]);
 
-useEffect(() => {
-  if (!user?.email) return;
+  useEffect(() => {
+    if (!user?.email) return;
 
-  authFetch(`/api/auth/invoice?email=${user.email}`)
-    .then(data => {
-      setInvoices(Array.isArray(data) ? data : (data.invoices ?? []));
-    })
-    .catch(err => console.error("Failed to fetch invoices", err));
-}, [user]);
+    authFetch(`/api/auth/invoice`)
+      .then(data => {
+        setInvoices(Array.isArray(data) ? data : (data.invoices ?? []));
+      })
+      .catch(err => console.error("Failed to fetch invoices", err));
+  }, [user]);
 
 
 
@@ -99,9 +103,14 @@ useEffect(() => {
     { icon: <FaCog />, label: "Help", path: "/help" },
   ];
 
-  const filteredInvoices = activeTab === "All" ? invoices : invoices.filter(i => i.status === activeTab);
+// Filter based on active tab
+const filteredInvoices = activeTab === "All"
+  ? invoices
+  : invoices.filter(i => i.status === activeTab);
 
-    if (showLoader) {
+// Filter based on search term
+
+  if (showLoader) {
     return (
       <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
         <TetrominosLoader />
@@ -121,6 +130,19 @@ useEffect(() => {
         return "bg-gray-400";
     }
   };
+  // Apply search filter
+  const searchedInvoices = filteredInvoices.filter(inv =>
+    inv.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    inv.billedTo.businessName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination logic
+  const totalPages = Math.ceil(searchedInvoices.length / itemsPerPage);
+  const paginatedInvoices = searchedInvoices.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const navbarVariants: Variants = {
     hidden: { y: -100, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
@@ -227,11 +249,20 @@ useEffect(() => {
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
           <div className="relative w-full md:w-1/3">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search invoices..."
-              className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
-            />
+           <div className="relative w-full md:w-1/3">
+  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+  <input
+    type="text"
+    placeholder="Search invoices..."
+    value={searchTerm} // ✅ Connect value
+    onChange={(e) => {
+      setSearchTerm(e.target.value); // ✅ Update state
+      setCurrentPage(1); // ✅ Reset to first page when searching
+    }}
+    className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
+  />
+</div>
+
           </div>
 
           <div className="flex flex-wrap gap-4 md:gap-6">
@@ -249,7 +280,7 @@ useEffect(() => {
         </div>
 
         <table className="min-w-full table-fixed border border-gray-200 text-left">
-          <thead className="bg-gray-100">
+          <thead className="bg-gray-100 hidden md:table-header-group">
             <tr>
               <th className="px-4 py-2 w-1/6">Invoice</th>
               <th className="px-4 py-2 w-1/6">Billed To</th>
@@ -260,25 +291,66 @@ useEffect(() => {
             </tr>
           </thead>
           <tbody>
-            {filteredInvoices.length === 0 ? (
+            {paginatedInvoices.length === 0 ? (
               <tr>
                 <td colSpan={6} className="text-center py-6 text-gray-500">
                   No invoices created yet
                 </td>
               </tr>
             ) : (
-              filteredInvoices.map(inv => (
-                <tr key={inv._id} className="border-t">
-                  <td className="px-4 py-2">{inv.invoiceNumber}</td>
-                  <td className="px-4 py-2">{inv.billedTo.businessName}</td>
-                  <td className="px-4 py-2">₹{inv.totals?.grandTotal ?? 0}</td>
-                  <td className="px-4 py-2">
+              paginatedInvoices.map((inv) => (
+                <tr key={inv._id} className="border-t md:table-row block md:table-row mb-4 md:mb-0">
+                  {/* Mobile layout */}
+                  <td colSpan={6} className="block md:hidden px-2 py-2">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex justify-between w-full px-4">
+                        <span className="font-semibold">Invoice:</span>
+                        <span>{inv.invoiceNumber}</span>
+                      </div>
+                      <div className="flex justify-between w-full px-4">
+                        <span className="font-semibold">Billed To:</span>
+                        <span>{inv.billedTo.businessName}</span>
+                      </div>
+                      <div className="flex justify-between w-full px-4">
+                        <span className="font-semibold">Amount:</span>
+                        <span>₹{inv.totals?.grandTotal ?? 0}</span>
+                      </div>
+                      <div className="flex justify-between w-full px-4">
+                        <span className="font-semibold">Status:</span>
+                        <span
+                          className={`px-2 py-1 rounded text-white ${getStatusColor(inv.status)}`}
+                        >
+                          {inv.status ?? "Unpaid"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between w-full px-4">
+                        <span className="font-semibold">Date:</span>
+                        <span>{new Date(inv.invoiceDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-end w-full px-4">
+                        {(inv.status === "Unpaid" || inv.status === "Overdue") && (
+                          <button
+                            onClick={() => router.push(`/payment-client/${inv._id}`)}
+                            className="px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded font-medium"
+                          >
+                            Pay
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Desktop layout */}
+                  <td className="hidden md:table-cell px-4 py-2">{inv.invoiceNumber}</td>
+                  <td className="hidden md:table-cell px-4 py-2">{inv.billedTo.businessName}</td>
+                  <td className="hidden md:table-cell px-4 py-2">₹{inv.totals?.grandTotal ?? 0}</td>
+                  <td className="hidden md:table-cell px-4 py-2">
                     <span className={`px-2 py-1 rounded text-white ${getStatusColor(inv.status)}`}>
                       {inv.status ?? "Unpaid"}
                     </span>
                   </td>
-                  <td className="px-4 py-2">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
-                  <td className="px-4 py-2">
+                  <td className="hidden md:table-cell px-4 py-2">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
+                  <td className="hidden md:table-cell px-4 py-2">
                     {(inv.status === "Unpaid" || inv.status === "Overdue") && (
                       <button
                         onClick={() => router.push(`/payment-client/${inv._id}`)}
@@ -288,13 +360,41 @@ useEffect(() => {
                       </button>
                     )}
                   </td>
-
                 </tr>
               ))
             )}
           </tbody>
         </table>
-    </motion.div>
+        <div className="flex justify-center mt-4 gap-2 items-center">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            className="px-2 py-1 bg-gray-200 rounded disabled:opacity-50"
+            disabled={currentPage === 1}
+          >
+            &lt;
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            className="px-2 py-1 bg-gray-200 rounded disabled:opacity-50"
+            disabled={currentPage === totalPages}
+          >
+            &gt;
+          </button>
+        </div>
+
+
+      </motion.div>
 
     </div >
   );

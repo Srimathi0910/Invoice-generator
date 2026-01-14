@@ -1,5 +1,5 @@
 "use client";
-import { authFetch} from "@/utils/authFetch"; 
+import { authFetch } from "@/utils/authFetch";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
@@ -17,15 +17,18 @@ export default function ReportsPage() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("All");
     const [searchTerm, setSearchTerm] = useState("");
-     const [showLoader, setShowLoader] = useState(true);
-      useEffect(() => {
+    const [showLoader, setShowLoader] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+
+
+    useEffect(() => {
         // Show loader for 3 seconds
         const timer = setTimeout(() => {
-          setShowLoader(false);
+            setShowLoader(false);
         }, 1200); // 3000ms = 3 seconds
-    
+
         return () => clearTimeout(timer); // cleanup
-      }, []);
+    }, []);
 
     /* ---------------- AUTH ---------------- */
     useEffect(() => {
@@ -35,55 +38,55 @@ export default function ReportsPage() {
     }, [router]);
 
     /* ---------------- FETCH INVOICES ---------------- */
- useEffect(() => {
-  if (!user?.email) return;
+    useEffect(() => {
+        if (!user?.email) return;
 
-  authFetch(`/api/auth/invoice?email=${user.email}`, {
-    credentials: "include",
-  })
-    .then((data) => {
-      console.log("Reports invoices response:", data); // 🔍 debug once
+        authFetch(`/api/auth/invoice?email=${user.email}`, {
+            credentials: "include",
+        })
+            .then((data) => {
+                console.log("Reports invoices response:", data); // 🔍 debug once
 
-      if (Array.isArray(data)) {
-        setInvoices(data);
-      } else if (Array.isArray(data.invoices)) {
-        setInvoices(data.invoices);
-      } else {
-        setInvoices([]);
-      }
+                if (Array.isArray(data)) {
+                    setInvoices(data);
+                } else if (Array.isArray(data.invoices)) {
+                    setInvoices(data.invoices);
+                } else {
+                    setInvoices([]);
+                }
 
-      setLoading(false);
-    })
-    .catch((err) => {
-      console.error("Failed to fetch invoices:", err);
-      setInvoices([]);
-      setLoading(false);
-    });
-}, [user]);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error("Failed to fetch invoices:", err);
+                setInvoices([]);
+                setLoading(false);
+            });
+    }, [user]);
 
 
-const handleLogout = async () => {
-  try {
-    const res = await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include", // ✅ REQUIRED
-    });
+    const handleLogout = async () => {
+        try {
+            const res = await fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: "include", // ✅ REQUIRED
+            });
 
-    if (!res.ok) throw new Error("Logout failed");
+            if (!res.ok) throw new Error("Logout failed");
 
-    const data = await res.json();
-    console.log(data.message);
+            const data = await res.json();
+            console.log(data.message);
 
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            localStorage.removeItem("token");
 
-    router.replace("/"); 
-  } catch (err) {
-    console.error("Logout failed:", err);
-  }
-};
+            router.replace("/");
+        } catch (err) {
+            console.error("Logout failed:", err);
+        }
+    };
 
-    if (loading) return <p>Loading...</p>;
+    
 
     /* ---------------- CALCULATIONS ---------------- */
     const totalInvoices = invoices.length;
@@ -125,74 +128,87 @@ const handleLogout = async () => {
 
         return statusMatch && searchMatch;
     });
-const navbarVariants: Variants = {
-    hidden: { y: -100, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
-  };
+    const navbarVariants: Variants = {
+        hidden: { y: -100, opacity: 0 },
+        visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+    };
 
-  // Summary boxes stagger
-  const summaryContainerVariants: Variants = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.15 } },
-  };
-
-
-  // Total revenue box appears after summary boxes
-
-  // Recent invoices appear last
-  const recentInvoicesVariants: Variants = {
-    hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 1 } },
-  };
+    // Summary boxes stagger
+    const summaryContainerVariants: Variants = {
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.15 } },
+    };
 
 
-  const summaryItemVariants: Variants = {
-    hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
-  };
+    // Total revenue box appears after summary boxes
 
-  const revenueVariants: Variants = {
-    hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
-  };
-const staggerContainer: Variants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.1,
-    },
-  },
-};const itemVariant: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
-};
+    // Recent invoices appear last
+    const recentInvoicesVariants: Variants = {
+        hidden: { y: -50, opacity: 0 },
+        visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 1 } },
+    };
 
-if (showLoader) {
-  return (
-    <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
-      <TetrominosLoader />
-    </div>
-  );
-}
+
+    const summaryItemVariants: Variants = {
+        hidden: { y: -50, opacity: 0 },
+        visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
+    };
+
+    const revenueVariants: Variants = {
+        hidden: { y: -50, opacity: 0 },
+        visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
+    };
+    const staggerContainer: Variants = {
+        hidden: {},
+        visible: {
+            transition: {
+                staggerChildren: 0.15,
+                delayChildren: 0.1,
+            },
+        },
+    }; const itemVariant: Variants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: { duration: 0.4, ease: "easeOut" },
+        },
+    };
+    const invoicesPerPage = 5;
+
+    const totalPages = Math.ceil(filteredInvoices.length / invoicesPerPage);
+
+    // Slice invoices for current page
+    const paginatedInvoices = filteredInvoices.slice(
+        (currentPage - 1) * invoicesPerPage,
+        currentPage * invoicesPerPage
+    );
+
+    const handlePageChange = (page: number) => {
+        if (page < 1 || page > totalPages) return;
+        setCurrentPage(page);
+    };
+    if (showLoader) {
+        return (
+            <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
+                <TetrominosLoader />
+            </div>
+        );
+    }
     return (
         <motion.div
-  variants={staggerContainer}
-  initial="hidden"
-  animate="visible" className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6 text-black dark:text-white">
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible" className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6 text-black dark:text-white">
             <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-                <motion.div variants={itemVariant}className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+                variants={navbarVariants}
+                initial="hidden"
+                animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+                <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
                     {/* LOGO */}
                 </motion.div>
 
-              <motion.div variants={itemVariant}className="md:hidden flex items-center mb-3">
+                <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
                     <button onClick={() => setMenuOpen(!menuOpen)}>
                         {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
                     </button>
@@ -230,8 +246,8 @@ if (showLoader) {
                 </motion.div>
             </motion.div>
             <motion.div variants={itemVariant}>
-            <h1 className="text-3xl font-bold mb-6">Reports</h1>
-</motion.div>
+                <h1 className="text-3xl font-bold mb-6">Reports</h1>
+            </motion.div>
             {/* Summary Cards */}
             <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-white p-6 rounded shadow">
@@ -250,7 +266,7 @@ if (showLoader) {
             </motion.div>
 
             {/* Charts */}
-            <motion.div variants={itemVariant}className="grid md:grid-cols-2 gap-6 mb-10">
+            <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-6 mb-10">
                 <div className="bg-white p-6 rounded shadow">
                     <h3 className="font-bold mb-4">Monthly Revenue</h3>
                     <ResponsiveContainer width="100%" height={250}>
@@ -279,7 +295,7 @@ if (showLoader) {
             </motion.div>
             <h2 className="text-xl font-semibold pl-2 pt-20 mb-4">Recent Invoices</h2>
 
-           <motion.div variants={itemVariant} className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
+            <motion.div variants={itemVariant} className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
                 <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
                     <div className="relative w-full md:w-1/3">
                         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -308,40 +324,72 @@ if (showLoader) {
                         ))}
                     </div>
                 </div>
-
-                <table className="min-w-full border table-auto">
-                    <thead className="bg-gray-100 bg-white dark:bg-gray-900">
-                        <tr>
-                            <Th>Invoice</Th>
-                            <Th>Client</Th>
-                            <Th>Amount</Th>
-                            <Th>Status</Th>
-                            <Th>Date</Th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredInvoices.length === 0 ? (
-                            <tr>
-                                <td colSpan={5} className="text-center py-6 text-gray-500">
-                                    No invoices created yet
-                                </td>
+                <div className="overflow-x-auto w-full">
+                    <table className="min-w-full border table-auto text-sm md:text-base">
+                        <thead className="bg-gray-100 dark:bg-gray-900">
+                            <tr className="hidden md:table-row"> {/* Hide headers on small screens */}
+                                <Th>Invoice</Th>
+                                <Th>Client</Th>
+                                <Th>Amount</Th>
+                                <Th>Status</Th>
+                                <Th>Date</Th>
                             </tr>
-                        ) : (
-                            filteredInvoices.map((inv) => (
-                                <InvoiceRow
-                                    key={inv._id}
-                                    id={inv.invoiceNumber}
-                                    client={inv.billedTo.businessName}
-                                    amount={`₹${inv.totals?.grandTotal ?? 0}`}
-                                    status={(inv.status ?? "N/A").trim()} // remove spaces
-                                    date={new Date(inv.invoiceDate).toLocaleDateString()}
-                                />
+                        </thead>
+                        <tbody>
+                            {filteredInvoices.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="text-center py-6 text-gray-500">
+                                        No invoices created yet
+                                    </td>
+                                </tr>
+                            ) : (
+                                paginatedInvoices.map((inv) => (
+                                    <InvoiceRow
+                                        key={inv._id}
+                                        id={inv.invoiceNumber}
+                                        client={inv.billedTo.businessName}
+                                        amount={`₹${inv.totals?.grandTotal ?? 0}`}
+                                        status={(inv.status ?? "N/A").trim()}
+                                        date={new Date(inv.invoiceDate).toLocaleDateString()}
+                                    />
+                                ))
 
-                            ))
-                        )}
-                    </tbody>
+                            )}
+                        </tbody>
+                    </table>
+                    {/* ---------------- PAGINATION CONTROLS ---------------- */}
+                    {totalPages > 1 && (
+                        <div className="flex justify-center mt-4 gap-2">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                            >
+                                &lt;
+                            </button>
 
-                </table>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                <button
+                                    key={page}
+                                    onClick={() => handlePageChange(page)}
+                                    className={`px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
+                                        }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                            >
+                                &gt;
+                            </button>
+                        </div>
+                    )}
+
+                </div>
             </motion.div>
         </motion.div>
     );
@@ -362,24 +410,56 @@ const Th = ({ children }: { children: React.ReactNode }) => (
 
 const InvoiceRow = ({ id, client, amount, status, date }: any) => {
     const colors: Record<string, string> = {
-        Paid: "bg-[#05410C]",       // dark green
-        Unpaid: "bg-[#E06A2A]",     // orange
-        Overdue: "bg-[#E51F22]",    // red
+        Paid: "bg-[#05410C]",
+        Unpaid: "bg-[#E06A2A]",
+        Overdue: "bg-[#E51F22]",
     };
 
-
     return (
-        <tr className="border-t">
-            <td className="px-4 py-2">{id}</td>
-            <td className="px-4 py-2">{client}</td>
-            <td className="px-4 py-2">{amount}</td>
-            <td className="px-4 py-2">
-                <button className={`px-2 py-1 text-white rounded ${colors[status] ?? "bg-gray-400"}`}>
+        <tr className="border-t md:table-row block md:table-row mb-4 md:mb-0">
+            {/* Mobile layout */}
+            <td colSpan={5} className="block md:hidden px-2 py-2">
+                <div className="flex flex-col items-center gap-2">
+                    {/* Each row: label on left, value on right */}
+                    <div className="flex justify-between w-full px-4">
+                        <span className="font-semibold">Invoice:</span>
+                        <span className="text-left">{id}</span>
+                    </div>
+                    <div className="flex justify-between w-full px-4">
+                        <span className="font-semibold">Client:</span>
+                        <span className="text-left">{client}</span>
+                    </div>
+                    <div className="flex justify-between w-full px-4">
+                        <span className="font-semibold">Amount:</span>
+                        <span className="text-left">{amount}</span>
+                    </div>
+                    <div className="flex justify-between w-full px-4">
+                        <span className="font-semibold">Status:</span>
+                        <span
+                            className={`px-2 py-1 text-white rounded ${colors[status] ?? "bg-gray-400"}`}
+                        >
+                            {status}
+                        </span>
+                    </div>
+                    <div className="flex justify-between w-full px-4">
+                        <span className="font-semibold">Date:</span>
+                        <span className="text-left">{date}</span>
+                    </div>
+                </div>
+            </td>
+
+            {/* Desktop layout */}
+            <td className="hidden md:table-cell px-2 md:px-6 py-1 md:py-4 text-left">{id}</td>
+            <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">{client}</td>
+            <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">{amount}</td>
+            <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">
+                <button
+                    className={`px-2 py-1 text-white rounded ${colors[status] ?? "bg-gray-400"}`}
+                >
                     {status}
                 </button>
-
             </td>
-            <td className="px-4 py-2">{date}</td>
+            <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">{date}</td>
         </tr>
     );
 };

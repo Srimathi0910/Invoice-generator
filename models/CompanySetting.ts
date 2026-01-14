@@ -13,6 +13,7 @@ const CompanySettingsSchema = new mongoose.Schema(
     email: String,
     address: String,
     gstin: String,
+    phone: String,
     stateCode: String,
 
     logoUrl: String,

@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
         email: data.email,
         address: data.address,
         gstin: data.gstin,
+        phone: data.phone, 
         stateCode: data.stateCode,
 
         currency: data.currency || "INR",

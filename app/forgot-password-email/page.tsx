@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Lock, Mail, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { authFetch } from "@/utils/authFetch";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -20,32 +19,31 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-    const res = await fetch("/api/auth/forgot-password-email", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email }),
-});
+      const res = await fetch("/api/auth/forgot-password-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
       const data = await res.json();
 
-if (!res.ok || data.success === false) {
-  setError(data.message || data.error || "Something went wrong");
-} else {
-  setSuccess(data.message || "OTP sent to your email address");
-  setTimeout(() => {
-          router.push("/verify-email");
+      if (!res.ok || data.success === false) {
+        setError(data.message || data.error || "Something went wrong");
+      } else {
+        setSuccess(data.message || "OTP sent to your email address");
+        setTimeout(() => {
+          // ✅ Pass email as query param to VerifyEmail page
+          router.push(`/verify-email?email=${encodeURIComponent(email)}`);
         }, 1000);
-}
-
+      }
     } catch {
       setError("Network error");
     } finally {
       setLoading(false);
     }
   };
- 
+
   return (
-    // Added p-4 to ensure the card has a gutter on mobile screens
     <div className="min-h-screen flex items-center justify-center bg-[#D9D9D9] p-4">
       <Link
         href="/login"
@@ -54,10 +52,6 @@ if (!res.ok || data.success === false) {
         <ArrowLeft size={22} />
       </Link>
 
-      {/* - Changed w-[420px] to w-full max-w-[420px] 
-          - Changed h-[500px] to md:h-[500px] (fixed on desktop, auto on mobile)
-          - Adjusted padding for smaller screens
-      */}
       <div className="relative w-full max-w-[420px] md:h-[500px] h-auto bg-white rounded-xl shadow-lg p-8 md:p-10 flex flex-col items-center">
         <h2 className="text-[25px] font-bold text-black mb-4 text-center">
           Forgot Password
@@ -72,7 +66,6 @@ if (!res.ok || data.success === false) {
           verification code
         </p>
 
-        {/* Email Input */}
         <div className="relative w-full mb-6">
           <input
             type="email"
@@ -91,11 +84,9 @@ if (!res.ok || data.success === false) {
           <Mail className="absolute right-0 top-2 text-gray-500" size={18} />
         </div>
 
-        {/* Messages */}
         {error && <p className="text-red-500 mb-2 text-center text-sm">{error}</p>}
         {success && <p className="text-green-600 mb-2 text-center text-sm">{success}</p>}
 
-        {/* Send Button */}
         <button
           type="button"
           onClick={handleSend}

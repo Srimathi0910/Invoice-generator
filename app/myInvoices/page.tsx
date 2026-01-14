@@ -1,5 +1,5 @@
 "use client";
-import { authFetch} from "@/utils/authFetch"; 
+import { authFetch } from "@/utils/authFetch";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -15,15 +15,17 @@ const Dashboard = () => {
     /* ---------------- AUTH ---------------- */
     const [user, setUser] = useState<{ username: string; email: string } | null>(null);
     const [loadingUser, setLoadingUser] = useState(true);
-     const [showLoader, setShowLoader] = useState(true);
-      useEffect(() => {
+    const [showLoader, setShowLoader] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    useEffect(() => {
         // Show loader for 3 seconds
         const timer = setTimeout(() => {
-          setShowLoader(false);
+            setShowLoader(false);
         }, 1200); // 3000ms = 3 seconds
-    
+
         return () => clearTimeout(timer); // cleanup
-      }, []);
+    }, []);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
@@ -35,52 +37,52 @@ const Dashboard = () => {
         setLoadingUser(false);
     }, [router]);
 
-   
-const handleLogout = async () => {
-  try {
-    const res = await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include", // ✅ REQUIRED
-    });
 
-    if (!res.ok) throw new Error("Logout failed");
+    const handleLogout = async () => {
+        try {
+            const res = await fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: "include", // ✅ REQUIRED
+            });
 
-    const data = await res.json();
-    console.log(data.message);
+            if (!res.ok) throw new Error("Logout failed");
 
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+            const data = await res.json();
+            console.log(data.message);
 
-    router.replace("/"); 
-  } catch (err) {
-    console.error("Logout failed:", err);
-  }
-};
+            localStorage.removeItem("user");
+            localStorage.removeItem("token");
+
+            router.replace("/");
+        } catch (err) {
+            console.error("Logout failed:", err);
+        }
+    };
 
 
     /* ---------------- INVOICES ---------------- */
     const [invoices, setInvoices] = useState<any[]>([]);
 
     useEffect(() => {
-    if (!user?.email) return;
+        if (!user?.email) return;
 
-    authFetch(`/api/auth/invoice?email=${user.email}`)
-        .then((data) => {
-            console.log("Fetched invoices:", data);
+        authFetch(`/api/auth/invoice?email=${user.email}`)
+            .then((data) => {
+                console.log("Fetched invoices:", data);
 
-            if (Array.isArray(data)) {
-                setInvoices(data);
-            } else if (Array.isArray(data.invoices)) {
-                setInvoices(data.invoices);
-            } else {
+                if (Array.isArray(data)) {
+                    setInvoices(data);
+                } else if (Array.isArray(data.invoices)) {
+                    setInvoices(data.invoices);
+                } else {
+                    setInvoices([]);
+                }
+            })
+            .catch((err) => {
+                console.error("Failed to fetch invoices", err);
                 setInvoices([]);
-            }
-        })
-        .catch((err) => {
-            console.error("Failed to fetch invoices", err);
-            setInvoices([]);
-        });
-}, [user]);
+            });
+    }, [user]);
 
 
     /* ---------------- CALCULATIONS ---------------- */
@@ -91,6 +93,11 @@ const handleLogout = async () => {
     const [activeMenu, setActiveMenu] = useState("My Invoices");
     const [menuOpen, setMenuOpen] = useState(false);
     const tabs = ["All", "Paid", "Unpaid", "Overdue"];
+    const [searchQuery, setSearchQuery] = useState("");
+
+    useEffect(() => {
+        setCurrentPage(1); // reset to first page when tab changes
+    }, [activeTab]);
 
     const menuItems = [
         { icon: <FaFileInvoiceDollar />, label: "Dashboard", path: "/dashboard-client" },
@@ -100,15 +107,22 @@ const handleLogout = async () => {
         { icon: <FaCog />, label: "Help", path: "/help" },
     ];
 
-    const filteredInvoices = activeTab === "All" ? invoices : invoices.filter(i => i.status === activeTab);
+    const filteredInvoices = invoices.filter((inv) => {
+        const matchesTab = activeTab === "All" ? true : inv.status === activeTab;
+        const matchesSearch =
+            inv.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            inv.billedTo.businessName.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesTab && matchesSearch;
+    });
 
-     if (showLoader) {
-    return (
-      <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
-        <TetrominosLoader />
-      </div>
-    );
-  }
+
+    if (showLoader) {
+        return (
+            <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
+                <TetrominosLoader />
+            </div>
+        );
+    }
     const getStatusColor = (status: string) => {
         switch (status) {
             case "Paid":
@@ -121,51 +135,59 @@ const handleLogout = async () => {
                 return "bg-gray-400";
         }
     };
-const navbarVariants: Variants = {
-    hidden: { y: -100, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
-  };
 
-  // Summary boxes stagger
-const itemVariant: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
-};
-const staggerContainer: Variants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.1,
-    },
-  },
-};
+    const navbarVariants: Variants = {
+        hidden: { y: -100, opacity: 0 },
+        visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+    };
+
+    // Summary boxes stagger
+    const itemVariant: Variants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: { duration: 0.4, ease: "easeOut" },
+        },
+    };
+    const staggerContainer: Variants = {
+        hidden: {},
+        visible: {
+            transition: {
+                staggerChildren: 0.15,
+                delayChildren: 0.1,
+            },
+        },
+    };
+
+    const itemsPerPage = 5; // Adjust as needed
+    const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
+
+    const paginatedInvoices = filteredInvoices.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
 
 
+    // Total revenue box appears after summary boxes
 
-  // Total revenue box appears after summary boxes
+    // Recent invoices appear last
 
-  // Recent invoices appear last
-  
 
-  
+
 
     return (
         <motion.div
-  variants={staggerContainer}
-  initial="hidden"
-  animate="visible" className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible" className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
 
             {/* ---------------- TOP MENU ---------------- */}
-          <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+            <motion.div
+                variants={navbarVariants}
+                initial="hidden"
+                animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
                 <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">Invoice Dashboard</div>
 
                 <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
@@ -202,7 +224,7 @@ const staggerContainer: Variants = {
 
 
             {/* ---------------- RECENT INVOICES ---------------- */}
-            
+
             <motion.h2 variants={itemVariant} className="text-xl font-semibold pl-2 pt-20 mb-4">My Invoices</motion.h2>
             <motion.div variants={itemVariant} className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
                 <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
@@ -211,8 +233,11 @@ const staggerContainer: Variants = {
                         <input
                             type="text"
                             placeholder="Search invoices..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
                         />
+
                     </div>
 
                     <div className="flex flex-wrap gap-4 md:gap-6">
@@ -230,7 +255,7 @@ const staggerContainer: Variants = {
                 </div>
 
                 <table className="min-w-full table-fixed border border-gray-200 text-left">
-                    <thead className="bg-gray-100">
+                    <thead className="bg-gray-100 hidden md:table-header-group">
                         <tr>
                             <th className="px-4 py-2 w-1/5">Invoice</th>
                             <th className="px-4 py-2 w-1/5">Billed To</th>
@@ -240,38 +265,99 @@ const staggerContainer: Variants = {
                             <td>Actions</td>
                         </tr>
                     </thead>
+
                     <tbody>
-                        {filteredInvoices.length === 0 ? (
+                        {paginatedInvoices.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="text-center py-6 text-gray-500">
+                                <td colSpan={6} className="text-center py-6 text-gray-500">
                                     No invoices created yet
                                 </td>
                             </tr>
                         ) : (
-                            filteredInvoices.map(inv => (
-                                <tr key={inv._id} className="border-t">
-                                    <td className="px-4 py-2">{inv.invoiceNumber}</td>
-                                    <td className="px-4 py-2">{inv.billedTo.businessName}</td>
-                                    <td className="px-4 py-2">₹{inv.totals?.grandTotal ?? 0}</td>
-                                    <td className="px-4 py-2">
+                            paginatedInvoices.map(inv => (
+                                <tr key={inv._id} className="border-t md:table-row block md:table-row mb-4 md:mb-0">
+                                    {/* Mobile Card */}
+                                    <td colSpan={6} className="block md:hidden p-2">
+                                        <div className="flex flex-col gap-2 bg-gray-50 rounded p-4 shadow-sm">
+                                            <div className="flex justify-between w-full">
+                                                <span className="font-semibold">Invoice:</span>
+                                                <span>{inv.invoiceNumber}</span>
+                                            </div>
+                                            <div className="flex justify-between w-full">
+                                                <span className="font-semibold">Billed To:</span>
+                                                <span>{inv.billedTo.businessName}</span>
+                                            </div>
+                                            <div className="flex justify-between w-full">
+                                                <span className="font-semibold">Amount:</span>
+                                                <span>₹{inv.totals?.grandTotal ?? 0}</span>
+                                            </div>
+                                            <div className="flex justify-between w-full">
+                                                <span className="font-semibold">Status:</span>
+                                                <span className={`px-2 py-1 rounded text-white ${getStatusColor(inv.status)}`}>
+                                                    {inv.status ?? "Unpaid"}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between w-full">
+                                                <span className="font-semibold">Date:</span>
+                                                <span>{new Date(inv.invoiceDate).toLocaleDateString()}</span>
+                                            </div>
+                                            <div className="flex justify-end w-full mt-2">
+                                                <button className="bg-blue-200 text-blue-700 font-medium px-3 py-1 rounded hover:bg-blue-300">
+                                                    View
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    {/* Desktop */}
+                                    <td className="hidden md:table-cell px-4 py-2">{inv.invoiceNumber}</td>
+                                    <td className="hidden md:table-cell px-4 py-2">{inv.billedTo.businessName}</td>
+                                    <td className="hidden md:table-cell px-4 py-2">₹{inv.totals?.grandTotal ?? 0}</td>
+                                    <td className="hidden md:table-cell px-4 py-2">
                                         <span className={`px-2 py-1 rounded text-white ${getStatusColor(inv.status)}`}>
                                             {inv.status ?? "Unpaid"}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-2">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
-                                    <td className="px-4 py-2">
+                                    <td className="hidden md:table-cell px-4 py-2">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
+                                    <td className="hidden md:table-cell px-4 py-2">
                                         <button className="bg-blue-200 text-blue-700 font-medium px-3 py-1 rounded hover:bg-blue-300">
                                             View
                                         </button>
                                     </td>
-
-
-
                                 </tr>
                             ))
                         )}
                     </tbody>
+
                 </table>
+                <div className="flex justify-center gap-2 mt-4">
+                    <button
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage((p) => p - 1)}
+                        className="px-3 py-1 border rounded disabled:opacity-50"
+                    >
+                        &lt;
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => setCurrentPage(i + 1)}
+                            className={`px-3 py-1 border rounded ${currentPage === i + 1 ? "bg-blue-500 text-white" : ""}`}
+                        >
+                            {i + 1}
+                        </button>
+                    ))}
+
+                    <button
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage((p) => p + 1)}
+                        className="px-3 py-1 border rounded disabled:opacity-50"
+                    >
+                        &gt;
+                    </button>
+                </div>
+
             </motion.div>
 
         </motion.div>

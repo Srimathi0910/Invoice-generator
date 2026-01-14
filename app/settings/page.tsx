@@ -13,6 +13,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { authFetch } from "@/utils/authFetch";
+import { motion, Variants } from "framer-motion";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -66,11 +67,8 @@ export default function SettingsPage() {
       try {
         const data = await authFetch("/api/auth/company/settings", {
           method: "GET",
-          cache: "no-store",
+          headers: { Authorization: `Bearer ${token}` },
           credentials: "include",
-          headers: {
-          Authorization: `Bearer ${token}`,
-        },
         });
 
         if (!data.data) return;
@@ -121,86 +119,90 @@ export default function SettingsPage() {
   };
 
   // -------------------- Save company settings --------------------
-const handleSave = async () => {
-  try {
-    const form = new FormData();
-
-    form.append(
-      "data",
-      JSON.stringify({
-        companyName: formData.companyName,
-        email: formData.email,
-        address: formData.address,
-        gstin: formData.gstin,
-        stateCode: formData.stateCode,
-
-        currency: formData.currency,
-        gstRate: formData.gstRate,
-        invoicePrefix: formData.invoicePrefix,
-
-        bankName: formData.bankName,
-        accountNumber: formData.accountNumber,
-        upiId: formData.upiId,
-
-        logoUrl: formData.logoUrl,
-      })
-    );
-
-    if (logoFile) {
-      form.append("logo", logoFile);
-    }
-
-    const res = await fetch("/api/auth/company/settings", {
-      method: "POST",
-      body: form,
-      credentials: "include",
-    });
-
-    const result = await res.json();
-
-    if (result.success) {
-      alert("Settings updated successfully!");
-      setFormData((prev) => ({
-        ...prev,
-        logoUrl: result.data.logoUrl,
-      }));
-      setLogoPreview(result.data.logoUrl);
-    } else {
-      alert("Error: " + result.message);
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Failed to update settings");
+  const handleSave = async () => {
+    const phoneRegex = /^\d{10}$/; // exactly 10 digits
+  if (!phoneRegex.test(formData.phone)) {
+    alert("Phone number must be exactly 10 digits.");
+    return; // stop saving
   }
-};
+    try {
+      const form = new FormData();
+
+      form.append(
+        "data",
+        JSON.stringify({
+          companyName: formData.companyName,
+          email: formData.email,
+          address: formData.address,
+          gstin: formData.gstin,
+          phone: formData.phone, // <-- Add this
+          stateCode: formData.stateCode,
+          currency: formData.currency,
+          gstRate: formData.gstRate,
+          invoicePrefix: formData.invoicePrefix,
+          bankName: formData.bankName,
+          accountNumber: formData.accountNumber,
+          upiId: formData.upiId,
+          logoUrl: formData.logoUrl,
+        })
+      );
+
+
+      if (logoFile) {
+        form.append("logo", logoFile);
+      }
+
+      const res = await fetch("/api/auth/company/settings", {
+        method: "POST",
+        body: form,
+        credentials: "include",
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        alert("Settings updated successfully!");
+        setFormData((prev) => ({
+          ...prev,
+          logoUrl: result.data.logoUrl,
+        }));
+        setLogoPreview(result.data.logoUrl);
+      } else {
+        alert("Error: " + result.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update settings");
+    }
+  };
 
 
   // -------------------- Save preferences --------------------
-const savePreferences = async () => {
-  const token = localStorage.getItem("token");
-  if (!token) return router.push("/login");
+  const savePreferences = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/login");
 
-  try {
-    const data = await authFetch("/api/auth/company/preferences", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      credentials: "include", // <- this must be outside headers
-      body: JSON.stringify(preferences),
-    });
+    try {
+      const data = await authFetch("/api/auth/company/preferences", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include", // <- this must be outside headers
+        body: JSON.stringify(preferences),
+      });
 
-    if (data.message === "Preferences saved") {
-      alert("Preferences saved successfully!");
-    } else {
-      alert("Error saving preferences: " + data.message);
+      if (data.message === "Preferences saved") {
+        alert("Preferences saved successfully!");
+      } else {
+        alert("Error saving preferences: " + data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error saving preferences");
     }
-  } catch (err) {
-    console.error(err);
-    alert("Error saving preferences");
-  }
-};
+  };
 
 
   // -------------------- Logout --------------------
@@ -234,35 +236,99 @@ const savePreferences = async () => {
       document.documentElement.classList.remove("dark");
     }
   }, [preferences.theme]);
+  // Navbar slides from top
+  const navbarVariants: Variants = {
+    hidden: { y: -100, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+  };
 
+  // Summary boxes stagger
+  const summaryContainerVariants: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.15 } },
+  };
+
+
+  // Total revenue box appears after summary boxes
+
+  // Recent invoices appear last
+  const recentInvoicesVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 1 } },
+  };
+
+
+  const summaryItemVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
+  };
+
+  const revenueVariants: Variants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
+  };
   return (
-    <div className="min-h-screen bg-gray-200">
+    <div className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
       {/* NAVBAR */}
-      <div className="bg-white rounded-lg p-4 shadow mb-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-          <div className="text-xl font-bold cursor-pointer">Dashboard</div>
-          <div className="md:hidden">
-            <button onClick={() => setMenuOpen(!menuOpen)}>
-              {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+      <motion.div
+        variants={navbarVariants}
+        initial="hidden"
+        animate="visible"
+        className="bg-white dark:bg-gray-900 rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
+      >
+
+
+
+        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+          {/* LOGO */}
+        </div>
+
+        <motion.div
+          variants={navbarVariants}
+          initial="hidden"
+          animate="visible" className="md:hidden flex items-center mb-3">
+          <button onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          </button>
+        </motion.div>
+
+        <div
+          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
+            }`}
+        >
+          {menuItems.map((item) => (
+            <MenuItem
+              key={item.label}
+              icon={item.icon}
+              label={item.label}
+              isActive={activeMenu === item.label}
+              onClick={() => {
+                setActiveMenu(item.label); // set active menu
+                if (item.path) router.push(item.path); // navigate to page
+              }}
+            />
+          ))}
+
+          <div className="flex flex-col items-end space-y-2">
+            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+              <FaUserCircle size={28} />
+              <span className="font-medium">{user?.username || "User"}</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-red-600 hover:underline"
+            >
+              Logout
             </button>
           </div>
-          <div className={`flex flex-col md:flex-row gap-6 md:gap-10 items-start md:items-center w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"}`}>
-            {menuItems.map((item) => (
-              <MenuItem key={item.label} icon={item.icon} label={item.label} isActive={activeMenu === item.label} onClick={() => { setActiveMenu(item.label); router.push(item.path); }} />
-            ))}
-            <div className="flex flex-col items-end">
-              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded shadow">
-                <FaUserCircle size={26} />
-                <span className="font-medium">{user?.username || "User"}</span>
-              </div>
-              <button onClick={handleLogout} className="text-sm text-red-600 hover:underline mt-1">Logout</button>
-            </div>
-          </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* PAGE CONTENT */}
-      <div className="px-4 sm:px-6 md:px-10 lg:px-16 py-8">
+      <motion.div
+        variants={recentInvoicesVariants}
+        initial="hidden"
+        animate="visible" className="px-4 sm:px-6 md:px-10 lg:px-16 py-8">
         <h1 className="text-3xl font-bold mb-6">Settings</h1>
         <div className="bg-white rounded-xl p-6 sm:p-8">
           {/* Tabs */}
@@ -286,7 +352,13 @@ const savePreferences = async () => {
                 <input className="border px-3 py-2 w-full mb-3" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                 <textarea className="border px-3 py-2 w-full mb-3" rows={4} placeholder="Address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
                 <input className="border px-3 py-2 w-full mb-3" placeholder="GSTIN" value={formData.gstin} onChange={(e) => setFormData({ ...formData, gstin: e.target.value })} />
-                <input className="border px-3 py-2 w-full mb-3" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                <input
+                  className="border px-3 py-2 w-full mb-3"
+                  placeholder="Phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+
               </Card>
 
               <Card title="Payment Settings">
@@ -362,7 +434,7 @@ const savePreferences = async () => {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -50,7 +50,7 @@ export default function ClientsPage() {
     return () => clearTimeout(timer); // cleanup
   }, []);
 
-  const itemsPerPage = 5;
+
 
   const menuItems = [
     { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/dashboard" },
@@ -71,52 +71,52 @@ export default function ClientsPage() {
   }, [router]);
 
   /* ---------------- FETCH CLIENTS ---------------- */
-useEffect(() => {
-  let isMounted = true;
+  useEffect(() => {
+    let isMounted = true;
 
-const fetchClients = async () => {
-  try {
-    const response = await authFetch("/api/auth/clients");
-    console.log("Clients API response:", response);
+    const fetchClients = async () => {
+      try {
+        const response = await authFetch("/api/auth/clients");
+        console.log("Clients API response:", response);
 
-    let rawClients: any[] = [];
+        let rawClients: any[] = [];
 
-    // handle authFetch wrapper
-    if (Array.isArray(response)) {
-      rawClients = response;
-    } else if (Array.isArray(response.clients)) {
-      rawClients = response.clients;
-    } else if (Array.isArray(response.data?.clients)) {
-      rawClients = response.data.clients;
-    } else {
-      console.warn("Unexpected API response shape:", response);
-    }
+        // handle authFetch wrapper
+        if (Array.isArray(response)) {
+          rawClients = response;
+        } else if (Array.isArray(response.clients)) {
+          rawClients = response.clients;
+        } else if (Array.isArray(response.data?.clients)) {
+          rawClients = response.data.clients;
+        } else {
+          console.warn("Unexpected API response shape:", response);
+        }
 
-    const normalizedClients: Client[] = rawClients.map((c) => ({
-      id: c._id || c.id,
-      name: c.name,
-      phone: c.phone,
-      gstin: c.gstin,
-      email: c.email,
-      totalInvoices: c.totalInvoices ?? 0,
-    }));
+        const normalizedClients: Client[] = rawClients.map((c) => ({
+          id: c._id || c.id,
+          name: c.name,
+          phone: c.phone,
+          gstin: c.gstin,
+          email: c.email,
+          totalInvoices: c.totalInvoices ?? 0,
+        }));
 
-    setClients(normalizedClients);
-  } catch (err) {
-    console.error("Failed to fetch clients", err);
-    setClients([]);
-  } finally {
-    setLoading(false);
-  }
-};
+        setClients(normalizedClients);
+      } catch (err) {
+        console.error("Failed to fetch clients", err);
+        setClients([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
 
-  fetchClients();
+    fetchClients();
 
-  return () => {
-    isMounted = false;
-  };
-}, []);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
 
 
@@ -129,12 +129,6 @@ const fetchClients = async () => {
   }, [clients, search]);
 
   /* ---------------- PAGINATION ---------------- */
-  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
-
-  const paginatedClients = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredClients.slice(start, start + itemsPerPage);
-  }, [filteredClients, currentPage]);
 
   /* ---------------- HANDLERS ---------------- */
   const handleEdit = (id: string) => {
@@ -213,14 +207,27 @@ const fetchClients = async () => {
       transition: { duration: 0.4, ease: "easeOut" },
     },
   };
-  if (showLoader) {
+ 
+  /* ---------------- PAGINATION ---------------- */
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+
+  const paginatedClients = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredClients.slice(start, start + itemsPerPage);
+  }, [filteredClients, currentPage]);
+
+  // Reset page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+ if (showLoader) {
     return (
       <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
         <TetrominosLoader />
       </div>
     );
   }
-
   /* ---------------- UI ---------------- */
   return (
     <motion.div
@@ -286,7 +293,7 @@ const fetchClients = async () => {
 
 
         {/* Search input */}
-        <motion.div variants={itemVariant} className="relative w-1/3">
+        {/* <motion.div variants={itemVariant} className="relative w-1/3">
           <input
             type="text"
             placeholder="Search Clients"
@@ -295,7 +302,7 @@ const fetchClients = async () => {
             className="border rounded w-full pl-10 pr-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-        </motion.div>
+        </motion.div> */}
         <motion.button variants={itemVariant}
           onClick={handleAddClient}
           className="bg-white text-black px-4 py-2 rounded flex items-center gap-2"
@@ -320,12 +327,13 @@ const fetchClients = async () => {
       </motion.div>
 
       {/* -------- TABLE -------- */}
-      <motion.div variants={itemVariant} className="bg-white rounded shadow overflow-x-auto ">
+      <motion.div variants={itemVariant} className="bg-white rounded shadow overflow-x-auto">
         {loading ? (
           <div className="text-center py-10">Loading clients...</div>
         ) : (
           <table className="w-full text-sm border-collapse border">
-            <thead className="bg-gray-200">
+            {/* Desktop headers */}
+            <thead className="bg-gray-200 hidden md:table-header-group">
               <tr>
                 <th className="border px-4 py-2 text-left">Client Name</th>
                 <th className="border px-4 py-2 text-left">Phone</th>
@@ -339,29 +347,56 @@ const fetchClients = async () => {
             <tbody>
               {paginatedClients.length > 0 ? (
                 paginatedClients.map((client) => (
-                  <tr key={client.id} className="hover:bg-gray-50">
-                    <td className="border px-4 py-2">{client.name}</td>
-                    <td className="border px-4 py-2">{client.phone}</td>
-                    <td className="border px-4 py-2">{client.gstin}</td>
-                    <td className="border px-4 py-2 text-center">
-                      {client.totalInvoices}
+                  <tr key={client.id} className="border-t md:table-row block md:table-row mb-4 md:mb-0">
+                    {/* Mobile layout */}
+                    <td colSpan={6} className="block md:hidden px-2 py-2">
+                      <div className="flex flex-col gap-2 bg-gray-50 rounded p-4 shadow-sm">
+                        <div className="flex justify-between w-full">
+                          <span className="font-semibold">Client Name:</span>
+                          <span>{client.name}</span>
+                        </div>
+                        <div className="flex justify-between w-full">
+                          <span className="font-semibold">Phone:</span>
+                          <span>{client.phone}</span>
+                        </div>
+                        <div className="flex justify-between w-full">
+                          <span className="font-semibold">GSTIN:</span>
+                          <span>{client.gstin}</span>
+                        </div>
+                        <div className="flex justify-between w-full">
+                          <span className="font-semibold">Total Invoices:</span>
+                          <span>{client.totalInvoices}</span>
+                        </div>
+                        <div className="flex justify-between w-full">
+                          <span className="font-semibold">Email:</span>
+                          <span>{client.email || "-"}</span>
+                        </div>
+                        {/* <div className="flex justify-end w-full mt-2">
+                    <button
+                      onClick={() => handleEdit(client.id)}
+                      className="bg-gray-200 px-4 py-1 rounded flex gap-1 items-center justify-center"
+                    >
+                      <Pencil size={14} /> Edit
+                    </button>
+                  </div> */}
+                      </div>
                     </td>
 
-                    {/* ✅ EMAIL COLUMN */}
-                    <td className="border px-4 py-2">
-                      {client.email || "-"}
-                    </td>
-
-                    <td className="border px-4 py-2 text-center">
+                    {/* Desktop layout */}
+                    <td className="hidden md:table-cell border px-4 py-2">{client.name}</td>
+                    <td className="hidden md:table-cell border px-4 py-2">{client.phone}</td>
+                    <td className="hidden md:table-cell border px-4 py-2">{client.gstin}</td>
+                    <td className="hidden md:table-cell border px-4 py-2 text-center">{client.totalInvoices}</td>
+                    <td className="hidden md:table-cell border px-4 py-2">{client.email || "-"}</td>
+                    <td className="hidden md:table-cell border px-4 py-2 text-center">
                       <button
                         onClick={() => handleEdit(client.id)}
-                        className="bg-gray-200 px-4 py-2 rounded flex gap-1 items-center justify-center mx-auto"
+                        className="bg-gray-200 px-4 py-1 rounded flex gap-1 items-center justify-center mx-auto"
                       >
                         <Pencil size={14} /> Edit
                       </button>
                     </td>
                   </tr>
-
                 ))
               ) : (
                 <tr>
@@ -372,38 +407,43 @@ const fetchClients = async () => {
               )}
             </tbody>
           </table>
+
         )}
       </motion.div>
 
+
       {/* -------- PAGINATION -------- */}
       <motion.div variants={itemVariant} className="flex justify-center gap-2 mt-4">
+        {/* Previous button */}
         <button
           disabled={currentPage === 1}
-          onClick={() => setCurrentPage((p) => p - 1)}
-          className="px-3 py-1 border rounded"
+          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+          className="px-3 py-1 border rounded disabled:opacity-50"
         >
           &lt;
         </button>
 
+        {/* Page numbers */}
         {Array.from({ length: totalPages }, (_, i) => (
           <button
-            key={i}
+            key={i + 1}
             onClick={() => setCurrentPage(i + 1)}
-            className={`px-3 py-1 border rounded ${currentPage === i + 1 ? "bg-blue-500 text-white" : ""
-              }`}
+            className={`px-3 py-1 border rounded ${currentPage === i + 1 ? "bg-blue-500 text-white" : ""}`}
           >
             {i + 1}
           </button>
         ))}
 
+        {/* Next button */}
         <button
           disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage((p) => p + 1)}
-          className="px-3 py-1 border rounded"
+          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+          className="px-3 py-1 border rounded disabled:opacity-50"
         >
           &gt;
         </button>
       </motion.div>
+
     </motion.div>
   );
 }

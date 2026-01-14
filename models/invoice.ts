@@ -47,8 +47,8 @@ const invoiceSchema = new mongoose.Schema({
     round: Number,
     paymentMethod: {
       type: String,
-      enum: ["UPI", "Credit/Debit Card", "Net Banking", "Wallet"],
-      default: undefined,
+      enum: ["NA","UPI", "Credit/Debit Card", "Net Banking", "Wallet"],
+      default: "NA",
     },
   },
 

@@ -1,16 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function VerifyEmail() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    const e = searchParams.get("email");
+    if (!e) {
+      setError("Email missing. Please retry.");
+    } else {
+      setEmail(e);
+    }
+  }, [searchParams]);
 
   const handleChange = (index: number, value: string) => {
     const newOtp = [...otp];
@@ -43,17 +54,20 @@ export default function VerifyEmail() {
       return;
     }
 
-    try {
-      console.log("Calling verify-otp-email API...", { otp: enteredOtp });
+    if (!email) {
+      setError("Email missing. Please retry.");
+      setLoading(false);
+      return;
+    }
 
+    try {
       const res = await fetch("/api/auth/verify-otp-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ otp: enteredOtp }),
+        body: JSON.stringify({ email, otp: enteredOtp }),
       });
 
       const data = await res.json();
-      console.log("API response:", data);
 
       if (!res.ok) {
         setError(data.error || "Invalid OTP");

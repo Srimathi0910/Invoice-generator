@@ -1,9 +1,10 @@
 "use client";
 import { authFetch } from "@/utils/authFetch";
 import TetrominosLoader from "../_components/TetrominosLoader";
-
+import { numberToWords } from "@/utils/numberToWords";
 import { useState, useEffect, useRef } from "react";
-import { X, Eye, FileText, StickyNote, Paperclip, Info, Phone } from "lucide-react";
+import { X, Eye, EyeOff, FileText, StickyNote, Paperclip, Info, Phone } from "lucide-react";
+
 import { useRouter } from "next/navigation";
 import {
   FaFileInvoiceDollar,
@@ -43,6 +44,10 @@ export default function InvoicePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
   const [invoice, setInvoice] = useState<any>(null); // <-- store saved invoice
+  const [showTotalWords, setShowTotalWords] = useState(true);
+  const [showPdfTotal, setShowPdfTotal] = useState(true);
+  const [showTotalInWords, setShowTotalInWords] = useState(true);
+
 
   useEffect(() => {
     // Show loader for 3 seconds
@@ -207,7 +212,6 @@ export default function InvoicePage() {
     return { amount, cgst, sgst, totalQty: qty, grandTotal: grand };
   };
   const handleCalculate = () => { if (!validateInvoice()) return; setTotals(computeTotals()); };
-  const numberToWords = (num: number) => `${num} rupees only`;
 
   /* ---------------- Preview ---------------- */
   const handlePreview = async () => {
@@ -243,6 +247,7 @@ export default function InvoicePage() {
       totals: calculatedTotals,
       totalInWords: `${calculatedTotals.grandTotal} rupees only`,
       logoUrl: logoPreview || "",
+      showTotalInWords,
       files: invoiceFilesBase64,
     };
 
@@ -488,24 +493,46 @@ export default function InvoicePage() {
         variants={navbarVariants}
         initial="hidden"
         animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">Invoice System</div>
-        <div className="md:hidden flex items-center mb-3">
-          <button onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}</button>
-        </div>
-        <div className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"}`}>
-          <div className="flex flex-col md:flex-row gap-4 md:gap-8 mb-3 md:mb-0">
-            {menuItems.map(item => (
-              <MenuItem key={item.label} icon={item.icon} label={item.label} isActive={activeMenu === item.label} onClick={() => { setActiveMenu(item.label); router.push(item.path); }} />
-            ))}
-          </div>
+        <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+          {/* LOGO */}
+        </motion.div>
+
+        <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
+          <button onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          </button>
+        </motion.div>
+
+        <motion.div variants={itemVariant}
+          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
+            }`}
+        >
+          {menuItems.map((item) => (
+            <MenuItem
+              key={item.label}
+              icon={item.icon}
+              label={item.label}
+              isActive={activeMenu === item.label}
+              onClick={() => {
+                setActiveMenu(item.label); // set active menu
+                if (item.path) router.push(item.path); // navigate to page
+              }}
+            />
+          ))}
+
           <div className="flex flex-col items-end space-y-2">
             <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
               <FaUserCircle size={28} />
               <span className="font-medium">{user?.username || "User"}</span>
             </div>
-            <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">Logout</button>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-red-600 hover:underline"
+            >
+              Logout
+            </button>
           </div>
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* ---------------- FORM START ---------------- */}
@@ -658,109 +685,211 @@ export default function InvoicePage() {
 
 
         {/* ---------------- ITEMS TABLE FULL WIDTH ---------------- */}
-        <motion.div variants={itemVariant} className="mb-8 overflow-x-auto w-full">
-          <table className="w-full border border-gray-300 text-sm border-collapse">
-            <thead className="bg-gray-200">
-              <tr>
-                <th className="p-2 border border-gray-300">Item</th>
-                <th className="p-2 border border-gray-300">HSN</th>
-                <th className="p-2 border border-gray-300">GST%</th>
-                <th className="p-2 border border-gray-300">Qty</th>
-                <th className="p-2 border border-gray-300">Rate</th>
-                <th className="p-2 border border-gray-300">Amount</th>
-                <th className="p-2 border border-gray-300"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item, i) => {
-                const amount = item.qty * item.rate;
-                return (
-                  <tr key={i}>
-                    <td className="p-2 border border-gray-300">
-                      <input
-                        className="w-full p-2 border border-gray-300 rounded text-sm"
-                        required
-                        value={item.itemName}
-                        onChange={(e) => handleChange(i, "itemName", e.target.value)}
-                      />
-                    </td>
-                    <td className="p-2 border border-gray-300">
-                      <input
-                        className="w-full p-2 border border-gray-300 rounded text-sm"
-                        required
-                        value={item.hsn}
-                        onChange={(e) => handleChange(i, "hsn", e.target.value)}
-                      />
-                    </td>
-                    <td className="p-2 border border-gray-300">
-                      <input
-                        className="w-full p-2 border border-gray-300 rounded text-sm"
-                        type="number"
-                        value={item.gst}
-                        required
-                        onChange={(e) => handleChange(i, "gst", e.target.value)}
-                      />
-                    </td>
+        <motion.div variants={itemVariant} className="mb-8 w-full">
+  {/* Desktop Table */}
+  <div className="hidden md:block overflow-x-auto w-full">
+    <table className="w-full border border-gray-300 text-sm border-collapse">
+      <thead className="bg-gray-200">
+        <tr>
+          <th className="p-2 border border-gray-300">Item</th>
+          <th className="p-2 border border-gray-300">HSN</th>
+          <th className="p-2 border border-gray-300">GST%</th>
+          <th className="p-2 border border-gray-300">Qty</th>
+          <th className="p-2 border border-gray-300">Rate</th>
+          <th className="p-2 border border-gray-300">Amount</th>
+          <th className="p-2 border border-gray-300"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((item, i) => {
+          const amount = item.qty * item.rate;
+          return (
+            <tr key={i}>
+              <td className="p-2 border border-gray-300">
+                <input
+                  className="w-full p-2 border border-gray-300 rounded text-sm"
+                  required
+                  value={item.itemName}
+                  onChange={(e) => handleChange(i, "itemName", e.target.value)}
+                />
+              </td>
+              <td className="p-2 border border-gray-300">
+                <input
+                  className="w-full p-2 border border-gray-300 rounded text-sm"
+                  required
+                  value={item.hsn}
+                  onChange={(e) => handleChange(i, "hsn", e.target.value)}
+                />
+              </td>
+              <td className="p-2 border border-gray-300">
+                <input
+                  className="w-full p-2 border border-gray-300 rounded text-sm"
+                  type="number"
+                  value={item.gst}
+                  required
+                  onChange={(e) => handleChange(i, "gst", e.target.value)}
+                />
+              </td>
+              <td className="p-2 border border-gray-300">
+                <input
+                  className="w-full p-2 border border-gray-300 rounded text-sm"
+                  type="number"
+                  value={item.qty}
+                  required
+                  onChange={(e) => handleChange(i, "qty", e.target.value)}
+                />
+              </td>
+              <td className="p-2 border border-gray-300">
+                <input
+                  className="w-full p-2 border border-gray-300 rounded text-sm"
+                  type="number"
+                  value={item.rate}
+                  required
+                  onChange={(e) => handleChange(i, "rate", e.target.value)}
+                />
+              </td>
+              <td className="p-2 border border-gray-300">₹{amount.toFixed(2)}</td>
+              <td className="p-2 border border-gray-300 text-center">
+                <X
+                  size={16}
+                  className="text-red-600 cursor-pointer"
+                  onClick={() => removeItem(i)}
+                />
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
 
+  {/* Mobile View */}
+  <div className="md:hidden flex flex-col gap-4">
+    {items.map((item, i) => {
+      const amount = item.qty * item.rate;
+      return (
+        <div key={i} className="flex flex-col border p-3 rounded bg-gray-50 gap-2">
+          <div className="flex justify-between">
+            <span className="font-semibold">Item:</span>
+            <input
+              className="border p-1 rounded w-2/3"
+              value={item.itemName}
+              onChange={(e) => handleChange(i, "itemName", e.target.value)}
+            />
+          </div>
+          <div className="flex justify-between">
+            <span className="font-semibold">HSN:</span>
+            <input
+              className="border p-1 rounded w-2/3"
+              value={item.hsn}
+              onChange={(e) => handleChange(i, "hsn", e.target.value)}
+            />
+          </div>
+          <div className="flex justify-between">
+            <span className="font-semibold">GST%:</span>
+            <input
+              className="border p-1 rounded w-2/3"
+              type="number"
+              value={item.gst}
+              onChange={(e) => handleChange(i, "gst", e.target.value)}
+            />
+          </div>
+          <div className="flex justify-between">
+            <span className="font-semibold">Qty:</span>
+            <input
+              className="border p-1 rounded w-2/3"
+              type="number"
+              value={item.qty}
+              onChange={(e) => handleChange(i, "qty", e.target.value)}
+            />
+          </div>
+          <div className="flex justify-between">
+            <span className="font-semibold">Rate:</span>
+            <input
+              className="border p-1 rounded w-2/3"
+              type="number"
+              value={item.rate}
+              onChange={(e) => handleChange(i, "rate", e.target.value)}
+            />
+          </div>
+          <div className="flex justify-between">
+            <span className="font-semibold">Amount:</span>
+            <span>₹{amount.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-end">
+            <X
+              size={16}
+              className="text-red-600 cursor-pointer"
+              onClick={() => removeItem(i)}
+            />
+          </div>
+        </div>
+      );
+    })}
+  </div>
 
-                    <td className="p-2 border border-gray-300">
-                      <input
-                        className="w-full p-2 border border-gray-300 rounded text-sm"
-                        type="number"
-                        value={item.qty}
-                        required
-                        onChange={(e) => handleChange(i, "qty", e.target.value)}
-                      />
-                    </td>
-                    <td className="p-2 border border-gray-300">
-                      <input
-                        className="w-full p-2 border border-gray-300 rounded text-sm"
-                        type="number"
-                        value={item.rate}
-                        required
-                        onChange={(e) => handleChange(i, "rate", e.target.value)}
-                      />
-                    </td>
-                    <td className="p-2 border border-gray-300">₹{amount.toFixed(2)}</td>
-                    <td className="p-2 border border-gray-300 text-center">
-                      <X
-                        size={16}
-                        className="text-red-600 cursor-pointer"
-                        onClick={() => removeItem(i)}
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          <button
-            type="button"
-            onClick={addItem}
-            className="w-full mt-3 bg-gray-200 py-2 rounded border border-gray-300 hover:bg-gray-300 transition"
-          >
-            + Add New Item
-          </button>
-        </motion.div>
+  <button
+    type="button"
+    onClick={addItem}
+    className="w-full mt-3 bg-gray-200 py-2 rounded border border-gray-300 hover:bg-gray-300 transition"
+  >
+    + Add New Item
+  </button>
+</motion.div>
 
 
         <motion.div variants={itemVariant}>
-          <div className="bg-white dark:bg-gray-900 flex flex-row justify-between p-10">
+          <div className="bg-white dark:bg-gray-900 flex flex-col md:flex-row gap-6 md:justify-between p-4 md:p-10">
+
             <div className="bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-white mb-6 bg-gray-50 w-[250px] h-[200px] p-10">
 
-              <div className="flex justify-between">
-                <p className="font-medium bg-white dark:bg-gray-900">Total (in words)</p>
-                <Eye />
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span>Total in Words:</span>
+                  <button type="button" onClick={() => setShowTotalInWords(!showTotalInWords)}>
+                    {showTotalInWords ? <Eye size={16} /> : <EyeOff size={16} />}
+                  </button>
+                </div>
+
+                <p className="text-sm">
+                  {showTotalWords
+                    ? (() => {
+                      if (!totals?.grandTotal || totals.grandTotal === 0) return "Zero rupees only";
+
+                      const grand = totals.grandTotal.toFixed(2); // e.g., "129.80"
+                      const [integerPart, decimalPart] = grand.split(".").map(Number);
+
+                      let words = numberToWords(integerPart) + " Rupees";
+                      if (decimalPart && decimalPart > 0) {
+                        words += ` and ${numberToWords(decimalPart)} Paise`;
+                      }
+
+                      return words + " Only";
+                    })()
+                    : "---"}
+                </p>
               </div>
-              <p className="text-sm">{numberToWords(totals.grandTotal)}</p>
+
+
+
+
+
+
             </div>
 
-            <div className="bg-white dark:bg-gray-900 border-2  bg-gray-50 p-4 rounded-lg space-y-3">
-              <div className=" flex justify-between items-center font-semibold">
+            <div className="bg-white dark:bg-gray-900 border-2 bg-gray-50 p-4 rounded-lg space-y-3 w-full md:w-auto">
+
+              <div className="flex justify-between font-semibold items-center">
                 <span>Show Total (PDF)</span>
-                <Eye />
+                <button
+                  type="button"   // <-- THIS IS CRUCIAL
+                  onClick={() => setShowPdfTotal(!showPdfTotal)}
+                >
+                  {showPdfTotal ? <Eye /> : <EyeOff />}
+                </button>
               </div>
+
+
 
               <div className="flex justify-between">
                 <span>Amount</span>

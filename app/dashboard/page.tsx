@@ -106,7 +106,8 @@ const Dashboard = () => {
 
   const totalRevenue = invoices
     .filter((i) => i.status === "Paid")
-    .reduce((sum, i) => sum + Number(i.amount), 0);
+    .reduce((sum, i) => sum + Number(i.totals?.grandTotal ?? 0), 0);
+
 
   /* ---------------- UI STATE ---------------- */
   const [activeTab, setActiveTab] = useState("All");
@@ -122,18 +123,21 @@ const Dashboard = () => {
     { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
     { icon: <FaCog />, label: "Settings", path: "/settings" },
   ];
-
+  // ---------------- FILTERED INVOICES ----------------
   const filteredInvoices = invoices.filter((inv) => {
-    const statusMatch =
-      activeTab === "All" || inv.status?.trim() === activeTab;
+    const statusMatch = activeTab === "All" || inv.status?.trim() === activeTab;
 
-    const clientName =
-      inv.billedTo?.businessName?.toLowerCase() || "";
+    const clientName = inv.billedTo?.businessName?.toLowerCase() || "";
+    const invoiceNumber = inv.invoiceNumber?.toLowerCase() || "";
 
-    const searchMatch = clientName.includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+
+    const searchMatch =
+      clientName.includes(searchLower) || invoiceNumber.includes(searchLower);
 
     return statusMatch && searchMatch;
   });
+
 
   /* ---------------- PAGINATION STATE ---------------- */
   const invoicesPerPage = 5;
@@ -198,7 +202,7 @@ const Dashboard = () => {
         variants={navbarVariants}
         initial="hidden"
         animate="visible"
-        className="bg-white dark:bg-gray-900 rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
+        className="bg-white  rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
       >
 
 
@@ -276,8 +280,9 @@ const Dashboard = () => {
             </span>
             <hr className="border-gray-300 my-2" />
             <div className="text-center text-xl font-semibold mb-3">
-              ${totalRevenue}
-            </div>
+  ${Number(totalRevenue).toFixed(2)}
+</div>
+
 
             <Link
               href="/company-new-invoice"
@@ -319,7 +324,7 @@ const Dashboard = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`bg-white dark:bg-gray-900 text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
+                className={`bg-white  text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
                   ? "text-[#29268E] border-b-2 border-[#29268E]"
                   : "text-black hover:text-[#29268E]"
                   }`}
@@ -332,7 +337,7 @@ const Dashboard = () => {
 
         <div className="overflow-x-auto w-full">
           <table className="min-w-full border table-auto text-sm md:text-base">
-            <thead className="bg-gray-100 dark:bg-gray-900">
+            <thead className="bg-gray-100 ">
               <tr className="hidden md:table-row"> {/* Hide headers on small screens */}
                 <Th>Invoice</Th>
                 <Th>Client</Th>
@@ -408,7 +413,7 @@ const Dashboard = () => {
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
   <div
     onClick={onClick}
-    className={`bg-white dark:bg-gray-900 flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
+    className={`bg-white flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
       }`}
   >
     {icon}

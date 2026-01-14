@@ -6,6 +6,7 @@ import { Edit2, Download, Send, FileText, StickyNote, Paperclip, Info, Phone } f
 import { FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog, FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
+import { numberToWords } from "@/utils/numberToWords";
 
 type InvoiceFiles = {
   signature?: File | null;
@@ -34,7 +35,7 @@ const InvoicePreview = () => {
   const [successMsg, setSuccessMsg] = useState("");
   const [showLoader, setShowLoader] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [downloading,setDownloading]=useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     // Show loader for 3 seconds
@@ -93,7 +94,22 @@ const InvoicePreview = () => {
     return { amount, cgst, sgst, totalQty, grandTotal };
   }, [invoice]);
 
-  const totalInWords = `${totals.grandTotal} rupees only`;
+  const totalInWords = useMemo(() => {
+    if (!totals?.grandTotal || isNaN(totals.grandTotal)) return "Zero rupees only";
+
+    const grand = totals.grandTotal.toFixed(2); // ensures 2 decimal places as string
+    const [integerPart, decimalPart] = grand.split(".").map(Number); // split into 129 and 80
+
+    let words = numberToWords(integerPart) + " Rupees";
+
+    if (decimalPart && decimalPart > 0) {
+      words += ` and ${numberToWords(decimalPart)} Paise`;
+    }
+
+    return words + " Only";
+  }, [totals?.grandTotal]);
+
+
   const saveInvoice = async () => {
     if (!user) {
       alert("Please login");
@@ -189,7 +205,7 @@ const InvoicePreview = () => {
       console.error("Save invoice error:", err);
       alert("Network error. Invoice not saved.");
     }
-    finally{
+    finally {
       setSaving(false)
     }
   };
@@ -234,7 +250,7 @@ const InvoicePreview = () => {
       console.error("PDF generation error:", err);
       alert("Failed to generate PDF.");
     }
-    finally{
+    finally {
       setDownloading(false)
     }
   };
@@ -422,40 +438,51 @@ const InvoicePreview = () => {
       initial="hidden"
       animate="visible" className="min-h-screen bg-gray-100 p-6">
       {/* Navbar */}
-      <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">Invoice Preview</div>
-        <div className="md:hidden flex items-center mb-3">
-          <button onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-          </button>
-        </div>
-        <div className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"}`}>
-          {menuItems.map((item) => (
-            <MenuItem
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              isActive={activeMenu === item.label}
-              onClick={() => {
-                setActiveMenu(item.label);
-                router.push(item.path);
-              }}
-            />
-          ))}
-          <div className="flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
-              <FaUserCircle size={28} />
-              <span className="font-medium">{user?.username || "User"}</span>
-            </div>
-            <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">
-              Logout
-            </button>
-          </div>
-        </div>
-      </motion.div>
+     <motion.div
+                    variants={navbarVariants}
+                    initial="hidden"
+                    animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+                    <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+                        {/* LOGO */}
+                    </motion.div>
+    
+                    <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
+                        <button onClick={() => setMenuOpen(!menuOpen)}>
+                            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+                        </button>
+                    </motion.div>
+    
+                    <motion.div variants={itemVariant}
+                        className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
+                            }`}
+                    >
+                        {menuItems.map((item) => (
+                            <MenuItem
+                                key={item.label}
+                                icon={item.icon}
+                                label={item.label}
+                                isActive={activeMenu === item.label}
+                                onClick={() => {
+                                    setActiveMenu(item.label); // set active menu
+                                    if (item.path) router.push(item.path); // navigate to page
+                                }}
+                            />
+                        ))}
+    
+                        <div className="flex flex-col items-end space-y-2">
+                            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+                                <FaUserCircle size={28} />
+                                <span className="font-medium">{user?.username || "User"}</span>
+                            </div>
+                            <button
+                                onClick={handleLogout}
+                                className="text-sm text-red-600 hover:underline"
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    </motion.div>
+                </motion.div>
 
       {/* Invoice Preview */}
       <motion.div variants={itemVariant} ref={invoiceRef} className="max-w-5xl mx-auto bg-white p-6 rounded shadow space-y-6">
@@ -529,7 +556,10 @@ const InvoicePreview = () => {
             <p className="font-semibold">Discount: ₹{invoice?.extras?.discount || 0}</p>
             <p className="font-semibold">Additional Charges: ₹{invoice?.extras?.charges || 0}</p>
             <p className="font-bold text-lg">Grand Total: ₹{totals?.grandTotal.toFixed(2)}</p>
-            <p className="italic">Total in words: {totalInWords}</p>
+            {invoice?.showTotalInWords && (
+              <p className="italic">Total in words: {totalInWords}</p>
+            )}
+
           </div>
         </div>
 
@@ -806,7 +836,19 @@ const InvoicePreview = () => {
       )}
 
       <div className="flex justify-center mb-6">
-        <button className={`bg-gray-300 text-black px-6 py-2 rounded flex items-center gap-2 ${downloading?"bg-gray-400 cursor-not-allowed":"bg-gray-300"}`} onClick={generatePDF}><Download size={16} />{downloading?"Downloading PDF":"Download PDF"}</button>
+       <button
+  className={`bg-gray-300 text-black px-6 py-2 rounded flex items-center gap-2 ${downloading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-300"}`}
+  onClick={() => {
+    if (editMode) {
+      alert("Please finish edit to download the PDF");
+      return;
+    }
+    generatePDF();
+  }}
+>
+  <Download size={16} />{downloading ? "Downloading PDF" : "Download PDF"}
+</button>
+
       </div>
     </motion.div>
   );
