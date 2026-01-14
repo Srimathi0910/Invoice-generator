@@ -295,7 +295,7 @@ export default function PaymentsPage() {
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`bg-white dark:bg-gray-900 text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
+                            className={`bg-white  text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
                                 ? "text-[#29268E] border-b-2 border-[#29268E]"
                                 : "text-black hover:text-[#29268E]"
                                 }`}
@@ -630,7 +630,7 @@ export default function PaymentsPage() {
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
     <div
         onClick={onClick}
-        className={`bg-white dark:bg-gray-900 flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
+        className={`bg-white  flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
             }`}
     >
         {icon}

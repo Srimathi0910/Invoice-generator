@@ -199,7 +199,7 @@ export default function ReportsPage() {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible" className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6 text-black dark:text-white">
+            animate="visible" className="min-h-screen bg-gray-100  p-6 text-black ">
             <motion.div
                 variants={navbarVariants}
                 initial="hidden"
@@ -314,7 +314,7 @@ export default function ReportsPage() {
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`bg-white dark:bg-gray-900 text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
+                                className={`bg-white  text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
                                     ? "text-[#29268E] border-b-2 border-[#29268E]"
                                     : "text-black hover:text-[#29268E]"
                                     }`}
@@ -326,7 +326,7 @@ export default function ReportsPage() {
                 </div>
                 <div className="overflow-x-auto w-full">
                     <table className="min-w-full border table-auto text-sm md:text-base">
-                        <thead className="bg-gray-100 dark:bg-gray-900">
+                        <thead className="bg-gray-100">
                             <tr className="hidden md:table-row"> {/* Hide headers on small screens */}
                                 <Th>Invoice</Th>
                                 <Th>Client</Th>
@@ -397,7 +397,7 @@ export default function ReportsPage() {
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
     <div
         onClick={onClick}
-        className={`bg-white dark:bg-gray-900 flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
+        className={`bg-white  flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
             }`}
     >
         {icon}

@@ -274,7 +274,7 @@ export default function SettingsPage() {
         variants={navbarVariants}
         initial="hidden"
         animate="visible"
-        className="bg-white dark:bg-gray-900 rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
+        className="bg-white  rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
       >
 
 

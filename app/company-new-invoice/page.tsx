@@ -571,7 +571,7 @@ export default function InvoicePage() {
             </label>
 
             <input
-              className="w-full p-2 bg-white dark:bg-gray-900 text-black dark:text-white border-2 border-black dark:border-white rounded-md focus:outline-none focus:ring-0"
+              className="w-full p-2 bg-white  text-black  border-2 border-black  rounded-md focus:outline-none focus:ring-0"
               type="date"
               required
               value={invoiceMeta.invoiceDate}
@@ -588,7 +588,7 @@ export default function InvoicePage() {
               Due Date
             </label>
             <input
-              className="w-full p-2 bg-white dark:bg-gray-900 text-black dark:text-white border-2 border-black dark:border-white rounded-md focus:outline-none focus:ring-0"
+              className="w-full p-2 bg-white  text-black  border-2 border-black  rounded-md focus:outline-none focus:ring-0"
               type="date"
               required
               value={invoiceMeta.dueDate}
@@ -839,9 +839,9 @@ export default function InvoicePage() {
 
 
         <motion.div variants={itemVariant}>
-          <div className="bg-white dark:bg-gray-900 flex flex-col md:flex-row gap-6 md:justify-between p-4 md:p-10">
+          <div className="bg-white  flex flex-col md:flex-row gap-6 md:justify-between p-4 md:p-10">
 
-            <div className="bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-white mb-6 bg-gray-50 w-[250px] h-[200px] p-10">
+            <div className="bg-white  border-2 border-gray-300  mb-6 bg-gray-50 w-[250px] h-[200px] p-10">
 
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
@@ -877,7 +877,7 @@ export default function InvoicePage() {
 
             </div>
 
-            <div className="bg-white dark:bg-gray-900 border-2 bg-gray-50 p-4 rounded-lg space-y-3 w-full md:w-auto">
+            <div className="bg-white  border-2 bg-gray-50 p-4 rounded-lg space-y-3 w-full md:w-auto">
 
               <div className="flex justify-between font-semibold items-center">
                 <span>Show Total (PDF)</span>
@@ -984,7 +984,7 @@ export default function InvoicePage() {
           <button
             type="button"
             onClick={handlePreview}
-            className="bg-white dark:bg-gray-900 w-[300px] text-black underline py-3 px-4 rounded-lg cursor-pointer"
+            className="bg-white  w-[300px] text-black underline py-3 px-4 rounded-lg cursor-pointer"
           >
             Preview
           </button>
@@ -1010,7 +1010,7 @@ export default function InvoicePage() {
 }
 
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-  <div onClick={onClick} className={`bg-white dark:bg-gray-900 flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"}`}>
+  <div onClick={onClick} className={`bg-white  flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"}`}>
     {icon} <span>{label}</span>
   </div>
 );
