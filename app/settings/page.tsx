@@ -24,6 +24,9 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<"company" | "preferences">("company");
+  const [loadingCompany, setLoadingCompany] = useState(false);
+  const [loadingPreferences, setLoadingPreferences] = useState(false);
+
 
   const [formData, setFormData] = useState({
     companyName: "",
@@ -121,11 +124,12 @@ export default function SettingsPage() {
   // -------------------- Save company settings --------------------
   const handleSave = async () => {
     const phoneRegex = /^\d{10}$/; // exactly 10 digits
-  if (!phoneRegex.test(formData.phone)) {
-    alert("Phone number must be exactly 10 digits.");
-    return; // stop saving
-  }
+    if (!phoneRegex.test(formData.phone)) {
+      alert("Phone number must be exactly 10 digits.");
+      return; // stop saving
+    }
     try {
+      setLoadingCompany(true);
       const form = new FormData();
 
       form.append(
@@ -174,6 +178,9 @@ export default function SettingsPage() {
       console.error(err);
       alert("Failed to update settings");
     }
+    finally {
+      setLoadingCompany(false); // ✅ End loading
+    }
   };
 
 
@@ -183,6 +190,7 @@ export default function SettingsPage() {
     if (!token) return router.push("/login");
 
     try {
+      setLoadingPreferences(true); // start loading
       const data = await authFetch("/api/auth/company/preferences", {
         method: "POST",
         headers: {
@@ -201,6 +209,9 @@ export default function SettingsPage() {
     } catch (err) {
       console.error(err);
       alert("Error saving preferences");
+    }
+    finally {
+      setLoadingPreferences(false); // end loading
     }
   };
 
@@ -378,7 +389,14 @@ export default function SettingsPage() {
                 <label className="block mb-1 font-medium">Invoice Number Prefix</label>
                 <input className="border px-3 py-2 w-full mb-6" value={formData.invoicePrefix} onChange={(e) => setFormData({ ...formData, invoicePrefix: e.target.value })} />
 
-                <button className="bg-gray-300 px-6 py-2 rounded text-sm" onClick={handleSave}>Save Changes</button>
+                <button
+                  className="bg-gray-300 px-6 py-2 rounded text-sm"
+                  onClick={handleSave}
+                  disabled={loadingCompany} // disable while saving
+                >
+                  {loadingCompany ? "Saving..." : "Save Changes"}
+                </button>
+
               </Card>
 
               <div className="md:col-span-2">
@@ -392,7 +410,13 @@ export default function SettingsPage() {
                   <label className="block mb-1 font-medium">UPI ID (Optional)</label>
                   <input className="border px-3 py-2 w-full mb-6" placeholder="example@upi" value={formData.upiId} onChange={(e) => setFormData({ ...formData, upiId: e.target.value })} />
 
-                  <button className="bg-gray-300 px-6 py-2 rounded text-sm" onClick={handleSave}>Save Bank Details</button>
+                  <button
+                    className="bg-gray-300 px-6 py-2 rounded text-sm"
+                    onClick={handleSave}
+                    disabled={loadingCompany} // disable while saving
+                  >
+                    {loadingCompany ? "Saving..." : "Save Bank Details"}
+                  </button>
                 </Card>
               </div>
             </div>
@@ -415,7 +439,14 @@ export default function SettingsPage() {
                   </select>
                 </div>
                 <div className="mt-6 text-right">
-                  <button onClick={savePreferences} className="bg-gray-200 hover:bg-gray-300 px-6 py-2 rounded text-sm">Save Changes</button>
+                  <button
+                    onClick={savePreferences}
+                    className="bg-gray-200 hover:bg-gray-300 px-6 py-2 rounded text-sm"
+                    disabled={loadingPreferences}
+                  >
+                    {loadingPreferences ? "Saving..." : "Save Changes"}
+                  </button>
+
                 </div>
               </Card>
 
@@ -428,7 +459,14 @@ export default function SettingsPage() {
                   </select>
                 </div>
                 <div className="mt-6 text-right">
-                  <button onClick={savePreferences} className="bg-gray-200 hover:bg-gray-300 px-6 py-2 rounded text-sm">Save Changes</button>
+                  <button
+                    onClick={savePreferences}
+                    className="bg-gray-200 hover:bg-gray-300 px-6 py-2 rounded text-sm"
+                    disabled={loadingPreferences}
+                  >
+                    {loadingPreferences ? "Saving..." : "Save Changes"}
+                  </button>
+
                 </div>
               </Card>
             </div>
