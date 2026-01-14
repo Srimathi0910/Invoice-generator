@@ -274,9 +274,9 @@ export default function PaymentsPage() {
             </motion.div>
             <h1 className="text-2xl font-bold mb-4">Payments</h1>
 
-            <motion.div variants={itemVariant} className="mb-4">
+            {/* <motion.div variants={itemVariant} className="mb-4">
                 <button className="bg-white px-4 py-2 rounded shadow">+ Add Payment</button>
-            </motion.div>
+            </motion.div> */}
             <motion.div variants={itemVariant} className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
                 <div className="relative w-full md:w-1/3">
                     <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
