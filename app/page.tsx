@@ -2,19 +2,25 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect,useState } from "react";
 import { useRouter } from "next/navigation";
 import "./_components/animations/animations.css";
 
 export default function WelcomePage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(true); // track redirect check
 
   useEffect(() => {
     const user = localStorage.getItem("user");
     if (user) {
-      router.replace("/dashboard");
+      router.replace("/dashboard"); // redirect logged-in users
+    } else {
+      setLoading(false); // show content for non-logged-in users
     }
   }, [router]);
+
+  // Show nothing while checking redirect
+  if (loading) return null;
 
   return (
     <div className="relative min-h-screen overflow-hidden">

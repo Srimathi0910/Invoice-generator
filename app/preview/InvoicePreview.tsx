@@ -514,32 +514,98 @@ const InvoicePreview = () => {
         </div>
 
         {/* Items Table */}
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr>
-              <th className="border px-3 py-2 text-left">Item</th>
-              <th className="border px-3 py-2 text-left">HSN</th>
-              <th className="border px-3 py-2 text-right">GST%</th>
-              <th className="border px-3 py-2 text-right">Qty</th>
-              <th className="border px-3 py-2 text-right">Rate</th>
-              <th className="border px-3 py-2 text-right">Amount</th>
-              {editMode && <th className="border px-3 py-2">Action</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {invoice?.items.map((item: any, i: number) => (
-              <tr key={i}>
-                <td className="border px-3 py-2">{editMode ? <input className="w-full px-1 py-1" value={item.itemName} onChange={(e) => handleItemChange(i, "itemName", e.target.value)} /> : item.itemName}</td>
-                <td className="border px-3 py-2">{editMode ? <input className="w-full px-1 py-1" value={item.hsn} onChange={(e) => handleItemChange(i, "hsn", e.target.value)} /> : item.hsn}</td>
-                <td className="border px-3 py-2 text-right">{editMode ? <input className="w-full px-1 py-1 text-right" type="number" value={item.gst} onChange={(e) => handleItemChange(i, "gst", e.target.value)} /> : item.gst}</td>
-                <td className="border px-3 py-2 text-right">{editMode ? <input className="w-full px-1 py-1 text-right" type="number" value={item.qty} onChange={(e) => handleItemChange(i, "qty", e.target.value)} /> : item.qty}</td>
-                <td className="border px-3 py-2 text-right">{editMode ? <input className="w-full px-1 py-1 text-right" type="number" value={item.rate} onChange={(e) => handleItemChange(i, "rate", e.target.value)} /> : item.rate}</td>
-                <td className="border px-3 py-2 text-right">₹{(item.qty * item.rate).toFixed(2)}</td>
-                {editMode && <td className="border px-3 py-2 text-center"><button className="text-red-500 font-bold" onClick={() => removeItem(i)}>✕</button></td>}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {/* ===== DESKTOP TABLE ===== */}
+<div className="hidden md:block">
+  <table className="w-full text-sm border-collapse">
+    <thead>
+      <tr>
+        <th className="border px-3 py-2 text-left">Item</th>
+        <th className="border px-3 py-2 text-left">HSN</th>
+        <th className="border px-3 py-2 text-right">GST%</th>
+        <th className="border px-3 py-2 text-right">Qty</th>
+        <th className="border px-3 py-2 text-right">Rate</th>
+        <th className="border px-3 py-2 text-right">Amount</th>
+        {editMode && <th className="border px-3 py-2">Action</th>}
+      </tr>
+    </thead>
+    <tbody>
+      {invoice?.items.map((item: any, i: number) => (
+        <tr key={i}>
+          <td className="border px-3 py-2">{item.itemName}</td>
+          <td className="border px-3 py-2">{item.hsn}</td>
+          <td className="border px-3 py-2 text-right">{item.gst}</td>
+          <td className="border px-3 py-2 text-right">{item.qty}</td>
+          <td className="border px-3 py-2 text-right">{item.rate}</td>
+          <td className="border px-3 py-2 text-right">
+            ₹{(item.qty * item.rate).toFixed(2)}
+          </td>
+          {editMode && (
+            <td className="border px-3 py-2 text-center">
+              <button
+                className="text-red-500 font-bold"
+                onClick={() => removeItem(i)}
+              >
+                ✕
+              </button>
+            </td>
+          )}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+{/* ===== MOBILE TABLE-CARDS (THEAD → LEFT | VALUE → RIGHT) ===== */}
+<div className="md:hidden space-y-4">
+  {invoice?.items.map((item: any, i: number) => (
+    <div
+      key={i}
+      className="border rounded-lg p-4 bg-white shadow-sm"
+    >
+      {/* Item Name */}
+      <div className="flex justify-between py-1">
+        <span className=" text-sm">Item</span>
+        <span className="font-medium text-right">
+          {item.itemName || "-"}
+        </span>
+      </div>
+
+      <div className="flex justify-between py-1">
+        <span className=" text-sm">HSN</span>
+        <span>{item.hsn || "-"}</span>
+      </div>
+
+      <div className="flex justify-between py-1">
+        <span className=" text-sm">GST %</span>
+        <span>{item.gst}%</span>
+      </div>
+
+      <div className="flex justify-between py-1">
+        <span className="text-sm">Quantity</span>
+        <span>{item.qty}</span>
+      </div>
+
+      <div className="flex justify-between py-1">
+        <span className="text-sm">Rate</span>
+        <span>₹{item.rate}</span>
+      </div>
+
+      <div className="flex justify-between py-2 border-t mt-2 font-semibold">
+        <span>Amount</span>
+        <span>₹{(item.qty * item.rate).toFixed(2)}</span>
+      </div>
+
+      {editMode && (
+        <button
+          onClick={() => removeItem(i)}
+          className="mt-3 text-red-600 text-sm underline"
+        >
+          Remove Item
+        </button>
+      )}
+    </div>
+  ))}
+</div>
+
 
         {editMode && (
           <div className="flex justify-end mb-4">
