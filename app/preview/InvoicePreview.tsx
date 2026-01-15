@@ -219,28 +219,52 @@ const InvoicePreview = () => {
     if (!invoiceRef.current) return alert("Invoice content not found");
 
     try {
-      setDownloading(true)
-      const html2canvasModule = (await import("html2canvas")).default;
+      setDownloading(true);
+
+      const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
 
       const element = invoiceRef.current;
-      const canvas = await html2canvasModule(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+
+      // 🔴 SAVE ORIGINAL STYLES
+      const originalWidth = element.style.width;
+      const originalTransform = element.style.transform;
+
+      // ✅ FORCE DESKTOP WIDTH (A4 SAFE WIDTH)
+      element.style.width = "794px"; // ≈ A4 width in px
+      element.style.transform = "scale(1)";
+
+      // ✅ CAPTURE
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        windowWidth: 794, // IMPORTANT
+      });
+
+      // 🔵 RESTORE STYLES
+      element.style.width = originalWidth;
+      element.style.transform = originalTransform;
+
       const imgData = canvas.toDataURL("image/png");
 
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
+
       const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
       let heightLeft = imgHeight;
       let position = 0;
 
+      // FIRST PAGE
       pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
       heightLeft -= pdfHeight;
 
+      // NEXT PAGES (NO SHRINKING)
       while (heightLeft > 0) {
         pdf.addPage();
-        position = heightLeft - imgHeight < 0 ? 0 : heightLeft - imgHeight;
+        position = heightLeft - imgHeight;
         pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
         heightLeft -= pdfHeight;
       }
@@ -249,11 +273,11 @@ const InvoicePreview = () => {
     } catch (err) {
       console.error("PDF generation error:", err);
       alert("Failed to generate PDF.");
-    }
-    finally {
-      setDownloading(false)
+    } finally {
+      setDownloading(false);
     }
   };
+
 
   /* ---------------- SEND INVOICE ---------------- */
   const sendInvoice = async () => {
@@ -438,51 +462,51 @@ const InvoicePreview = () => {
       initial="hidden"
       animate="visible" className="min-h-screen bg-gray-100 p-6">
       {/* Navbar */}
-     <motion.div
-                    variants={navbarVariants}
-                    initial="hidden"
-                    animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-                    <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
-                        {/* LOGO */}
-                    </motion.div>
-    
-                    <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
-                        <button onClick={() => setMenuOpen(!menuOpen)}>
-                            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-                        </button>
-                    </motion.div>
-    
-                    <motion.div variants={itemVariant}
-                        className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
-                            }`}
-                    >
-                        {menuItems.map((item) => (
-                            <MenuItem
-                                key={item.label}
-                                icon={item.icon}
-                                label={item.label}
-                                isActive={activeMenu === item.label}
-                                onClick={() => {
-                                    setActiveMenu(item.label); // set active menu
-                                    if (item.path) router.push(item.path); // navigate to page
-                                }}
-                            />
-                        ))}
-    
-                        <div className="flex flex-col items-end space-y-2">
-                            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
-                                <FaUserCircle size={28} />
-                                <span className="font-medium">{user?.username || "User"}</span>
-                            </div>
-                            <button
-                                onClick={handleLogout}
-                                className="text-sm text-red-600 hover:underline"
-                            >
-                                Logout
-                            </button>
-                        </div>
-                    </motion.div>
-                </motion.div>
+      <motion.div
+        variants={navbarVariants}
+        initial="hidden"
+        animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+        <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+          {/* LOGO */}
+        </motion.div>
+
+        <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
+          <button onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          </button>
+        </motion.div>
+
+        <motion.div variants={itemVariant}
+          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
+            }`}
+        >
+          {menuItems.map((item) => (
+            <MenuItem
+              key={item.label}
+              icon={item.icon}
+              label={item.label}
+              isActive={activeMenu === item.label}
+              onClick={() => {
+                setActiveMenu(item.label); // set active menu
+                if (item.path) router.push(item.path); // navigate to page
+              }}
+            />
+          ))}
+
+          <div className="flex flex-col items-end space-y-2">
+            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+              <FaUserCircle size={28} />
+              <span className="font-medium">{user?.username || "User"}</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-red-600 hover:underline"
+            >
+              Logout
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
 
       {/* Invoice Preview */}
       <motion.div variants={itemVariant} ref={invoiceRef} className="max-w-5xl mx-auto bg-white p-6 rounded shadow space-y-6">
@@ -515,96 +539,162 @@ const InvoicePreview = () => {
 
         {/* Items Table */}
         {/* ===== DESKTOP TABLE ===== */}
-<div className="hidden md:block">
-  <table className="w-full text-sm border-collapse">
-    <thead>
-      <tr>
-        <th className="border px-3 py-2 text-left">Item</th>
-        <th className="border px-3 py-2 text-left">HSN</th>
-        <th className="border px-3 py-2 text-right">GST%</th>
-        <th className="border px-3 py-2 text-right">Qty</th>
-        <th className="border px-3 py-2 text-right">Rate</th>
-        <th className="border px-3 py-2 text-right">Amount</th>
-        {editMode && <th className="border px-3 py-2">Action</th>}
-      </tr>
-    </thead>
-    <tbody>
-      {invoice?.items.map((item: any, i: number) => (
-        <tr key={i}>
-          <td className="border px-3 py-2">{item.itemName}</td>
-          <td className="border px-3 py-2">{item.hsn}</td>
-          <td className="border px-3 py-2 text-right">{item.gst}</td>
-          <td className="border px-3 py-2 text-right">{item.qty}</td>
-          <td className="border px-3 py-2 text-right">{item.rate}</td>
-          <td className="border px-3 py-2 text-right">
-            ₹{(item.qty * item.rate).toFixed(2)}
-          </td>
-          {editMode && (
-            <td className="border px-3 py-2 text-center">
-              <button
-                className="text-red-500 font-bold"
-                onClick={() => removeItem(i)}
-              >
-                ✕
-              </button>
-            </td>
-          )}
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
-{/* ===== MOBILE TABLE-CARDS (THEAD → LEFT | VALUE → RIGHT) ===== */}
-<div className="md:hidden space-y-4">
-  {invoice?.items.map((item: any, i: number) => (
-    <div
-      key={i}
-      className="border rounded-lg p-4 bg-white shadow-sm"
-    >
-      {/* Item Name */}
-      <div className="flex justify-between py-1">
-        <span className=" text-sm">Item</span>
-        <span className="font-medium text-right">
-          {item.itemName || "-"}
-        </span>
-      </div>
+        <div className="hidden md:block">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr>
+                <th className="border px-3 py-2 text-left">Item</th>
+                <th className="border px-3 py-2 text-left">HSN</th>
+                <th className="border px-3 py-2 text-right">GST%</th>
+                <th className="border px-3 py-2 text-right">Qty</th>
+                <th className="border px-3 py-2 text-right">Rate</th>
+                <th className="border px-3 py-2 text-right">Amount</th>
+                {editMode && <th className="border px-3 py-2">Action</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {invoice?.items.map((item: any, i: number) => (
+                <tr key={i}>
+                  <td className="border px-3 py-2">
+                    {editMode ? (
+                      <input
+                        value={item.itemName}
+                        onChange={(e) =>
+                          handleItemChange(i, "itemName", e.target.value)
+                        }
+                        className="w-full border rounded px-2 py-1"
+                      />
+                    ) : (
+                      item.itemName
+                    )}
+                  </td>
 
-      <div className="flex justify-between py-1">
-        <span className=" text-sm">HSN</span>
-        <span>{item.hsn || "-"}</span>
-      </div>
+                  <td className="border px-3 py-2">
+                    {editMode ? (
+                      <input
+                        value={item.hsn}
+                        onChange={(e) =>
+                          handleItemChange(i, "hsn", e.target.value)
+                        }
+                        className="w-full border rounded px-2 py-1"
+                      />
+                    ) : (
+                      item.hsn
+                    )}
+                  </td>
+                  <td className="border px-3 py-2 text-right">
+                    {editMode ? (
+                      <input
+                        type="number"
+                        value={item.gst}
+                        onChange={(e) =>
+                          handleItemChange(i, "gst", e.target.value)
+                        }
+                        className="w-20 border rounded px-2 py-1 text-right"
+                      />
+                    ) : (
+                      item.gst
+                    )}
+                  </td>
+                  <td className="border px-3 py-2 text-right">
+                    {editMode ? (
+                      <input
+                        type="number"
+                        value={item.qty}
+                        onChange={(e) =>
+                          handleItemChange(i, "qty", e.target.value)
+                        }
+                        className="w-20 border rounded px-2 py-1 text-right"
+                      />
+                    ) : (
+                      item.qty
+                    )}
+                  </td>
 
-      <div className="flex justify-between py-1">
-        <span className=" text-sm">GST %</span>
-        <span>{item.gst}%</span>
-      </div>
 
-      <div className="flex justify-between py-1">
-        <span className="text-sm">Quantity</span>
-        <span>{item.qty}</span>
-      </div>
+                  <td className="border px-3 py-2 text-right">
+                    {editMode ? (
+                      <input
+                        type="number"
+                        value={item.rate}
+                        onChange={(e) =>
+                          handleItemChange(i, "rate", e.target.value)
+                        }
+                        className="w-24 border rounded px-2 py-1 text-right"
+                      />
+                    ) : (
+                      item.rate
+                    )}
+                  </td>
+                  <td className="border px-3 py-2 text-right">
+                    ₹{(item.qty * item.rate).toFixed(2)}
+                  </td>
+                  {editMode && (
+                    <td className="border px-3 py-2 text-center">
+                      <button
+                        className="text-red-500 font-bold"
+                        onClick={() => removeItem(i)}
+                      >
+                        ✕
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* ===== MOBILE TABLE-CARDS (THEAD → LEFT | VALUE → RIGHT) ===== */}
+        <div className="md:hidden space-y-4">
+          {invoice?.items.map((item: any, i: number) => (
+            <div
+              key={i}
+              className="border rounded-lg p-4 bg-white shadow-sm"
+            >
+              {/* Item Name */}
+              <div className="flex justify-between py-1">
+                <span className=" text-sm">Item</span>
+                <span className="font-medium text-right">
+                  {item.itemName || "-"}
+                </span>
+              </div>
 
-      <div className="flex justify-between py-1">
-        <span className="text-sm">Rate</span>
-        <span>₹{item.rate}</span>
-      </div>
+              <div className="flex justify-between py-1">
+                <span className=" text-sm">HSN</span>
+                <span>{item.hsn || "-"}</span>
+              </div>
 
-      <div className="flex justify-between py-2 border-t mt-2 font-semibold">
-        <span>Amount</span>
-        <span>₹{(item.qty * item.rate).toFixed(2)}</span>
-      </div>
+              <div className="flex justify-between py-1">
+                <span className=" text-sm">GST %</span>
+                <span>{item.gst}%</span>
+              </div>
 
-      {editMode && (
-        <button
-          onClick={() => removeItem(i)}
-          className="mt-3 text-red-600 text-sm underline"
-        >
-          Remove Item
-        </button>
-      )}
-    </div>
-  ))}
-</div>
+              <div className="flex justify-between py-1">
+                <span className="text-sm">Quantity</span>
+                <span>{item.qty}</span>
+              </div>
+
+              <div className="flex justify-between py-1">
+                <span className="text-sm">Rate</span>
+                <span>₹{item.rate}</span>
+              </div>
+
+              <div className="flex justify-between py-2 border-t mt-2 font-semibold">
+                <span>Amount</span>
+                <span>₹{(item.qty * item.rate).toFixed(2)}</span>
+              </div>
+
+              {editMode && (
+                <button
+                  onClick={() => removeItem(i)}
+                  className="mt-3 text-red-600 text-sm underline"
+                >
+                  Remove Item
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
 
 
         {editMode && (
@@ -869,20 +959,47 @@ const InvoicePreview = () => {
           )}
         </div>
       </motion.div>
-      <motion.div variants={itemVariant} className="flex justify-center gap-4 m-4">
+      <motion.div
+        variants={itemVariant}
+        className="flex flex-col sm:flex-row items-center justify-center gap-4 m-4"
+      >
         <button
           disabled={saving}
           onClick={saveInvoice}
-          className={`btn px-4 py-2 rounded flex items-center gap-2 ${saving ? "bg-gray-400 cursor-not-allowed" : "bg-gray-300"
-            }`}
+          className={`bg-gray-300 text-black
+      px-6 py-2 h-12 w-64 sm:w-auto
+      rounded flex items-center justify-center gap-2
+      ${saving ? "bg-gray-400 cursor-not-allowed" : ""}
+    `}
         >
           <Edit2 size={16} />
           {saving ? "Saving..." : "Save Invoice"}
         </button>
 
-        <button className="btn bg-gray-300 px-4 py-2 rounded flex items-center gap-2" onClick={async () => { if (editMode) await saveInvoice(); setEditMode(!editMode); }}><Edit2 size={16} /> {editMode ? "Finish Edit" : "Edit Invoice"}</button>
-        <button className="btn bg-gray-300 px-4 py-2 rounded flex items-center gap-2" onClick={() => setShowEmailForm(!showEmailForm)}><Send size={16} /> Send Invoice</button>
+        <button
+          className="bg-gray-300 text-black
+      px-6 py-2 h-12 w-64 sm:w-auto
+      rounded flex items-center justify-center gap-2"
+          onClick={async () => {
+            if (editMode) await saveInvoice();
+            setEditMode(!editMode);
+          }}
+        >
+          <Edit2 size={16} />
+          {editMode ? "Finish Edit" : "Edit Invoice"}
+        </button>
+
+        <button
+          className="bg-gray-300 text-black
+      px-6 py-2 h-12 w-64 sm:w-auto
+      rounded flex items-center justify-center gap-2"
+          onClick={() => setShowEmailForm(!showEmailForm)}
+        >
+          <Send size={16} />
+          Send Invoice
+        </button>
       </motion.div>
+
 
       {showEmailForm && (
         <div className="flex justify-center gap-2 mb-6">
@@ -902,18 +1019,20 @@ const InvoicePreview = () => {
       )}
 
       <div className="flex justify-center mb-6">
-       <button
-  className={`bg-gray-300 text-black px-6 py-2 rounded flex items-center gap-2 ${downloading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-300"}`}
-  onClick={() => {
-    if (editMode) {
-      alert("Please finish edit to download the PDF");
-      return;
-    }
-    generatePDF();
-  }}
->
-  <Download size={16} />{downloading ? "Downloading PDF" : "Download PDF"}
-</button>
+        <button
+          className={`bg-gray-300 text-black
+      px-6 py-2 h-12 w-64 sm:w-auto
+      rounded flex items-center justify-center gap-2 ${downloading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-300"}`}
+          onClick={() => {
+            if (editMode) {
+              alert("Please finish edit to download the PDF");
+              return;
+            }
+            generatePDF();
+          }}
+        >
+          <Download size={16} />{downloading ? "Downloading PDF" : "Download PDF"}
+        </button>
 
       </div>
     </motion.div>
