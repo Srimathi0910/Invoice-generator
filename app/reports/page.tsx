@@ -397,7 +397,7 @@ export default function ReportsPage() {
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
     <div
         onClick={onClick}
-        className={`bg-white  flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"
+        className={`bg-white  flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-1" : "text-black"
             }`}
     >
         {icon}

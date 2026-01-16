@@ -300,7 +300,7 @@ const Input = ({ label, error, ...props }: any) => (
 );
 
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-  <div onClick={onClick} className={`flex items-center gap-2 cursor-pointer ${isActive ? "text-[#8F90DF] underline" : ""}`}>
+  <div onClick={onClick} className={`flex items-center gap-2 cursor-pointer ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-1" : ""}`}>
     {icon} <span>{label}</span>
   </div>
 );

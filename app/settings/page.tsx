@@ -344,8 +344,8 @@ export default function SettingsPage() {
         <div className="bg-white rounded-xl p-6 sm:p-8">
           {/* Tabs */}
           <div className="flex gap-10 mb-8">
-            <span onClick={() => setActiveTab("company")} className={`cursor-pointer font-semibold pb-1 ${activeTab === "company" ? "text-[#8F90DF] underline" : "text-gray-800"}`}>Company Profile</span>
-            <span onClick={() => setActiveTab("preferences")} className={`cursor-pointer font-semibold pb-1 ${activeTab === "preferences" ? "text-[#8F90DF] underline" : "text-gray-800"}`}>Preferences</span>
+            <span onClick={() => setActiveTab("company")} className={`cursor-pointer font-semibold pb-1 ${activeTab === "company" ? "text-[#8F90DF] underline underline-offset-4 pb-1" : "text-gray-800"}`}>Company Profile</span>
+            <span onClick={() => setActiveTab("preferences")} className={`cursor-pointer font-semibold pb-1 ${activeTab === "preferences" ? "text-[#8F90DF] underline underline-offset-4 pb-1" : "text-gray-800"}`}>Preferences</span>
           </div>
 
           {/* Company Profile */}
@@ -479,7 +479,7 @@ export default function SettingsPage() {
 
 // -------------------- Components --------------------
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-  <div onClick={onClick} className={`flex gap-2 items-center cursor-pointer ${isActive ? "text-[#8F90DF] underline" : "text-black"}`}>{icon}<span>{label}</span></div>
+  <div onClick={onClick} className={`flex gap-2 items-center cursor-pointer ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-1" : "text-black"}`}>{icon}<span>{label}</span></div>
 );
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {

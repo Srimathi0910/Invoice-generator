@@ -406,7 +406,7 @@ const Dashboard = () => {
 
 /* ---------------- COMPONENTS ---------------- */
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-  <div onClick={onClick} className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline" : "text-black"}`}>
+  <div onClick={onClick} className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-2" : "text-black"}`}>
     {icon}
     <span>{label}</span>
   </div>
