@@ -169,6 +169,14 @@ export default function InvoicePage() {
     updated[index] = { ...updated[index], [field]: field === "itemName" || field === "hsn" ? value : Number(value) };
     setItems(updated);
   };
+  const isValidEmail = (email: string) => {
+    const trimmed = email.trim();
+    const regex = /^[^\s@]+@([^\s@]+\.)+(com|in)$/i;
+    return regex.test(trimmed);
+  };
+
+
+
 
   /* ---------------- Validation ---------------- */
   const isValidPhone = (value: string) => /^\d{10}$/.test(value);
@@ -177,13 +185,26 @@ export default function InvoicePage() {
       alert("Please fill all invoice details.");
       return false;
     }
+
     if (!isValidPhone(billedBy.phone) || !isValidPhone(billedTo.phone)) {
       alert("Please enter valid 10-digit mobile numbers.");
       return false;
     }
 
-    for (const key in billedBy) if (!(billedBy as any)[key]) { alert(`Fill Billed By: ${key}`); return false; }
-    for (const key in billedTo) if (!(billedTo as any)[key]) { alert(`Fill Billed To: ${key}`); return false; }
+    // ✅ Check emails
+    if (!isValidEmail(billedBy.email)) {
+      alert("Billed By: Enter a valid email ending with .com or .in");
+      return false;
+    }
+    if (!isValidEmail(billedTo.email)) {
+      alert("Billed To: Enter a valid email ending with .com or .in");
+      return false;
+    }
+
+    for (const key in billedBy)
+      if (!(billedBy as any)[key]) { alert(`Fill Billed By: ${key}`); return false; }
+    for (const key in billedTo)
+      if (!(billedTo as any)[key]) { alert(`Fill Billed To: ${key}`); return false; }
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -194,6 +215,7 @@ export default function InvoicePage() {
     }
     return true;
   };
+
 
   /* ---------------- Totals Calculation ---------------- */
   const computeTotals = () => {
@@ -639,7 +661,7 @@ export default function InvoicePage() {
                   <label
                     className={`absolute left-0 text-gray-400 text-sm transition-all
           ${value ? 'top-0 text-blue-500 text-sm' : 'top-5 peer-placeholder-shown:text-gray-500 peer-placeholder-shown:text-base'}
-          peer-focus:top-0 peer-focus:text-black-500 peer-focus:text-sm`}
+          peer-focus:top-0 peer-focus:text-black peer-focus:text-sm`}
                   >
                     {key === "email" ? "Email" : key === "phone" ? "Phone" : key.replace(/([A-Z])/g, " $1")}
                   </label>
@@ -686,156 +708,156 @@ export default function InvoicePage() {
 
         {/* ---------------- ITEMS TABLE FULL WIDTH ---------------- */}
         <motion.div variants={itemVariant} className="mb-8 w-full">
-  {/* Desktop Table */}
-  <div className="hidden md:block overflow-x-auto w-full">
-    <table className="w-full border border-gray-300 text-sm border-collapse">
-      <thead className="bg-gray-200">
-        <tr>
-          <th className="p-2 border border-gray-300">Item</th>
-          <th className="p-2 border border-gray-300">HSN</th>
-          <th className="p-2 border border-gray-300">GST%</th>
-          <th className="p-2 border border-gray-300">Qty</th>
-          <th className="p-2 border border-gray-300">Rate</th>
-          <th className="p-2 border border-gray-300">Amount</th>
-          <th className="p-2 border border-gray-300"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {items.map((item, i) => {
-          const amount = item.qty * item.rate;
-          return (
-            <tr key={i}>
-              <td className="p-2 border border-gray-300">
-                <input
-                  className="w-full p-2 border border-gray-300 rounded text-sm"
-                  required
-                  value={item.itemName}
-                  onChange={(e) => handleChange(i, "itemName", e.target.value)}
-                />
-              </td>
-              <td className="p-2 border border-gray-300">
-                <input
-                  className="w-full p-2 border border-gray-300 rounded text-sm"
-                  required
-                  value={item.hsn}
-                  onChange={(e) => handleChange(i, "hsn", e.target.value)}
-                />
-              </td>
-              <td className="p-2 border border-gray-300">
-                <input
-                  className="w-full p-2 border border-gray-300 rounded text-sm"
-                  type="number"
-                  value={item.gst}
-                  required
-                  onChange={(e) => handleChange(i, "gst", e.target.value)}
-                />
-              </td>
-              <td className="p-2 border border-gray-300">
-                <input
-                  className="w-full p-2 border border-gray-300 rounded text-sm"
-                  type="number"
-                  value={item.qty}
-                  required
-                  onChange={(e) => handleChange(i, "qty", e.target.value)}
-                />
-              </td>
-              <td className="p-2 border border-gray-300">
-                <input
-                  className="w-full p-2 border border-gray-300 rounded text-sm"
-                  type="number"
-                  value={item.rate}
-                  required
-                  onChange={(e) => handleChange(i, "rate", e.target.value)}
-                />
-              </td>
-              <td className="p-2 border border-gray-300">₹{amount.toFixed(2)}</td>
-              <td className="p-2 border border-gray-300 text-center">
-                <X
-                  size={16}
-                  className="text-red-600 cursor-pointer"
-                  onClick={() => removeItem(i)}
-                />
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  </div>
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto w-full">
+            <table className="w-full border border-gray-300 text-sm border-collapse">
+              <thead className="bg-gray-200">
+                <tr>
+                  <th className="p-2 border border-gray-300">Item</th>
+                  <th className="p-2 border border-gray-300">HSN</th>
+                  <th className="p-2 border border-gray-300">GST%</th>
+                  <th className="p-2 border border-gray-300">Qty</th>
+                  <th className="p-2 border border-gray-300">Rate</th>
+                  <th className="p-2 border border-gray-300">Amount</th>
+                  <th className="p-2 border border-gray-300"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, i) => {
+                  const amount = item.qty * item.rate;
+                  return (
+                    <tr key={i}>
+                      <td className="p-2 border border-gray-300">
+                        <input
+                          className="w-full p-2 border border-gray-300 rounded text-sm"
+                          required
+                          value={item.itemName}
+                          onChange={(e) => handleChange(i, "itemName", e.target.value)}
+                        />
+                      </td>
+                      <td className="p-2 border border-gray-300">
+                        <input
+                          className="w-full p-2 border border-gray-300 rounded text-sm"
+                          required
+                          value={item.hsn}
+                          onChange={(e) => handleChange(i, "hsn", e.target.value)}
+                        />
+                      </td>
+                      <td className="p-2 border border-gray-300">
+                        <input
+                          className="w-full p-2 border border-gray-300 rounded text-sm"
+                          type="number"
+                          value={item.gst}
+                          required
+                          onChange={(e) => handleChange(i, "gst", e.target.value)}
+                        />
+                      </td>
+                      <td className="p-2 border border-gray-300">
+                        <input
+                          className="w-full p-2 border border-gray-300 rounded text-sm"
+                          type="number"
+                          value={item.qty}
+                          required
+                          onChange={(e) => handleChange(i, "qty", e.target.value)}
+                        />
+                      </td>
+                      <td className="p-2 border border-gray-300">
+                        <input
+                          className="w-full p-2 border border-gray-300 rounded text-sm"
+                          type="number"
+                          value={item.rate}
+                          required
+                          onChange={(e) => handleChange(i, "rate", e.target.value)}
+                        />
+                      </td>
+                      <td className="p-2 border border-gray-300">₹{amount.toFixed(2)}</td>
+                      <td className="p-2 border border-gray-300 text-center">
+                        <X
+                          size={16}
+                          className="text-red-600 cursor-pointer"
+                          onClick={() => removeItem(i)}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
-  {/* Mobile View */}
-  <div className="md:hidden flex flex-col gap-4">
-    {items.map((item, i) => {
-      const amount = item.qty * item.rate;
-      return (
-        <div key={i} className="flex flex-col border p-3 rounded bg-gray-50 gap-2">
-          <div className="flex justify-between">
-            <span className="font-semibold">Item:</span>
-            <input
-              className="border p-1 rounded w-2/3"
-              value={item.itemName}
-              onChange={(e) => handleChange(i, "itemName", e.target.value)}
-            />
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col gap-4">
+            {items.map((item, i) => {
+              const amount = item.qty * item.rate;
+              return (
+                <div key={i} className="flex flex-col border p-3 rounded bg-gray-50 gap-2">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Item:</span>
+                    <input
+                      className="border p-1 rounded w-2/3"
+                      value={item.itemName}
+                      onChange={(e) => handleChange(i, "itemName", e.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">HSN:</span>
+                    <input
+                      className="border p-1 rounded w-2/3"
+                      value={item.hsn}
+                      onChange={(e) => handleChange(i, "hsn", e.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">GST%:</span>
+                    <input
+                      className="border p-1 rounded w-2/3"
+                      type="number"
+                      value={item.gst}
+                      onChange={(e) => handleChange(i, "gst", e.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Qty:</span>
+                    <input
+                      className="border p-1 rounded w-2/3"
+                      type="number"
+                      value={item.qty}
+                      onChange={(e) => handleChange(i, "qty", e.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Rate:</span>
+                    <input
+                      className="border p-1 rounded w-2/3"
+                      type="number"
+                      value={item.rate}
+                      onChange={(e) => handleChange(i, "rate", e.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Amount:</span>
+                    <span>₹{amount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-end">
+                    <X
+                      size={16}
+                      className="text-red-600 cursor-pointer"
+                      onClick={() => removeItem(i)}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div className="flex justify-between">
-            <span className="font-semibold">HSN:</span>
-            <input
-              className="border p-1 rounded w-2/3"
-              value={item.hsn}
-              onChange={(e) => handleChange(i, "hsn", e.target.value)}
-            />
-          </div>
-          <div className="flex justify-between">
-            <span className="font-semibold">GST%:</span>
-            <input
-              className="border p-1 rounded w-2/3"
-              type="number"
-              value={item.gst}
-              onChange={(e) => handleChange(i, "gst", e.target.value)}
-            />
-          </div>
-          <div className="flex justify-between">
-            <span className="font-semibold">Qty:</span>
-            <input
-              className="border p-1 rounded w-2/3"
-              type="number"
-              value={item.qty}
-              onChange={(e) => handleChange(i, "qty", e.target.value)}
-            />
-          </div>
-          <div className="flex justify-between">
-            <span className="font-semibold">Rate:</span>
-            <input
-              className="border p-1 rounded w-2/3"
-              type="number"
-              value={item.rate}
-              onChange={(e) => handleChange(i, "rate", e.target.value)}
-            />
-          </div>
-          <div className="flex justify-between">
-            <span className="font-semibold">Amount:</span>
-            <span>₹{amount.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-end">
-            <X
-              size={16}
-              className="text-red-600 cursor-pointer"
-              onClick={() => removeItem(i)}
-            />
-          </div>
-        </div>
-      );
-    })}
-  </div>
 
-  <button
-    type="button"
-    onClick={addItem}
-    className="w-full mt-3 bg-gray-200 py-2 rounded border border-gray-300 hover:bg-gray-300 transition"
-  >
-    + Add New Item
-  </button>
-</motion.div>
+          <button
+            type="button"
+            onClick={addItem}
+            className="w-full mt-3 bg-gray-200 py-2 rounded border border-gray-300 hover:bg-gray-300 transition"
+          >
+            + Add New Item
+          </button>
+        </motion.div>
 
 
         <motion.div variants={itemVariant}>

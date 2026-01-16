@@ -1,9 +1,9 @@
 "use client";
 
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Mail, Phone } from "lucide-react"; // optional icons
 import { useRouter } from "next/navigation";
-import { authFetch} from "@/utils/authFetch"; 
+import { authFetch } from "@/utils/authFetch";
 import {
     FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog,
     FaUserCircle, FaSearch, FaBars, FaTimes
@@ -25,15 +25,15 @@ export default function HelpPage() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [user, setUser] = useState<{ username: string; email: string } | null>(null);
     const [loadingUser, setLoadingUser] = useState(true);
-      const [showLoader, setShowLoader] = useState(true);
-      useEffect(() => {
-        
+    const [showLoader, setShowLoader] = useState(true);
+    useEffect(() => {
+
         const timer = setTimeout(() => {
-          setShowLoader(false);
-        }, 1200); 
-    
+            setShowLoader(false);
+        }, 1200);
+
         return () => clearTimeout(timer); // cleanup
-      }, []);
+    }, []);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
@@ -47,27 +47,27 @@ export default function HelpPage() {
 
 
 
-  
-const handleLogout = async () => {
-  try {
-    const res = await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include", // ✅ REQUIRED
-    });
 
-    if (!res.ok) throw new Error("Logout failed");
+    const handleLogout = async () => {
+        try {
+            const res = await fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: "include", // ✅ REQUIRED
+            });
 
-    const data = await res.json();
-    console.log(data.message);
+            if (!res.ok) throw new Error("Logout failed");
 
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+            const data = await res.json();
+            console.log(data.message);
 
-    router.replace("/"); 
-  } catch (err) {
-    console.error("Logout failed:", err);
-  }
-};
+            localStorage.removeItem("user");
+            localStorage.removeItem("token");
+
+            router.replace("/");
+        } catch (err) {
+            console.error("Logout failed:", err);
+        }
+    };
 
 
 
@@ -84,44 +84,44 @@ const handleLogout = async () => {
     const toggleFAQ = (index: number) => {
         setOpenIndex(openIndex === index ? null : index);
     };
- // Navbar slides from top
-  const navbarVariants: Variants = {
-    hidden: { y: -100, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
-  };
-  const itemVariant: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
-};
-const staggerContainer: Variants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.1,
-    },
-  },
-};
-  if (showLoader) {
-    return (
-      <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
-        <TetrominosLoader />
-      </div>
-    );
-  }
+    // Navbar slides from top
+    const navbarVariants: Variants = {
+        hidden: { y: -100, opacity: 0 },
+        visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+    };
+    const itemVariant: Variants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: { duration: 0.4, ease: "easeOut" },
+        },
+    };
+    const staggerContainer: Variants = {
+        hidden: {},
+        visible: {
+            transition: {
+                staggerChildren: 0.15,
+                delayChildren: 0.1,
+            },
+        },
+    };
+    if (showLoader) {
+        return (
+            <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
+                <TetrominosLoader />
+            </div>
+        );
+    }
     return (
         <motion.div
-  variants={staggerContainer}
-  initial="hidden"
-  animate="visible" className="min-h-screen bg-gray-100 p-6">
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible" className="min-h-screen bg-gray-100 p-6">
             <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible"className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+                variants={navbarVariants}
+                initial="hidden"
+                animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
                 <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">Invoice Dashboard</motion.div>
 
                 <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
@@ -179,27 +179,44 @@ const staggerContainer: Variants = {
                 </div>
 
                 {/* Contact Support */}
-                <div className="bg-gray-300 p-10 rounded-md">
-                    <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                        <span>👤?</span> Contact support
-                    </h2>
-                    <div className="flex flex-col sm:flex-row gap-40">
-                        <div className="bg-white px-10 py-5 rounded-md w-[300px] h-[100px] shadow-[2px_4px_10px_rgba(0,0,0,0.2)] flex items-center gap-6 p-8">
-                            <Mail className="w-5 h-5" />
-                            <div>
-                                <p className="font-semibold">Email support</p>
-                                <p className="text-gray-600">support@invoice.com</p>
-                            </div>
-                        </div>
-                        <div className="bg-white px-10 py-5 rounded-md w-[300px] h-[100px] shadow-[2px_4px_10px_rgba(0,0,0,0.2)] flex items-center gap-6 p-8">
-                            <Phone className="w-5 h-5" />
-                            <div>
-                                <p className="font-semibold ">Call us</p>
-                                <p className="text-gray-600">9876543211</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<div className="bg-gray-300 p-6 sm:p-10 rounded-md">
+  <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+    <span>👤</span> Contact support
+  </h2>
+
+  <div className="flex flex-col sm:flex-row gap-6 sm:gap-12 justify-center items-center">
+    
+    {/* Email Card */}
+    <div className="bg-white px-6 py-4 rounded-md w-full max-w-[320px] h-[100px]
+      shadow-[2px_4px_10px_rgba(0,0,0,0.2)]
+      flex items-center gap-4">
+      
+      <Mail className="w-5 h-5 shrink-0" />
+      <div>
+        <p className="font-semibold">Email support</p>
+        <p className="text-gray-600 break-all">
+          support@invoice.com
+        </p>
+      </div>
+    </div>
+
+    {/* Phone Card */}
+    <div className="bg-white px-6 py-4 rounded-md w-full max-w-[320px] h-[100px]
+      shadow-[2px_4px_10px_rgba(0,0,0,0.2)]
+      flex items-center gap-4">
+      
+      <Phone className="w-5 h-5 shrink-0" />
+      <div>
+        <p className="font-semibold">Call us</p>
+        <p className="text-gray-600">
+          9876543211
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
             </motion.div>
         </motion.div>
     );

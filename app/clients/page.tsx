@@ -303,12 +303,12 @@ export default function ClientsPage() {
           />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
         </motion.div> */}
-        <motion.button variants={itemVariant}
+        {/* <motion.button variants={itemVariant}
           onClick={handleAddClient}
           className="bg-white text-black px-4 py-2 rounded flex items-center gap-2"
         >
           + Add Client
-        </motion.button>
+        </motion.button> */}
       </motion.div>
 
       {/* -------- SEARCH -------- */}

@@ -1,10 +1,10 @@
 "use client";
-import { authFetch} from "@/utils/authFetch"; 
+import { authFetch } from "@/utils/authFetch"; 
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, Mail, Phone, Lock } from "lucide-react";
+import { User, Mail, Phone, Lock, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
 export default function Signup() {
@@ -27,6 +27,7 @@ export default function Signup() {
 
   const [loading, setLoading] = useState(false);
   const [shake, setShake] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // ✅ Show/hide password
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -98,7 +99,6 @@ export default function Signup() {
   };
 
   const inputClass = "peer w-full border-b border-gray-400 py-2 outline-none";
-
   const labelClass = (value: string) =>
     `absolute left-0 text-gray-500 transition-all duration-300 ${
       value ? "-top-3 text-sm text-black" : "top-2 text-base"
@@ -109,7 +109,6 @@ export default function Signup() {
     shake: { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.5 } },
   };
 
-  // Entry animation for image and form
   const entryVariant: Variants = {
     hidden: { opacity: 0, y: -50 },
     visible: (delay = 0) => ({
@@ -129,7 +128,7 @@ export default function Signup() {
           variants={entryVariant}
           initial="hidden"
           animate="visible"
-          custom={0} // no delay
+          custom={0}
         >
           <Image
             src="/assets/signup/signup-img.png"
@@ -151,7 +150,7 @@ export default function Signup() {
           variants={entryVariant}
           initial="hidden"
           animate="visible"
-          custom={0.2} // slight delay for form
+          custom={0.2}
         >
           <h2 className="text-2xl font-bold mb-6 text-center">Signup</h2>
 
@@ -187,7 +186,6 @@ export default function Signup() {
               />
               <label className={labelClass(formData.username)}>Username</label>
               <User className="absolute right-0 top-2 text-gray-500" size={18} />
-
               <AnimatePresence>
                 {errors.username && (
                   <motion.p
@@ -216,7 +214,6 @@ export default function Signup() {
               />
               <label className={labelClass(formData.email)}>Email</label>
               <Mail className="absolute right-0 top-2 text-gray-500" size={18} />
-
               <AnimatePresence>
                 {errors.email && (
                   <motion.p
@@ -244,7 +241,6 @@ export default function Signup() {
               />
               <label className={labelClass(formData.phone)}>Phone Number</label>
               <Phone className="absolute right-0 top-2 text-gray-500" size={18} />
-
               <AnimatePresence>
                 {errors.phone && (
                   <motion.p
@@ -261,18 +257,25 @@ export default function Signup() {
               </AnimatePresence>
             </div>
 
-            {/* Password */}
+            {/* Password with toggle */}
             <div className="relative">
               <input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleChange}
                 placeholder=" "
                 className={inputClass}
               />
               <label className={labelClass(formData.password)}>Password</label>
-              <Lock className="absolute right-0 top-2 text-gray-500" size={18} />
+
+              {/* Eye toggle */}
+              <div
+                className="absolute right-0 top-2 cursor-pointer text-gray-500"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+              </div>
 
               <AnimatePresence>
                 {errors.password && (
@@ -290,7 +293,7 @@ export default function Signup() {
               </AnimatePresence>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}

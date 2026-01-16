@@ -4,9 +4,10 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { motion, Variants, AnimatePresence } from "framer-motion";
-import { authFetch} from "@/utils/authFetch"; 
+import { authFetch } from "@/utils/authFetch";
+
 export default function Login() {
   const router = useRouter();
 
@@ -23,47 +24,47 @@ export default function Login() {
 
   const [loading, setLoading] = useState(false);
   const [shake, setShake] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // ✅ Toggle password
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
     setErrors((prev) => ({ ...prev, [id]: "", general: "" }));
   };
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setErrors({ email: "", password: "", general: "" });
-  setLoading(true);
 
-  try {
-    const data = await authFetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({ email: "", password: "", general: "" });
+    setLoading(true);
 
-    // Successful login
-    localStorage.setItem("user", JSON.stringify(data.user));
-    localStorage.setItem("token", data.token);
+    try {
+      const data = await authFetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    if (data.role === "company") router.replace("/dashboard");
-    else if (data.role === "client") router.replace("/dashboard-client");
-  } catch (err: any) {
-    setShake(true);
-    setTimeout(() => setShake(false), 500);
+      // Successful login
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("token", data.token);
 
-    setErrors({
-      email: err?.errors?.email || "",
-      password: err?.errors?.password || "",
-      general: err?.error || "Invalid email or password",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+      if (data.role === "company") router.replace("/dashboard");
+      else if (data.role === "client") router.replace("/dashboard-client");
+    } catch (err: any) {
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
 
+      setErrors({
+        email: err?.errors?.email || "",
+        password: err?.errors?.password || "",
+        general: err?.error || "Invalid email or password",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /* ---------------- ANIMATIONS ---------------- */
-
   const pageVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
@@ -115,7 +116,8 @@ const handleSubmit = async (e: React.FormEvent) => {
     "peer w-full border-b border-gray-400 py-2 outline-none bg-transparent";
 
   const labelClass = (value: string) =>
-    `absolute left-0 transition-all duration-300 ${value ? "-top-3 text-sm text-black" : "top-2 text-base text-gray-500"
+    `absolute left-0 transition-all duration-300 ${
+      value ? "-top-3 text-sm text-black" : "top-2 text-base text-gray-500"
     }`;
 
   return (
@@ -184,17 +186,15 @@ const handleSubmit = async (e: React.FormEvent) => {
                     size={18}
                   />
                   {errors.email && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.email}
-                    </p>
+                    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
                   )}
                 </motion.div>
 
-                {/* Password */}
+                {/* Password with show/hide */}
                 <motion.div variants={itemVariants} className="relative">
                   <input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={handleChange}
                     placeholder=" "
@@ -203,10 +203,15 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <label className={labelClass(formData.password)}>
                     Password
                   </label>
-                  <Lock
-                    className="absolute right-0 top-2 text-gray-500"
-                    size={18}
-                  />
+
+                  {/* Toggle Eye Icon */}
+                  <div
+                    className="absolute right-0 top-2 cursor-pointer text-gray-500"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                  </div>
+
                   {errors.password && (
                     <p className="text-red-500 text-sm mt-1">
                       {errors.password}

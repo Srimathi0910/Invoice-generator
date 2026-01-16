@@ -723,33 +723,57 @@ const InvoicePreview = () => {
         {/* ... Your existing file upload JSX remains unchanged ... */}
 
       </motion.div>
-      <div className="mb-4 w-64">
-        <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-full h-10">
-          <FileText size={18} className="text-gray-500" />
-          <span className="bg-white text-sm text-gray-600 text-center">
-            Add Signature
-          </span>
-          <input
-            type="file"
-            accept=".png,.jpg,.jpeg,.pdf"
-            className="hidden"
-            onChange={(e) => handleFileChange("signature", e.target.files ?? null)}
-          />
-        </label>
 
-        {invoiceFiles.signature && (
-          <div className="mt-2 text-sm text-gray-700 flex justify-between items-center bg-gray-100 px-2 py-1 rounded">
-            <span>{invoiceFiles.signature.name}</span>
-            <button
-              type="button"
-              onClick={() => setInvoiceFiles({ ...invoiceFiles, signature: null })}
-              className="text-red-500 font-bold ml-2"
-            >
-              X
-            </button>
-          </div>
-        )}
-      </div>
+      <motion.div variants={itemVariant} className="px-30 py-6">
+        <div className="flex flex-col items-center md:items-end mb-4 w-full md:w-64 md:ml-auto">
+
+          <label
+            className="
+        flex items-center justify-center
+        gap-3 px-4
+        border-2 border-dashed
+        rounded-lg cursor-pointer
+        hover:bg-gray-50
+        w-full h-10
+        text-center
+      "
+          >
+            <FileText size={18} className="text-gray-500" />
+            <span className="bg-white text-sm text-gray-600">
+              Add Signature
+            </span>
+
+            <input
+              type="file"
+              accept=".png,.jpg,.jpeg,.pdf"
+              className="hidden"
+              onChange={(e) =>
+                handleFileChange("signature", e.target.files ?? null)
+              }
+            />
+          </label>
+
+          {invoiceFiles.signature && (
+            <div className="mt-2 text-sm text-gray-700 flex justify-between items-center bg-gray-100 px-2 py-1 rounded w-full">
+              <span className="truncate">
+                {invoiceFiles.signature.name}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setInvoiceFiles({ ...invoiceFiles, signature: null })
+                }
+                className="text-red-500 font-bold ml-2"
+              >
+                X
+              </button>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+
+
 
       <motion.div variants={itemVariant} className="p-10">
         <div className="grid md:grid-cols-3 gap-4 justify-items-center">
