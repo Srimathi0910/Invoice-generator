@@ -432,12 +432,29 @@ export default function SettingsPage() {
                     <span>{field === "dueDateReminder" ? "Due Date Reminder" : field === "overdueAlert" ? "Overdue Invoice Alert" : "Payment Received Notification"}</span>
                   </label>
                 ))}
-                <div className="mt-6 flex items-center gap-4">
-                  <span className="text-sm text-gray-600">Reminder Period:</span>
-                  <select value={preferences.reminderPeriod} onChange={(e) => setPreferences({ ...preferences, reminderPeriod: Number(e.target.value) })} className="border rounded px-3 py-2 text-sm">
-                    {[1, 3, 5].map((day) => (<option key={day} value={day}>{day} Day{day > 1 ? "s" : ""} Before Due Date</option>))}
+                <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 w-full">
+                  <span className="text-sm text-gray-600 whitespace-nowrap">
+                    Reminder Period:
+                  </span>
+
+                  <select
+                    value={preferences.reminderPeriod}
+                    onChange={(e) =>
+                      setPreferences({
+                        ...preferences,
+                        reminderPeriod: Number(e.target.value),
+                      })
+                    }
+                    className="border rounded px-3 py-2 text-sm w-full sm:w-auto"
+                  >
+                    {[1, 3, 5].map((day) => (
+                      <option key={day} value={day}>
+                        {day} Day{day > 1 ? "s" : ""} Before Due Date
+                      </option>
+                    ))}
                   </select>
                 </div>
+
                 <div className="mt-6 text-right">
                   <button
                     onClick={savePreferences}
