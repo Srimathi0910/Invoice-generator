@@ -45,36 +45,36 @@ export async function POST(req: NextRequest) {
 }
 
 /* ---------------- GET PREFERENCES ---------------- */
-export async function GET(req: NextRequest) {
-  await connectDB();
+// export async function GET(req: NextRequest) {
+//   await connectDB();
 
-  try {
-    // Get token from cookies
-    const token = req.cookies.get("accessToken")?.value;
-    if (!token) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+//   try {
+//     // Get token from cookies
+//     const token = req.cookies.get("accessToken")?.value;
+//     if (!token) {
+//       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+//     }
 
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-    const userId = decoded.id || decoded.userId || decoded._id;
+//     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+//     const userId = decoded.id || decoded.userId || decoded._id;
 
-    if (!userId) {
-      return NextResponse.json({ message: "Invalid token" }, { status: 401 });
-    }
+//     if (!userId) {
+//       return NextResponse.json({ message: "Invalid token" }, { status: 401 });
+//     }
 
-    const preferences = await NotificationPreference.findOne({ userId }).lean();
+//     const preferences = await NotificationPreference.findOne({ userId }).lean();
 
-    return NextResponse.json({ preferences: preferences || {} });
-  } catch (err: any) {
-    console.error("PREFERENCES GET ERROR:", err);
-    return NextResponse.json(
-      {
-        message:
-          err.name === "TokenExpiredError"
-            ? "ACCESS_TOKEN_EXPIRED"
-            : "Error fetching preferences",
-      },
-      { status: 401 }
-    );
-  }
-}
+//     return NextResponse.json({ preferences: preferences || {} });
+//   } catch (err: any) {
+//     console.error("PREFERENCES GET ERROR:", err);
+//     return NextResponse.json(
+//       {
+//         message:
+//           err.name === "TokenExpiredError"
+//             ? "ACCESS_TOKEN_EXPIRED"
+//             : "Error fetching preferences",
+//       },
+//       { status: 401 }
+//     );
+//   }
+// }
