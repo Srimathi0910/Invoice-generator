@@ -103,12 +103,12 @@ const Dashboard = () => {
     { icon: <FaCog />, label: "Help", path: "/help" },
   ];
 
-// Filter based on active tab
-const filteredInvoices = activeTab === "All"
-  ? invoices
-  : invoices.filter(i => i.status === activeTab);
+  // Filter based on active tab
+  const filteredInvoices = activeTab === "All"
+    ? invoices
+    : invoices.filter(i => i.status === activeTab);
 
-// Filter based on search term
+  // Filter based on search term
 
   if (showLoader) {
     return (
@@ -249,19 +249,19 @@ const filteredInvoices = activeTab === "All"
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
           <div className="relative w-full md:w-1/3">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-           <div className="relative w-full md:w-1/3">
-  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-  <input
-    type="text"
-    placeholder="Search invoices..."
-    value={searchTerm} // ✅ Connect value
-    onChange={(e) => {
-      setSearchTerm(e.target.value); // ✅ Update state
-      setCurrentPage(1); // ✅ Reset to first page when searching
-    }}
-    className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
-  />
-</div>
+            <div className="relative w-full md:w-1/3">
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search invoices..."
+                value={searchTerm} // ✅ Connect value
+                onChange={(e) => {
+                  setSearchTerm(e.target.value); // ✅ Update state
+                  setCurrentPage(1); // ✅ Reset to first page when searching
+                }}
+                className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
+              />
+            </div>
 
           </div>
 
@@ -313,8 +313,9 @@ const filteredInvoices = activeTab === "All"
                       </div>
                       <div className="flex justify-between w-full px-4">
                         <span className="font-semibold">Amount:</span>
-                        <span>₹{inv.totals?.grandTotal ?? 0}</span>
+                        <span>₹{Number(inv.totals?.grandTotal ?? 0).toFixed(2)}</span>
                       </div>
+
                       <div className="flex justify-between w-full px-4">
                         <span className="font-semibold">Status:</span>
                         <span
@@ -343,7 +344,10 @@ const filteredInvoices = activeTab === "All"
                   {/* Desktop layout */}
                   <td className="hidden md:table-cell px-4 py-2">{inv.invoiceNumber}</td>
                   <td className="hidden md:table-cell px-4 py-2">{inv.billedTo.businessName}</td>
-                  <td className="hidden md:table-cell px-4 py-2">₹{inv.totals?.grandTotal ?? 0}</td>
+                  <td className="hidden md:table-cell px-4 py-2">
+  ₹{Number(inv.totals?.grandTotal ?? 0).toFixed(2)}
+</td>
+
                   <td className="hidden md:table-cell px-4 py-2">
                     <span className={`px-2 py-1 rounded text-white ${getStatusColor(inv.status)}`}>
                       {inv.status ?? "Unpaid"}

@@ -55,7 +55,31 @@ export async function POST(req: NextRequest) {
     // ---------- CREATE CLIENT USER IF NOT EXISTS ----------
     let clientUser = await User.findOne({ email: invoiceData.billedTo.email });
     if (!clientUser) {
-      const tempPassword = Math.random().toString(36).slice(-8);
+      // ----- STRONG PASSWORD GENERATION -----
+      function generatePassword(length = 10) {
+        const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const lower = "abcdefghijklmnopqrstuvwxyz";
+        const numbers = "0123456789";
+        const symbols = "!@#$%^&*()";
+        const all = upper + lower + numbers + symbols;
+
+        let password = "";
+        password += upper[Math.floor(Math.random() * upper.length)];
+        password += lower[Math.floor(Math.random() * lower.length)];
+        password += numbers[Math.floor(Math.random() * numbers.length)];
+        password += symbols[Math.floor(Math.random() * symbols.length)];
+
+        for (let i = 4; i < length; i++) {
+          password += all[Math.floor(Math.random() * all.length)];
+        }
+
+        return password
+          .split("")
+          .sort(() => 0.5 - Math.random()) // shuffle
+          .join("");
+      }
+
+      const tempPassword = generatePassword(10); // 10 characters
       const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
       clientUser = await User.create({
@@ -130,9 +154,6 @@ export async function POST(req: NextRequest) {
 /* =========================
    GET: Fetch Invoices
    ========================= */
-/* =========================
-   GET: Fetch Invoices (Only Logged-in User = billedBy.email)
-   ========================= */
 export async function GET(req: NextRequest) {
   await connectDB();
 
@@ -169,10 +190,8 @@ export async function GET(req: NextRequest) {
     let filter: any = {};
 
     if (role === "company") {
-      // Company dashboard → invoices CREATED by company
       filter = { "billedBy.email": email };
     } else if (role === "client") {
-      // Client dashboard → invoices RECEIVED by client
       filter = { "billedTo.email": email };
     } else {
       return NextResponse.json(
