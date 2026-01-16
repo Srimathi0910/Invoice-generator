@@ -1,10 +1,13 @@
+import 'dotenv/config';
 import cron from "node-cron";
-import { sendInvoiceReminders } from "./lib/sendInvoiceReminders";
-import { connectDB } from "./lib/db";
+import { sendInvoiceReminders } from "./lib/sendInvoiceReminders.ts"; // <- relative path, no .ts
 
-cron.schedule("0 7 * * *", async () => {
-  console.log("⏱ Running daily invoice reminder...");
-  await connectDB();
+cron.schedule("0 9 * * *", async () => {
+  console.log("⏱ CRON TEST RUNNING...");
   await sendInvoiceReminders();
-  console.log("✅ Daily reminders executed");
 });
+
+
+
+
+

@@ -5,7 +5,22 @@ const ReminderLogSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Invoice",
   },
-  reminderDate: Date,
+  invoiceNumber: {
+    type: String,
+    required: true,
+  },
+  dueDate: {
+    type: Date,
+    required: true,
+  },
+  emailSentTo: {
+    type: String,
+    required: true,
+  },
+  reminderDate: {
+    type: Date,
+    required: true,
+  },
 });
 
 export default mongoose.models.ReminderLog ||
