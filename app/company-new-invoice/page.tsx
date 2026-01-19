@@ -186,12 +186,19 @@ export default function InvoicePage() {
       return false;
     }
 
+    // Check if Invoice Date <= Due Date
+    const invoiceDate = new Date(invoiceMeta.invoiceDate);
+    const dueDate = new Date(invoiceMeta.dueDate);
+    if (invoiceDate > dueDate) {
+      alert("Invoice Date cannot be later than Due Date.");
+      return false;
+    }
+
     if (!isValidPhone(billedBy.phone) || !isValidPhone(billedTo.phone)) {
       alert("Please enter valid 10-digit mobile numbers.");
       return false;
     }
 
-    // ✅ Check emails
     if (!isValidEmail(billedBy.email)) {
       alert("Billed By: Enter a valid email ending with .com or .in");
       return false;
@@ -213,8 +220,10 @@ export default function InvoicePage() {
         return false;
       }
     }
+
     return true;
   };
+
 
 
   /* ---------------- Totals Calculation ---------------- */
@@ -593,15 +602,13 @@ export default function InvoicePage() {
             </label>
 
             <input
-              className="w-full p-2 bg-white  text-black  border-2 border-black  rounded-md focus:outline-none focus:ring-0"
+              className="w-full p-2 bg-white text-black border-2 border-black rounded-md focus:outline-none focus:ring-0"
               type="date"
               required
               value={invoiceMeta.invoiceDate}
+              max={invoiceMeta.dueDate || undefined} // cannot select after Due Date
               onChange={(e) =>
-                setInvoiceMeta({
-                  ...invoiceMeta,
-                  invoiceDate: e.target.value,
-                })
+                setInvoiceMeta({ ...invoiceMeta, invoiceDate: e.target.value })
               }
             />
           </div>
@@ -610,15 +617,13 @@ export default function InvoicePage() {
               Due Date
             </label>
             <input
-              className="w-full p-2 bg-white  text-black  border-2 border-black  rounded-md focus:outline-none focus:ring-0"
+              className="w-full p-2 bg-white text-black border-2 border-black rounded-md focus:outline-none focus:ring-0"
               type="date"
               required
               value={invoiceMeta.dueDate}
+              min={invoiceMeta.invoiceDate || undefined} // cannot select before Invoice Date
               onChange={(e) =>
-                setInvoiceMeta({
-                  ...invoiceMeta,
-                  dueDate: e.target.value,
-                })
+                setInvoiceMeta({ ...invoiceMeta, dueDate: e.target.value })
               }
             />
           </div>

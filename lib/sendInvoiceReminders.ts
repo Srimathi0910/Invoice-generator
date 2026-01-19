@@ -4,15 +4,11 @@ import ReminderLog from "../models/ReminderLog.ts";
 import { connectDB } from "./db.ts";
 import nodemailer from "nodemailer";
 
-/**
- * Send invoice reminders, overdue alerts, or payment received notifications.
- * @param testMode boolean - If true, sends emails regardless of date (for testing)
- */
 export async function sendInvoiceReminders(testMode = false) {
   await connectDB();
 
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // start of today
+  today.setHours(0, 0, 0, 0);
 
   const invoices = await Invoice.find({});
   console.log(`📦 Total invoices found: ${invoices.length}`);
@@ -23,140 +19,131 @@ export async function sendInvoiceReminders(testMode = false) {
       user: process.env.EMAIL_USER!,
       pass: process.env.EMAIL_PASS!,
     },
-    tls: { rejectUnauthorized: false },
   });
 
   for (const invoice of invoices) {
-    console.log(`\n🔍 Checking invoice: ${invoice.invoiceNumber}`);
-    console.log(`Status: ${invoice.status}, Due Date: ${invoice.dueDate.toDateString()}`);
 
-    // Get user notification preferences
-    const pref = await NotificationPreference.findOne({ userId: invoice.userId });
-    if (!pref) continue;
-
-    const recipient = invoice.billedTo?.email?.trim().toLowerCase();
-    if (!recipient || !recipient.includes("@")) {
-      console.log(`⚠️ Invalid email for invoice: ${invoice.invoiceNumber}`);
+    // ✅ SAFETY 1: skip invoices without dueDate
+    if (!invoice.dueDate) {
+      console.log(
+        `⚠️ Skipping invoice ${invoice.invoiceNumber} (missing dueDate)`
+      );
       continue;
     }
 
-    // ------------------------------
-    // 1️⃣ Due Date Reminder
-    // ------------------------------
+    const pref = await NotificationPreference.findOne({
+      userId: invoice.userId,
+    });
+    if (!pref) continue;
+
+    const recipient = invoice.billedTo?.email?.trim().toLowerCase();
+    if (!recipient) continue;
+
+    // =============================
+    // 1️⃣ DUE DATE REMINDER
+    // =============================
     if (pref.dueDateReminder) {
       const reminderDate = new Date(invoice.dueDate);
       reminderDate.setDate(reminderDate.getDate() - pref.reminderPeriod);
       reminderDate.setHours(0, 0, 0, 0);
 
-      const alreadySentReminder = await ReminderLog.findOne({
+      const alreadySent = await ReminderLog.findOne({
         invoiceId: invoice._id,
         type: "Reminder",
-        reminderDate: { $gte: today, $lte: new Date(today.getTime() + 86399999) },
+        dueDate: invoice.dueDate,
       });
 
-      if (!alreadySentReminder && (reminderDate.toDateString() === today.toDateString() || testMode)) {
+      if (
+        !alreadySent &&
+        (reminderDate.getTime() === today.getTime() || testMode)
+      ) {
         await sendEmail(transporter, invoice, recipient, "Reminder");
       }
     }
 
-    // ------------------------------
-    // 2️⃣ Overdue Alert
-    // ------------------------------
-    // Auto-mark overdue if unpaid and past due date
+    // =============================
+    // 2️⃣ OVERDUE ALERT
+    // =============================
     if (invoice.status === "Unpaid" && new Date(invoice.dueDate) < today) {
       invoice.status = "Overdue";
-      await invoice.save(); // triggers pre-save hook if implemented
-      console.log(`🛑 Invoice ${invoice.invoiceNumber} marked as Overdue`);
+      await invoice.save();
     }
 
     if (invoice.status === "Overdue" && pref.overdueAlert) {
-      const alreadySentOverdue = await ReminderLog.findOne({
+      const alreadySent = await ReminderLog.findOne({
         invoiceId: invoice._id,
         type: "Overdue",
-        reminderDate: { $gte: today, $lte: new Date(today.getTime() + 86399999) },
+        dueDate: invoice.dueDate,
       });
 
-      if (!alreadySentOverdue || testMode) {
+      if (!alreadySent || testMode) {
         await sendEmail(transporter, invoice, recipient, "Overdue");
       }
     }
-
-    // ------------------------------
-    // 3️⃣ Payment Received Alert
-    // ------------------------------
-    if (invoice.status === "Paid" && pref.paymentReceived) {
-      const alreadySentPayment = await ReminderLog.findOne({
-        invoiceId: invoice._id,
-        type: "PaymentReceived",
-        reminderDate: { $gte: today, $lte: new Date(today.getTime() + 86399999) },
-      });
-
-      if (!alreadySentPayment || testMode) {
-        await sendEmail(transporter, invoice, recipient, "PaymentReceived");
-      }
-    }
   }
 
-  console.log("\n⏰ CRON run complete!");
+  console.log("⏰ CRON completed");
 }
 
-// ------------------------------
-// Helper to send emails and log them
-// ------------------------------
-export async function sendEmail(transporter: any, invoice: any, recipient: string, type: string) {
+// ---------------- EMAIL HELPER ----------------
+export async function sendEmail(
+  transporter: any,
+  invoice: any,
+  recipient: string,
+  type: "Reminder" | "Overdue" | "PaymentReceived"
+) {
+  // ✅ SAFETY 2: final guard
+  if (!invoice.dueDate) {
+    console.log(
+      `❌ Email NOT sent. Missing dueDate for invoice ${invoice.invoiceNumber}`
+    );
+    return;
+  }
+
   let subject = "";
   let html = "";
 
-  switch (type) {
-    case "Reminder":
-      subject = `Invoice Reminder - ${invoice.invoiceNumber}`;
-      html = `<h2>Invoice Payment Reminder</h2>
-        <p>Dear <strong>${invoice.billedTo?.businessName ?? "Customer"}</strong>,</p>
-        <p>This is a reminder for invoice <b>${invoice.invoiceNumber}</b> due on ${new Date(
-          invoice.dueDate
-        ).toDateString()}</p>
-        <p>Amount: ₹${invoice.totals.grandTotal}</p>`;
-      break;
-
-    case "Overdue":
-      subject = `⚠️ Invoice Overdue - ${invoice.invoiceNumber}`;
-      html = `<h2>Invoice Overdue Alert</h2>
-        <p>Dear <strong>${invoice.billedTo?.businessName ?? "Customer"}</strong>,</p>
-        <p>Invoice <b>${invoice.invoiceNumber}</b> is overdue since ${new Date(
-          invoice.dueDate
-        ).toDateString()}</p>
-        <p>Amount Due: ₹${invoice.totals.grandTotal}</p>`;
-      break;
-
-    case "PaymentReceived":
-      subject = `✅ Payment Received - ${invoice.invoiceNumber}`;
-      html = `<h2>Payment Received</h2>
-        <p>Dear <strong>${invoice.billedTo?.businessName ?? "Customer"}</strong>,</p>
-        <p>We have received payment for invoice <b>${invoice.invoiceNumber}</b>.</p>
-        <p>Amount Paid: ₹${invoice.totals.grandTotal}</p>`;
-      break;
+  if (type === "Reminder") {
+    subject = `Invoice Reminder - ${invoice.invoiceNumber}`;
+    html = `
+      <p>Invoice <b>${invoice.invoiceNumber}</b> is due on
+      ${new Date(invoice.dueDate).toDateString()}</p>
+      <p>Amount: ₹${invoice.totals.grandTotal}</p>
+    `;
   }
 
-  try {
-    await transporter.sendMail({
-      from: `"${invoice.billedBy?.businessName ?? "Billing"}" <${process.env.EMAIL_USER}>`,
-      to: recipient,
-      subject,
-      html,
-    });
-
-    console.log(`📧 [${type}] email sent to ${recipient} for invoice ${invoice.invoiceNumber}`);
-
-    // Log email to ReminderLog
-    await ReminderLog.create({
-      invoiceId: invoice._id,
-      invoiceNumber: invoice.invoiceNumber,
-      dueDate: invoice.dueDate,
-      emailSentTo: recipient,
-      reminderDate: new Date(),
-      type,
-    });
-  } catch (err) {
-    console.error(`❌ Failed to send ${type} email for invoice: ${invoice.invoiceNumber}`, err);
+  if (type === "Overdue") {
+    subject = `⚠️ Invoice Overdue - ${invoice.invoiceNumber}`;
+    html = `
+      <p>Invoice <b>${invoice.invoiceNumber}</b> is overdue.</p>
+      <p>Amount Due: ₹${invoice.totals.grandTotal}</p>
+    `;
   }
+
+  if (type === "PaymentReceived") {
+    subject = `✅ Payment Received - ${invoice.invoiceNumber}`;
+    html = `
+      <p>Payment received for invoice <b>${invoice.invoiceNumber}</b>.</p>
+      <p>Amount Paid: ₹${invoice.totals.grandTotal}</p>
+    `;
+  }
+
+  await transporter.sendMail({
+    from: `"${invoice.billedBy.businessName}" <${process.env.EMAIL_USER}>`,
+    to: recipient,
+    subject,
+    html,
+  });
+
+  // ✅ SAFE ReminderLog save
+  await ReminderLog.create({
+    invoiceId: invoice._id,
+    invoiceNumber: invoice.invoiceNumber,
+    dueDate: invoice.dueDate,
+    emailSentTo: recipient,
+    reminderDate: new Date(),
+    type,
+  });
+
+  console.log(`📧 ${type} email sent to ${recipient}`);
 }
