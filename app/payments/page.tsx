@@ -433,7 +433,8 @@ export default function PaymentsPage() {
                                                     {isEditing ? (
                                                         <>
                                                             <button
-                                                                className="bg-green-500 text-white px-2 py-1 rounded mr-2"
+                                                            
+                                                                className="bg-green-500 text-white px-2 py-1 rounded mr-2 cursor-pointer"
                                                                 onClick={async () => {
                                                                     await handleUpdate(p._id, {
                                                                         paymentDate: p.paymentDate,
@@ -446,7 +447,7 @@ export default function PaymentsPage() {
                                                                 Save
                                                             </button>
                                                             <button
-                                                                className="bg-gray-400 text-white px-2 py-1 rounded"
+                                                                className="bg-gray-400 text-white px-2 py-1 rounded  cursor-pointer"
                                                                 onClick={() => setEditRow(null)}
                                                             >
                                                                 Cancel
@@ -550,7 +551,7 @@ export default function PaymentsPage() {
                                             {isEditing ? (
                                                 <>
                                                     <button
-                                                        className="bg-green-500 text-white px-2 py-1 rounded mr-2"
+                                                        className="bg-green-500 text-white px-2 py-1 rounded mr-2  cursor-pointer"
                                                         onClick={async () => {
                                                             await handleUpdate(p._id, {
                                                                 paymentDate: p.paymentDate,
@@ -563,7 +564,7 @@ export default function PaymentsPage() {
                                                         Save
                                                     </button>
                                                     <button
-                                                        className="bg-gray-400 text-white px-2 py-1 rounded"
+                                                        className="bg-gray-400 text-white px-2 py-1 rounded  cursor-pointer"
                                                         onClick={() => setEditRow(null)}
                                                     >
                                                         Cancel
