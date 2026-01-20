@@ -302,10 +302,16 @@ const Dashboard = () => {
                                                 <span>{new Date(inv.invoiceDate).toLocaleDateString()}</span>
                                             </div>
                                             <div className="flex justify-end w-full mt-2">
-                                                <button className="bg-blue-200 text-blue-700 font-medium px-3 py-1 rounded hover:bg-blue-300">
+                                                <a
+                                                    href={inv.pdfUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="bg-blue-200 text-blue-700 font-medium px-3 py-1 rounded hover:bg-blue-300"
+                                                >
                                                     View
-                                                </button>
+                                                </a>
                                             </div>
+
                                         </div>
                                     </td>
 
@@ -321,7 +327,17 @@ const Dashboard = () => {
                                     <td className="hidden md:table-cell px-4 py-2">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
                                     <td className="hidden md:table-cell px-4 py-2">
                                         <button className="bg-blue-200 text-blue-700 font-medium px-3 py-1 rounded hover:bg-blue-300">
-                                            View
+                                            <div className="flex justify-end w-full">
+                                                <a
+                                                    href={inv.pdfUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="bg-blue-200 text-blue-700 font-medium rounded hover:bg-blue-300"
+                                                >
+                                                    View
+                                                </a>
+                                            </div>
+
                                         </button>
                                     </td>
                                 </tr>

@@ -69,6 +69,8 @@ const invoiceSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
   logoUrl: String,
+  pdfUrl: { type: String }, // stored PDF path
+
 
   files: {
     signature: [{ filename: String, url: String }],
