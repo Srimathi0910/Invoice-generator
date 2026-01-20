@@ -1,5 +1,5 @@
 "use client";
-import { authFetch} from "@/utils/authFetch"; 
+import { authFetch } from "@/utils/authFetch"; 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -14,6 +14,8 @@ import {
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
+import { Eye, EyeOff } from "lucide-react";
+
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -21,16 +23,15 @@ const ProfilePage = () => {
   const [user, setUser] = useState<any>(null);
   const [activeMenu, setActiveMenu] = useState("Profile");
   const [menuOpen, setMenuOpen] = useState(false);
-  const[loading,setLoading]=useState(false);
-    const [showLoader, setShowLoader] = useState(true);
-    useEffect(() => {
-      
-      const timer = setTimeout(() => {
-        setShowLoader(false);
-      }, 1200); 
-  
-      return () => clearTimeout(timer); // cleanup
-    }, []);
+  const [loading, setLoading] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowLoader(false);
+    }, 1200); 
+    return () => clearTimeout(timer);
+  }, []);
 
   const [formData, setFormData] = useState({
     contactPerson: "",
@@ -43,80 +44,79 @@ const ProfilePage = () => {
   const [errors, setErrors] = useState<any>({});
 
   // ---------------- LOAD USER ----------------
-  
-// ---------------- LOAD USER ----------------
-useEffect(() => {
-  const storedUser = localStorage.getItem("user");
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
     if (!storedUser) {
       router.replace("/login");
       return;
     }
-  const fetchUser = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/auth/profile-update", {
-        method: "GET",
-        credentials: "include",
-      });
-      const data = await res.json();
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("/api/auth/profile-update", {
+          method: "GET",
+          credentials: "include",
+        });
+        const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to fetch user");
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to fetch user");
+        }
+
+        setUser(data.user);
+        setFormData({
+          contactPerson: data.user.contactPerson || "",
+          phone: data.user.phone || "",
+          email: data.user.email || "",
+          password: "",
+          confirmPassword: "",
+        });
+      } catch (err) {
+        console.error(err);
+        router.replace("/login"); // redirect if not authorized
+      } finally {
+        setLoading(false);
       }
+    };
 
-      setUser(data.user);
-      setFormData({
-        contactPerson: data.user.contactPerson || "",
-        phone: data.user.phone || "",
-        email: data.user.email || "",
-        password: "",
-        confirmPassword: "",
-      });
-    } catch (err) {
-      console.error(err);
-      router.replace("/login"); // redirect if not authorized
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchUser();
-}, [router]);
+    fetchUser();
+  }, [router]);
 
   // ---------------- HANDLERS ----------------
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-const handleLogout = async () => {
-  try {
-    const res = await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include", // ✅ REQUIRED
-    });
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
 
-    if (!res.ok) throw new Error("Logout failed");
+      if (!res.ok) throw new Error("Logout failed");
 
-    const data = await res.json();
-    console.log(data.message);
+      const data = await res.json();
+      console.log(data.message);
 
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
 
-    router.replace("/"); 
-  } catch (err) {
-    console.error("Logout failed:", err);
-  }
-};
-
+      router.replace("/"); 
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
 
   // ---------------- UPDATE PROFILE ----------------
   const handleUpdate = async () => {
     const newErrors: any = {};
 
     if (formData.password || formData.confirmPassword) {
-      if (formData.password.length <=8) newErrors.password = "Password must be more than 8 characters";
-      if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+      if (formData.password.length <= 8)
+        newErrors.password = "Password must be more than 8 characters";
+      if (formData.password !== formData.confirmPassword)
+        newErrors.confirmPassword = "Passwords do not match";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -125,7 +125,7 @@ const handleLogout = async () => {
     }
 
     setErrors({});
-    setLoading(true)
+    setLoading(true);
 
     const payload: any = {
       phone: formData.phone,
@@ -134,35 +134,34 @@ const handleLogout = async () => {
     if (formData.password) payload.password = formData.password;
 
     try {
-  const data = await authFetch("/api/auth/profile-update", {
-    method: "PUT",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+      const data = await authFetch("/api/auth/profile-update", {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-  if (!data?.user) {
-    throw new Error("Invalid response");
-  }
+      if (!data?.user) {
+        throw new Error("Invalid response");
+      }
 
-  const updatedUser = {
-    ...user,
-    phone: data.user.phone,
-    contactPerson: data.user.contactPerson,
-  };
+      const updatedUser = {
+        ...user,
+        phone: data.user.phone,
+        contactPerson: data.user.contactPerson,
+      };
 
-  localStorage.setItem("user", JSON.stringify(updatedUser));
-  setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
 
-  alert("Profile updated successfully!");
-  setFormData({ ...formData, password: "", confirmPassword: "" });
-} catch (err) {
-  console.error(err);
-  alert("Failed to update profile");
-} finally {
-  setLoading(false);
-}
-
+      alert("Profile updated successfully!");
+      setFormData({ ...formData, password: "", confirmPassword: "" });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ---------------- MENU ----------------
@@ -173,28 +172,22 @@ const handleLogout = async () => {
     { icon: <FaMoneyCheckAlt />, label: "Profile", path: "/profile" },
     { icon: <FaCog />, label: "Help", path: "/help" },
   ];
- // Navbar slides from top
+
   const navbarVariants: Variants = {
     hidden: { y: -100, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
   };
+
   const staggerContainer: Variants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.1,
-    },
-  },
-};
-const itemVariant: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
-};
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.15, delayChildren: 0.1 } },
+  };
+
+  const itemVariant: Variants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.4, ease: "easeOut" } },
+  };
+
   if (showLoader) {
     return (
       <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
@@ -202,21 +195,16 @@ const itemVariant: Variants = {
       </div>
     );
   }
+
   return (
-    <motion.div
-  variants={staggerContainer}
-  initial="hidden"
-  animate="visible" className="min-h-screen bg-gray-200 p-6">
+    <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="min-h-screen bg-gray-200 p-6">
       {/* TOP BAR */}
       <motion.div
         variants={navbarVariants}
         initial="hidden"
         animate="visible"
-        className="bg-white  rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
+        className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
       >
-
-
-
         <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
           {/* LOGO */}
         </motion.div>
@@ -227,9 +215,11 @@ const itemVariant: Variants = {
           </button>
         </motion.div>
 
-        <motion.div variants={itemVariant}
-          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
-            }`}
+        <motion.div
+          variants={itemVariant}
+          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${
+            menuOpen ? "flex" : "hidden md:flex"
+          }`}
         >
           {menuItems.map((item) => (
             <MenuItem
@@ -238,8 +228,8 @@ const itemVariant: Variants = {
               label={item.label}
               isActive={activeMenu === item.label}
               onClick={() => {
-                setActiveMenu(item.label); // set active menu
-                if (item.path) router.push(item.path); // navigate to page
+                setActiveMenu(item.label);
+                if (item.path) router.push(item.path);
               }}
             />
           ))}
@@ -249,10 +239,7 @@ const itemVariant: Variants = {
               <FaUserCircle size={28} />
               <span className="font-medium">{user?.username || "User"}</span>
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:underline"
-            >
+            <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">
               Logout
             </button>
           </div>
@@ -275,7 +262,7 @@ const itemVariant: Variants = {
             <Input label="Email ID" name="email" value={formData.email} readOnly />
           </div>
 
-          <div className="space-y-4">
+          <div className="space--4">
             <Input label="Change Password" type="password" name="password" value={formData.password} onChange={handleChange} error={errors.password} />
             <Input label="Confirm Password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} error={errors.confirmPassword} />
           </div>
@@ -283,7 +270,7 @@ const itemVariant: Variants = {
 
         <div className="mt-6 flex justify-center">
           <button onClick={handleUpdate} className="bg-gray-300 px-6 py-2 rounded font-medium hover:bg-gray-400">
-            {loading?"Updating":"Update profile"}
+            {loading ? "Updating" : "Update profile"}
           </button>
         </div>
       </motion.div>
@@ -291,14 +278,49 @@ const itemVariant: Variants = {
   );
 };
 
-const Input = ({ label, error, ...props }: any) => (
-  <div>
-    <label className="block mb-1 font-medium">{label}</label>
-    <input {...props} className={`w-full border px-3 py-2 rounded ${error ? "border-red-500" : "border-gray-300"}`} />
-    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-  </div>
-);
+// ---------------- INPUT WITH EYE TOGGLE ----------------
 
+
+const Input = ({ label, error, type = "text", ...props }: any) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const inputType =
+    type === "password" ? (showPassword ? "text" : "password") : type;
+
+  return (
+    <div>
+      <label className="block mb-1 font-medium">{label}</label>
+
+      {/* Input wrapper */}
+      <div className="relative">
+        <input
+          {...props}
+          type={inputType}
+          className={`w-full border px-3 py-2 rounded pr-10 ${
+            error ? "border-red-500" : "border-gray-300"
+          }`}
+        />
+
+        {type === "password" && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+          >
+            {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+          </button>
+        )}
+      </div>
+
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+    </div>
+  );
+};
+
+
+
+
+
+// ---------------- MENU ITEM ----------------
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
   <div onClick={onClick} className={`flex items-center gap-2 cursor-pointer ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-1" : ""}`}>
     {icon} <span>{label}</span>

@@ -27,6 +27,8 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showLoader, setShowLoader] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [email, setEmail] = useState<string | null>(null);
+
 
   useEffect(() => {
 
@@ -39,13 +41,19 @@ const Dashboard = () => {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
+
     if (!storedUser) {
       router.replace("/login");
-    } else {
-      setUser(JSON.parse(storedUser));
+      return;
     }
+
+    const parsedUser = JSON.parse(storedUser);
+
+    setUser(parsedUser);
+    setEmail(parsedUser.email); // ✅ IMPORTANT
     setLoadingUser(false);
   }, [router]);
+
 
   const handleLogout = async () => {
     try {
@@ -74,14 +82,12 @@ const Dashboard = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!user?.email) return;
+    if (!email) return;
 
-    authFetch(`/api/auth/invoice?email=${user.email}`, {
+    authFetch(`/api/auth/invoice?email=${email}`, {
       credentials: "include",
     })
       .then((data) => {
-        console.log("Invoices response:", data); // ✅ debug once
-
         if (Array.isArray(data)) {
           setInvoices(data);
         } else if (Array.isArray(data.invoices)) {
@@ -90,11 +96,9 @@ const Dashboard = () => {
           setInvoices([]);
         }
       })
-      .catch((err) => {
-        console.error("Failed to fetch invoices", err);
-        setInvoices([]);
-      });
-  }, [user]);
+      .catch(() => setInvoices([]));
+  }, [email]);
+
 
 
 
@@ -143,12 +147,19 @@ const Dashboard = () => {
   const invoicesPerPage = 5;
 
   const totalPages = Math.ceil(filteredInvoices.length / invoicesPerPage);
+  // ---------------- SORTED INVOICES (RECENT FIRST) ----------------
+  const sortedInvoices = [...filteredInvoices].sort(
+    (a, b) =>
+      new Date(b.invoiceDate).getTime() -
+      new Date(a.invoiceDate).getTime()
+  );
 
   // Slice invoices for current page
-  const paginatedInvoices = filteredInvoices.slice(
+  const paginatedInvoices = sortedInvoices.slice(
     (currentPage - 1) * invoicesPerPage,
     currentPage * invoicesPerPage
   );
+
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -234,18 +245,33 @@ const Dashboard = () => {
             />
           ))}
 
-          <div className="flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
-              <FaUserCircle size={28} />
-              <span className="font-medium">{user?.username || "User"}</span>
-            </div>
+          <div className="relative">
             <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:underline"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="flex items-center space-x-2 bg-white px-4 py-2 rounded shadow hover:bg-gray-100 transition"
             >
-              Logout
+              <FaUserCircle size={28} />
+              <div className="flex flex-col text-left">
+                <span className="font-medium">{user?.username || "User"}</span>
+                <span className="text-xs text-gray-500">{user?.email}</span>
+              </div>
             </button>
+
+            {/* Dropdown menu */}
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded border border-gray-200 z-50">
+                <div className="px-4 py-2 text-gray-700 text-sm">{user?.email}</div>
+                <hr className="border-gray-200" />
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 transition text-sm rounded-b"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
+
         </div>
       </motion.div>
 
@@ -280,8 +306,8 @@ const Dashboard = () => {
             </span>
             <hr className="border-gray-300 my-2" />
             <div className="text-center text-xl font-semibold mb-3">
-  ${Number(totalRevenue).toFixed(2)}
-</div>
+              ${Number(totalRevenue).toFixed(2)}
+            </div>
 
 
             <Link

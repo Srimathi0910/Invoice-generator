@@ -29,13 +29,13 @@ export async function GET(req: Request) {
       return new Response("Invalid token", { status: 401 });
     }
 
-    const userEmail = decoded.email; // logged-in user email
+    const userEmail = decoded.email?.toLowerCase(); // normalize email
     if (!userEmail) return new Response("Email not found in token", { status: 401 });
 
-    // ---------- FETCH INVOICES ONLY WHERE LOGGED-IN USER IS BILLED BY ----------
+    // ---------- FETCH ALL INVOICES WHERE LOGGED-IN USER IS BILLED BY ----------
     const invoices = await Invoice.find(
       { "billedBy.email": userEmail, billedTo: { $exists: true } },
-      { billedTo: 1 } // only fetch billedTo info
+      { billedTo: 1 }
     ).lean();
 
     const clientsMap = new Map<string, any>();
@@ -43,15 +43,20 @@ export async function GET(req: Request) {
     invoices.forEach((inv: any) => {
       if (!inv.billedTo) return;
 
-      const key = inv.billedTo.email || inv.billedTo.gstin;
+      const email = inv.billedTo.email?.toLowerCase() || "";
+      const gstin = inv.billedTo.gstin || "";
+      const businessName = inv.billedTo.businessName || "Unknown";
+
+      // Unique key for each client
+      const key = email || gstin || businessName;
 
       if (!clientsMap.has(key)) {
         clientsMap.set(key, {
           id: key,
-          name: inv.billedTo.businessName,
-          email: inv.billedTo.email || "",
+          name: businessName,
+          email: email,
           phone: inv.billedTo.phone || "",
-          gstin: inv.billedTo.gstin || "",
+          gstin: gstin,
           totalInvoices: 1,
         });
       } else {

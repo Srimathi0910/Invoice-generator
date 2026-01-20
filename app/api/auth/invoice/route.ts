@@ -27,15 +27,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
     }
 
-    // ---------- FORM DATA ----------
     const formData = await req.formData();
     const dataField = formData.get("data");
-
     if (!dataField || typeof dataField !== "string") {
       return NextResponse.json({ success: false, message: "Invoice data missing" }, { status: 400 });
     }
-
     const data = JSON.parse(dataField);
+
+    // ---------- NORMALIZE EMAILS ----------
+    if (data.billedBy?.email) data.billedBy.email = data.billedBy.email.toLowerCase();
+    if (data.billedTo?.email) data.billedTo.email = data.billedTo.email.toLowerCase();
 
     // ---------- INVOICE OBJECT ----------
     const invoiceData: any = {
@@ -55,7 +56,6 @@ export async function POST(req: NextRequest) {
     // ---------- CREATE CLIENT USER IF NOT EXISTS ----------
     let clientUser = await User.findOne({ email: invoiceData.billedTo.email });
     if (!clientUser) {
-      // ----- STRONG PASSWORD GENERATION -----
       function generatePassword(length = 10) {
         const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         const lower = "abcdefghijklmnopqrstuvwxyz";
@@ -73,13 +73,10 @@ export async function POST(req: NextRequest) {
           password += all[Math.floor(Math.random() * all.length)];
         }
 
-        return password
-          .split("")
-          .sort(() => 0.5 - Math.random()) // shuffle
-          .join("");
+        return password.split("").sort(() => 0.5 - Math.random()).join("");
       }
 
-      const tempPassword = generatePassword(10); // 10 characters
+      const tempPassword = generatePassword(10);
       const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
       clientUser = await User.create({
@@ -91,7 +88,6 @@ export async function POST(req: NextRequest) {
         role: "client",
       });
 
-      // ---------- SEND EMAIL ----------
       try {
         await sendEmail({
           to: clientUser.email,
@@ -114,7 +110,6 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file");
     if (file && file instanceof File && file.size > 0) {
       const buffer = Buffer.from(await file.arrayBuffer());
-
       const uploadResult: any = await new Promise((resolve, reject) => {
         cloudinary.uploader
           .upload_stream({ folder: "business-logos" }, (err, result) => {
@@ -123,24 +118,19 @@ export async function POST(req: NextRequest) {
           })
           .end(buffer);
       });
-
       invoiceData.logoUrl = uploadResult.secure_url;
     }
 
     // ---------- CREATE OR UPDATE INVOICE ----------
     let invoice: any;
-
-    // Check if invoice number exists for this client
     const existingInvoice = await Invoice.findOne({
       invoiceNumber: invoiceData.invoiceNumber,
       "billedTo.email": invoiceData.billedTo.email,
     });
 
     if (existingInvoice) {
-      // Update existing invoice
       invoice = await Invoice.findByIdAndUpdate(existingInvoice._id, invoiceData, { new: true });
     } else {
-      // Create new invoice
       invoice = await Invoice.create(invoiceData);
     }
 
@@ -158,46 +148,33 @@ export async function GET(req: NextRequest) {
   await connectDB();
 
   try {
-    // ---------- AUTH ----------
     const token = req.cookies.get("accessToken")?.value;
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    if (!token)
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
     let decoded: any;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET!);
     } catch {
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
     }
 
-    const { email, role } = decoded;
+    const { id: userId, email: rawEmail, role } = decoded;
+    const email = rawEmail?.toLowerCase();
 
     if (!email || !role) {
-      return NextResponse.json(
-        { success: false, message: "Invalid token data" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: "Invalid token data" }, { status: 401 });
     }
 
     // ---------- ROLE BASED FILTER ----------
     let filter: any = {};
-
     if (role === "company") {
-      filter = { "billedBy.email": email };
+      // Use userId to match invoices for the company
+      filter = { userId };
     } else if (role === "client") {
       filter = { "billedTo.email": email };
     } else {
-      return NextResponse.json(
-        { success: false, message: "Invalid role" },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, message: "Invalid role" }, { status: 403 });
     }
 
     // ---------- OPTIONAL: FETCH SINGLE INVOICE ----------
@@ -211,16 +188,13 @@ export async function GET(req: NextRequest) {
       }).lean();
 
       if (!invoice) {
-        return NextResponse.json(
-          { success: false, message: "Invoice not found or unauthorized" },
-          { status: 404 }
-        );
+        return NextResponse.json({ success: false, message: "Invoice not found or unauthorized" }, { status: 404 });
       }
 
       return NextResponse.json({ success: true, invoice });
     }
 
-    // ---------- FETCH ALL USER INVOICES ----------
+    // ---------- FETCH ALL INVOICES ----------
     const invoices = await Invoice.find(filter)
       .sort({ invoiceDate: -1 })
       .lean();
@@ -228,9 +202,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, invoices });
   } catch (error: any) {
     console.error("Fetch invoice error:", error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

@@ -32,37 +32,46 @@ export default function Login() {
     setErrors((prev) => ({ ...prev, [id]: "", general: "" }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({ email: "", password: "", general: "" });
-    setLoading(true);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setErrors({ email: "", password: "", general: "" });
+  setLoading(true);
 
-    try {
-      const data = await authFetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // ✅ IMPORTANT for cookies
+      body: JSON.stringify(formData),
+    });
 
-      // Successful login
-      localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("token", data.token);
+    const data = await res.json();
 
-      if (data.role === "company") router.replace("/dashboard");
-      else if (data.role === "client") router.replace("/dashboard-client");
-    } catch (err: any) {
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-
-      setErrors({
-        email: err?.errors?.email || "",
-        password: err?.errors?.password || "",
-        general: err?.error || "Invalid email or password",
-      });
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      throw new Error(data.error || "Invalid email or password");
     }
-  };
+
+    // ✅ Successful login
+    localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("token", data.token);
+
+    if (data.role === "company") router.replace("/dashboard");
+    else if (data.role === "client") router.replace("/dashboard-client");
+
+  } catch (err: any) {
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+
+    setErrors({
+      email: "",
+      password: "",
+      general: err.message || "Invalid email or password",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   /* ---------------- ANIMATIONS ---------------- */
   const pageVariants: Variants = {
