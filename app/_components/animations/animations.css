@@ -1,0 +1,90 @@
+/* -------------------------------
+   BACKGROUND IMAGE ANIMATION
+---------------------------------*/
+@keyframes bgUp {
+  0% {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.bg-slide {
+  animation: bgUp 1s ease forwards;
+}
+
+/* -------------------------------
+   NAVBAR BUTTONS SLIDE FROM TOP
+---------------------------------*/
+@keyframes slideDownFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-50px); /* start above */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0); /* end at original position */
+  }
+}
+
+.slide-down {
+  opacity: 0;             
+  transform: translateY(-100px); 
+  animation: slideDownFromTop 0.8s ease forwards;
+}
+
+/* -------------------------------
+   WELCOME HEADING & SUBTEXT SLIDE FROM LEFT
+---------------------------------*/
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px); /* start left */
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0); /* end at original position */
+  }
+}
+
+.slide-left {
+  opacity: 0;
+  animation: slideInFromLeft 0.8s ease forwards;
+}
+
+/* -------------------------------
+   MAIN SECTION BUTTONS (FADE UP)
+---------------------------------*/
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-item {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 0.8s ease forwards;
+}
+
+/* -------------------------------
+   ANIMATION DELAYS
+---------------------------------*/
+.delay-1000 { animation-delay: 1s; }
+.delay-1200 { animation-delay: 1.2s; }
+.delay-1400 { animation-delay: 1.4s; }
+.delay-2000 { animation-delay: 2s; }
+.delay-2200 { animation-delay: 2.2s; }
+.delay-2400 { animation-delay: 2.0s; }
+.delay-2600 { animation-delay: 2.6s; }
+.delay-2800 { animation-delay: 2.8s; }
+
+
