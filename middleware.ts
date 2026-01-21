@@ -33,6 +33,7 @@ export function middleware(req: NextRequest) {
     "/myInvoices",
     "/payment-client",
     "/profile",
+    "/reports-client",
     "/help",
   ];
 
@@ -86,6 +87,7 @@ export const config = {
     "/dashboard-client/:path*",
     "/myInvoices/:path*",
     "/payment-client/:path*",
+    "/reports-client/:path",
     "/profile/:path*",
     "/help/:path*",
     "/login",
