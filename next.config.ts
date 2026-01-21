@@ -1,19 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // If you have a custom webpack config, you can keep it
   webpack: (config) => {
-    config.resolve.fallback = {
-      ...(config.resolve.fallback || {}),
-      fs: false,
-      path: false,
-      os: false,
-    };
+    // Ignore .map files in node_modules/chrome-aws-lambda
+    config.module.rules.push({
+      test: /\.js\.map$/,
+      loader: "ignore-loader",
+    });
+
     return config;
   },
 
-  // Add empty turbopack config to silence warnings
-  turbopack: {}, // ✅ this is valid
+  // Keep turbopack config empty if needed
+  turbopack: {},
 };
 
 export default nextConfig;
