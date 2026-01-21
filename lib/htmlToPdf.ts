@@ -1,22 +1,20 @@
-import chromium from "chrome-aws-lambda";
+// Only server-side
+import  chromium from "chrome-aws-lambda";
 import puppeteer from "puppeteer-core";
 
-export const generatePDF = async (htmlContent: string) => {
+export async function generateInvoicePDF(html: string, invoiceNumber: string) {
   const browser = await puppeteer.launch({
-    executablePath: await chromium.executablePath,
     args: chromium.args,
+    executablePath: await chromium.executablePath,
     headless: true,
   });
 
   const page = await browser.newPage();
-  await page.setContent(htmlContent, { waitUntil: "networkidle0", timeout: 60000 });
+  await page.setContent(html, { waitUntil: "networkidle0" });
 
-  const pdfBuffer = await page.pdf({
-    format: "a4",
-    printBackground: true,
-    margin: { top: "20mm", bottom: "20mm", left: "15mm", right: "15mm" },
-  });
-
+  const pdfBuffer = await page.pdf({ format: "a4", printBackground: true });
   await browser.close();
-  return pdfBuffer;
-};
+
+  return { pdfBuffer, fileName: `Invoice-${invoiceNumber}.pdf` };
+}
+

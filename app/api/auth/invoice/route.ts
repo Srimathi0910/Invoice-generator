@@ -9,7 +9,8 @@ import cloudinary from "@/lib/cloudinary";
 import { generateInvoicePDF } from "@/lib/htmlToPdf"; // Puppeteer HTML-to-PDF generator
 import { uploadPdfToCloudinary } from "@/utils/uploadPdfToCloudinary";
 import { Buffer } from "buffer";
-
+const chromium = await import('chrome-aws-lambda');
+const puppeteer = await import('puppeteer-core');
 
 export async function POST(req: NextRequest) {
   await connectDB();
