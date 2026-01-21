@@ -87,7 +87,7 @@ export const config = {
     "/dashboard-client/:path*",
     "/myInvoices/:path*",
     "/payment-client/:path*",
-    "/reports-client/:path",
+    "/reports-client/:path*",
     "/profile/:path*",
     "/help/:path*",
     "/login",
