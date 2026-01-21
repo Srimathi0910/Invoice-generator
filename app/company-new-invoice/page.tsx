@@ -245,48 +245,130 @@ export default function InvoicePage() {
   const handleCalculate = () => { if (!validateInvoice()) return; setTotals(computeTotals()); };
 
   /* ---------------- Preview ---------------- */
-  const handlePreview = async () => {
-    if (!validateInvoice()) return;
+ const handlePreview = async () => {
+  if (!validateInvoice()) return;
 
-    const calculatedTotals = computeTotals();
-    setTotals(calculatedTotals);
+  const calculatedTotals = computeTotals();
+  setTotals(calculatedTotals);
 
-    // Convert all files to base64
-    const convertFilesToBase64 = async (files: File[]) => {
-      const promises = files.map(file => fileToBase64(file));
-      return Promise.all(promises);
-    };
-
-    const invoiceFilesBase64 = {
-      signature: invoiceFiles.signature ? await fileToBase64(invoiceFiles.signature) : null,
-      notes: invoiceFiles.notes ? await fileToBase64(invoiceFiles.notes) : null,
-      terms: await convertFilesToBase64(invoiceFiles.terms),
-      attachments: await convertFilesToBase64(invoiceFiles.attachments),
-      additionalInfo: await convertFilesToBase64(invoiceFiles.additionalInfo),
-      contactDetails: await convertFilesToBase64(invoiceFiles.contactDetails),
-    };
-
-    const invoiceData = {
-      _id: invoice?._id || undefined, // <-- add this
-      invoiceNumber: invoiceMeta.invoiceNumber.trim(),
-      invoiceDate: new Date(invoiceMeta.invoiceDate),
-      dueDate: new Date(invoiceMeta.dueDate),
-      billedBy,
-      billedTo,
-      items,
-      extras,
-      totals: calculatedTotals,
-      totalInWords: `${calculatedTotals.grandTotal} rupees only`,
-      logoUrl: logoPreview || "",
-      showTotalInWords,
-      files: invoiceFilesBase64,
-    };
-
-
-    localStorage.setItem("invoiceData", JSON.stringify(invoiceData));
-    router.push("/preview");
+  // Convert files to Base64 for preview (optional, can be skipped if using FormData for saving)
+  const convertFilesToBase64 = async (files: File[]) => {
+    const promises = files.map(file => fileToBase64(file));
+    return Promise.all(promises);
   };
 
+  const invoiceFilesBase64 = {
+    signature: invoiceFiles.signature ? await fileToBase64(invoiceFiles.signature) : null,
+    notes: invoiceFiles.notes ? await fileToBase64(invoiceFiles.notes) : null,
+    terms: await convertFilesToBase64(invoiceFiles.terms),
+    attachments: await convertFilesToBase64(invoiceFiles.attachments),
+    additionalInfo: await convertFilesToBase64(invoiceFiles.additionalInfo),
+    contactDetails: await convertFilesToBase64(invoiceFiles.contactDetails),
+  };
+
+  const invoiceData = {
+    _id: invoice?._id || undefined,
+    invoiceNumber: invoiceMeta.invoiceNumber.trim(),
+    invoiceDate: new Date(invoiceMeta.invoiceDate),
+    dueDate: new Date(invoiceMeta.dueDate),
+    billedBy,
+    billedTo,
+    items,
+    extras,
+    totals: calculatedTotals,
+    totalInWords: `${calculatedTotals.grandTotal} rupees only`,
+    logoUrl: logoPreview || "",
+    showTotalInWords,
+    files: invoiceFilesBase64,
+    userId: user?._id, // include user ID for saving
+  };
+
+  // 1️⃣ Save locally for preview
+  localStorage.setItem("invoiceData", JSON.stringify(invoiceData));
+
+  // 2️⃣ Save to DB (just like handleSaveInvoice)
+  if (user?._id) {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("User token not found.");
+
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(invoiceData));
+
+      if (invoiceFiles.signature) formData.append("signature", invoiceFiles.signature);
+      if (invoiceFiles.notes) formData.append("notes", invoiceFiles.notes);
+      if (invoiceFiles.terms) invoiceFiles.terms.forEach(f => formData.append("terms", f));
+      if (invoiceFiles.attachments) invoiceFiles.attachments.forEach(f => formData.append("attachments", f));
+      if (invoiceFiles.additionalInfo) invoiceFiles.additionalInfo.forEach(f => formData.append("additionalInfo", f));
+      if (invoiceFiles.contactDetails) invoiceFiles.contactDetails.forEach(f => formData.append("contactDetails", f));
+      if (logoFile) formData.append("file", logoFile);
+
+      const res = await fetch("/api/auth/invoice", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const result = await res.json();
+
+      if (result.success && result.invoice) {
+        setInvoice(result.invoice);
+        localStorage.setItem("invoiceData", JSON.stringify(result.invoice));
+        console.log("Invoice saved successfully on preview!");
+
+        // Optionally send email automatically
+        const recipientEmail = result.invoice?.billedTo?.email;
+        if (recipientEmail) {
+          try {
+            await sendInvoiceEmail(result.invoice, recipientEmail);
+            console.log("Invoice email sent to client successfully!");
+          } catch (emailErr: any) {
+            console.warn("Invoice saved but failed to send email:", emailErr);
+          }
+        }
+      } else {
+        console.warn("Failed to save invoice on preview:", result.error || result.message);
+      }
+    } catch (err) {
+      console.error("Error saving invoice during preview:", err);
+    }
+  }
+
+  // 3️⃣ Navigate to preview page
+  router.push("/preview");
+};
+
+
+
+  const sendInvoiceEmail = async (savedInvoice: any, email: string) => {
+    const formData = new FormData();
+
+    formData.append("email", email);
+    formData.append("invoice", JSON.stringify(savedInvoice));
+    formData.append("totals", JSON.stringify(savedInvoice.totals));
+    formData.append("totalInWords", savedInvoice.totalInWords);
+    formData.append("logoUrl", savedInvoice.logoUrl || "");
+
+    const allFiles: File[] = [
+      ...(invoiceFiles.terms || []),
+      ...(invoiceFiles.attachments || []),
+      ...(invoiceFiles.additionalInfo || []),
+      ...(invoiceFiles.contactDetails || []),
+      ...(invoiceFiles.notes ? [invoiceFiles.notes] : []),
+      ...(invoiceFiles.signature ? [invoiceFiles.signature] : []),
+    ];
+
+    allFiles.forEach(file => formData.append("files", file));
+
+    const res = await authFetch("/api/auth/send-invoice", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res?.success) throw new Error(res?.error || "Failed to send invoice email");
+  };
 
   /* ---------------- Save Invoice ---------------- */
   const handleSaveInvoice = async (e?: React.FormEvent) => {
@@ -311,9 +393,8 @@ export default function InvoicePage() {
       const calculatedTotals = computeTotals();
 
       // 4️⃣ Prepare invoice object
-
       const invoiceData: any = {
-        _id: invoice?._id || undefined, // <-- important: include _id if updating
+        _id: invoice?._id || undefined,
         invoiceNumber: invoiceMeta.invoiceNumber.trim(),
         invoiceDate: new Date(invoiceMeta.invoiceDate),
         dueDate: new Date(invoiceMeta.dueDate),
@@ -331,7 +412,7 @@ export default function InvoicePage() {
       const formData = new FormData();
       formData.append("data", JSON.stringify(invoiceData));
 
-      // 6️⃣ Append files if any
+      // 6️⃣ Append files
       if (invoiceFiles.signature) formData.append("signature", invoiceFiles.signature);
       if (invoiceFiles.notes) formData.append("notes", invoiceFiles.notes);
       if (invoiceFiles.terms) invoiceFiles.terms.forEach(f => formData.append("terms", f));
@@ -340,7 +421,7 @@ export default function InvoicePage() {
       if (invoiceFiles.contactDetails) invoiceFiles.contactDetails.forEach(f => formData.append("contactDetails", f));
       if (logoFile) formData.append("file", logoFile);
 
-      // 7️⃣ Call API
+      // 7️⃣ Call API to SAVE invoice
       const res = await fetch("/api/auth/invoice", {
         method: "POST",
         headers: {
@@ -351,13 +432,28 @@ export default function InvoicePage() {
 
       const result = await res.json();
 
-      // 8️⃣ Handle response
+      // 8️⃣ Handle SAVE response
       if (result.success && result.invoice) {
+        setInvoice(result.invoice);
+        localStorage.setItem("invoiceData", JSON.stringify(result.invoice));
+
         alert("Invoice saved successfully!");
-        setInvoice(result.invoice); // update invoice state with returned data
-        localStorage.setItem("invoiceData", JSON.stringify(result.invoice)); // for review page
-      }
-      else {
+
+        // 9️⃣ Send invoice email automatically
+        const recipientEmail = result.invoice?.billedTo?.email;
+        if (recipientEmail) {
+          try {
+            await sendInvoiceEmail(result.invoice, recipientEmail);
+            alert("Invoice email sent to client successfully!");
+          } catch (emailErr: any) {
+            console.error("Email sending failed:", emailErr);
+            alert("Invoice saved but failed to send email.");
+          }
+        } else {
+          console.warn("No client email found. Email not sent.");
+        }
+
+      } else {
         alert(`Failed to save invoice: ${result.error || result.message || "Unknown error"}`);
       }
 

@@ -10,7 +10,7 @@ import {
   FaCog,
   FaUserCircle,
   FaBars,
-  FaTimes,
+  FaTimes,FaRegUser
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
@@ -169,7 +169,8 @@ const ProfilePage = () => {
     { icon: <FaFileInvoiceDollar />, label: "Dashboard", path: "/dashboard-client" },
     { icon: <FaUsers />, label: "My Invoices", path: "/myInvoices" },
     { icon: <FaChartBar />, label: "Payments", path: "/payment-client" },
-    { icon: <FaMoneyCheckAlt />, label: "Profile", path: "/profile" },
+   { icon: <FaMoneyCheckAlt />, label: "Reports", path: "/reports-client" },
+       { icon: <FaRegUser />, label: "Profile", path: "/profile" },
     { icon: <FaCog />, label: "Help", path: "/help" },
   ];
 

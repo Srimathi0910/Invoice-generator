@@ -7,6 +7,9 @@ import User from "@/models/User";
 import sendEmail from "@/lib/sendEmail";
 import cloudinary from "@/lib/cloudinary";
 import { generateInvoicePDF } from "@/lib/htmlToPdf"; // Puppeteer HTML-to-PDF generator
+import { uploadPdfToCloudinary } from "@/utils/uploadPdfToCloudinary";
+import { Buffer } from "buffer";
+
 
 export async function POST(req: NextRequest) {
   await connectDB();
@@ -26,10 +29,15 @@ export async function POST(req: NextRequest) {
     // ---------- FORM DATA ----------
     const formData = await req.formData();
     const dataField = formData.get("data");
+
+    // Check if dataField exists AND is a string
     if (!dataField || typeof dataField !== "string") {
       return NextResponse.json({ success: false, message: "Invoice data missing" }, { status: 400 });
     }
+
+    // Now TypeScript knows dataField is a string
     const data = JSON.parse(dataField);
+
 
     // ---------- INVOICE OBJECT ----------
     const invoiceData: any = {
@@ -44,6 +52,8 @@ export async function POST(req: NextRequest) {
       extras: data.extras ?? { paymentStatus: "Unpaid", paymentMethod: "N/A" },
       totalInWords: data.totalInWords ?? "",
       status: "Unpaid",
+     logoUrl: data.logoUrl ?? "",
+
     };
 
     // ---------- CLEAN EMAIL ----------
@@ -104,15 +114,22 @@ export async function POST(req: NextRequest) {
 
     // ---------- LOGO UPLOAD ----------
     const file = formData.get("file");
-    if (file && file instanceof File && file.size > 0) {
-      const buffer = Buffer.from(await file.arrayBuffer());
+
+    if (file && file instanceof File) {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer: Buffer = Buffer.from(arrayBuffer);
+
       const uploadResult: any = await new Promise((resolve, reject) => {
         cloudinary.uploader
           .upload_stream({ folder: "business-logos" }, (err, result) => (err ? reject(err) : resolve(result)))
           .end(buffer);
       });
+
       invoiceData.logoUrl = uploadResult.secure_url;
     }
+
+
+
 
     // ---------- CREATE OR UPDATE INVOICE ----------
     let invoice: any;
@@ -120,11 +137,13 @@ export async function POST(req: NextRequest) {
       invoiceNumber: invoiceData.invoiceNumber,
       "billedTo.email": invoiceData.billedTo.email,
     });
+
     if (existingInvoice) {
       invoice = await Invoice.findByIdAndUpdate(existingInvoice._id, invoiceData, { new: true });
     } else {
       invoice = await Invoice.create(invoiceData);
     }
+
 
     // ---------- GENERATE STYLED PDF ----------
     // Render invoice HTML as string
@@ -133,17 +152,19 @@ export async function POST(req: NextRequest) {
 <html>
   <head>
     <meta charset="UTF-8" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Akaya+Telivigala&display=swap" rel="stylesheet">
+
 
 
     <title>Invoice ${invoiceData.invoiceNumber}</title>
     <style>
-      body {
-       font-family: "Roboto", Arial, Helvetica, sans-serif;
-        margin: 0;
-        padding: 20px;
-        background-color: #f9f9f9;
-      }
+     body {
+    font-family: 'Akaya Telivigala', Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f9f9f9;
+}
+
       .invoice-container {
         max-width: 800px;
         margin: 0 auto;
@@ -156,9 +177,10 @@ export async function POST(req: NextRequest) {
         display: flex;
         justify-content: space-between;
       }
-      h1, h2, h3 {
-        margin: 0 0 10px 0;
-      }
+     h1, h2, h3 {
+    font-family: 'Akaya Telivigala', Arial, Helvetica, sans-serif;
+}
+
       p {
         margin: 2px 0;
       }
@@ -273,11 +295,22 @@ export async function POST(req: NextRequest) {
 `;
 
     // Generate PDF using Puppeteer
-    const { url: pdfUrl } = await generateInvoicePDF(htmlContent, invoiceData.invoiceNumber);
 
-    // Save PDF URL in invoice document
-    invoice.pdfUrl = pdfUrl;
+    // ---------- GENERATE PDF ----------
+    const { pdfBuffer, fileName } = await generateInvoicePDF(htmlContent, invoiceData.invoiceNumber);
+
+    // ---------- UPLOAD PDF TO CLOUDINARY ----------
+
+    // Convert if necessary
+    // Ensure pdfBuffer is a Node Buffer
+    const buffer = Buffer.isBuffer(pdfBuffer) ? pdfBuffer : Buffer.from(pdfBuffer);
+
+    const cloudinaryPdfUrl = await uploadPdfToCloudinary(buffer, invoiceData.invoiceNumber);
+    console.log("PDF URL:", cloudinaryPdfUrl);
+    invoice.pdfUrl = cloudinaryPdfUrl;
     await invoice.save();
+
+
 
     return NextResponse.json({ success: true, invoice });
   } catch (error: any) {

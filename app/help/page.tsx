@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { authFetch } from "@/utils/authFetch";
 import {
     FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog,
-    FaUserCircle, FaSearch, FaBars, FaTimes
+    FaUserCircle, FaSearch, FaBars, FaTimes,FaRegUser
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
@@ -76,7 +76,8 @@ export default function HelpPage() {
         { icon: <FaFileInvoiceDollar />, label: "Dashboard", path: "/dashboard-client" },
         { icon: <FaUsers />, label: "My Invoices", path: "/myInvoices" },
         { icon: <FaChartBar />, label: "Payments", path: "/payment-client" },
-        { icon: <FaMoneyCheckAlt />, label: "Profile", path: "/profile" },
+       { icon: <FaMoneyCheckAlt />, label: "Reports", path: "/reports-client" },
+           { icon: <FaRegUser />, label: "Profile", path: "/profile" },
         { icon: <FaCog />, label: "Help", path: "/help" },
     ];
 

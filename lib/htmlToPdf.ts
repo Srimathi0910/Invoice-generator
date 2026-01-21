@@ -1,29 +1,26 @@
 import puppeteer from "puppeteer";
-import fs from "fs";
-import path from "path";
 
-export async function generateInvoicePDF(html: string, invoiceNo: string) {
+export async function generateInvoicePDF(htmlContent: string, invoiceNumber: string) {
   const browser = await puppeteer.launch({
+    headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
   const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: "networkidle0" });
 
-  const dir = path.join(process.cwd(), "public", "invoices");
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  // Load HTML without waiting for external resources
+ await page.setContent(htmlContent, { waitUntil: "networkidle0", timeout: 60000 });
 
-  const fileName = `Invoice-${invoiceNo}.pdf`;
-  const filePath = path.join(dir, fileName);
 
-  await page.pdf({
-    path: filePath,
-    format: "A4",
-    printBackground: true,
-    margin: { top: "20mm", bottom: "20mm" },
-  });
+  // Generate PDF as Node Buffer
+ const pdfBuffer = await page.pdf({
+  format: "A4",
+  printBackground: true,
+  margin: { top: "20mm", bottom: "20mm", left: "15mm", right: "15mm" },
+});
+;
 
   await browser.close();
 
-  return { url: `/invoices/${fileName}` };
+  return { pdfBuffer, fileName: `Invoice-${invoiceNumber}.pdf` };
 }
