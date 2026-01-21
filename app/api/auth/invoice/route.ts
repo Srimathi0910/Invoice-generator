@@ -6,11 +6,13 @@ import Invoice from "@/models/invoice";
 import User from "@/models/User";
 import sendEmail from "@/lib/sendEmail";
 import cloudinary from "@/lib/cloudinary";
-import { generateInvoicePDF } from "@/lib/htmlToPdf"; // Puppeteer HTML-to-PDF generator
 import { uploadPdfToCloudinary } from "@/utils/uploadPdfToCloudinary";
 import { Buffer } from "buffer";
-const chromium = await import('chrome-aws-lambda');
-const puppeteer = await import('puppeteer-core');
+import { generateInvoicePDF } from "@/lib/htmlToPdf"; // Puppeteer HTML-to-PDF generator
+// Puppeteer + Chrome for serverless
+import puppeteer from "puppeteer-core";
+import chromium from "chrome-aws-lambda";
+
 
 export async function POST(req: NextRequest) {
   await connectDB();

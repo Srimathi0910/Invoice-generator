@@ -2,9 +2,15 @@ import chromium from "chrome-aws-lambda";
 import puppeteer from "puppeteer-core";
 
 export async function generateInvoicePDF(html: string, invoiceNumber: string) {
+  // Determine executablePath depending on environment
+  const isProduction = process.env.NODE_ENV === "production";
+
   const browser = await puppeteer.launch({
-    args: chromium.args,
-    executablePath: await chromium.executablePath, // getter
+    args: isProduction ? chromium.args : [],
+    defaultViewport: chromium.defaultViewport,
+    executablePath: isProduction
+      ? await chromium.executablePath // Vercel / Lambda
+      : undefined, // Local Chrome
     headless: true,
   });
 
