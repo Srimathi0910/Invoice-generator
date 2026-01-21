@@ -1091,4 +1091,5 @@ const MenuItem = ({ icon, label, isActive, onClick }: any) => (
   </div>
 );
 
+
 export default InvoicePreview;
