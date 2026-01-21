@@ -1,23 +1,16 @@
-import chromium from 'chrome-aws-lambda';
-import puppeteer from 'puppeteer-core';
+import chromium from "chrome-aws-lambda";
+import puppeteer from "puppeteer-core";
 
-export async function generateInvoicePDF(htmlContent: string, invoiceNumber: string) {
-  // Determine executablePath: use chrome-aws-lambda on serverless, or local Puppeteer for dev
-  const executablePath = await chromium.executablePath || undefined;
-
+export const generatePDF = async (htmlContent: string) => {
   const browser = await puppeteer.launch({
+    executablePath: await chromium.executablePath,
+    args: chromium.args,
     headless: true,
-    args: chromium.args,           // required for Vercel
-    defaultViewport: chromium.defaultViewport,
-    executablePath: executablePath,
   });
 
   const page = await browser.newPage();
-
-  // Load HTML content
   await page.setContent(htmlContent, { waitUntil: "networkidle0", timeout: 60000 });
 
-  // Generate PDF as Node Buffer
   const pdfBuffer = await page.pdf({
     format: "a4",
     printBackground: true,
@@ -25,9 +18,5 @@ export async function generateInvoicePDF(htmlContent: string, invoiceNumber: str
   });
 
   await browser.close();
-
-  return {
-    pdfBuffer,
-    fileName: `Invoice-${invoiceNumber}.pdf`,
-  };
-}
+  return pdfBuffer;
+};
