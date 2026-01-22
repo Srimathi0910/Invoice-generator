@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
 
       /* Inner border */
       .inner-border {
-        border: 2px solid #d1d5db; /* light gray border */
+        border: 2px solid #0a0a0a; /* light gray border */
         padding: 20px; /* space inside border */
         border-radius: 6px; /* slightly smaller radius */
       }
