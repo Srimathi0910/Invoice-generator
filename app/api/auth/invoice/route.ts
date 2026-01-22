@@ -158,16 +158,14 @@ export async function POST(req: NextRequest) {
     <meta charset="UTF-8" />
     <link href="https://fonts.googleapis.com/css2?family=Akaya+Telivigala&display=swap" rel="stylesheet">
 
-
-
     <title>Invoice ${invoiceData.invoiceNumber}</title>
     <style>
-     body {
-    font-family: 'Akaya Telivigala', Arial, Helvetica, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f9f9f9;
-}
+      body {
+        font-family: 'Akaya Telivigala', Arial, Helvetica, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f9f9f9;
+      }
 
       .invoice-container {
         max-width: 800px;
@@ -177,42 +175,58 @@ export async function POST(req: NextRequest) {
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0,0,0,0.1);
       }
+
+      /* Inner border */
+      .inner-border {
+        border: 2px solid #d1d5db; /* light gray border */
+        padding: 20px; /* space inside border */
+        border-radius: 6px; /* slightly smaller radius */
+      }
+
       .flex-between {
         display: flex;
         justify-content: space-between;
       }
-     h1, h2, h3 {
-    font-family: 'Akaya Telivigala', Arial, Helvetica, sans-serif;
-}
+
+      h1, h2, h3 {
+        font-family: 'Akaya Telivigala', Arial, Helvetica, sans-serif;
+      }
 
       p {
         margin: 2px 0;
       }
+
       table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
       }
+
       th, td {
         border: 1px solid #333;
         padding: 8px;
         text-align: left;
       }
+
       th {
         background-color: #f0f0f0;
       }
+
       .text-right {
         text-align: right;
       }
+
       .totals {
         margin-top: 20px;
         text-align: right;
         font-weight: bold;
       }
+
       .logo {
         max-height: 60px;
         margin-bottom: 10px;
       }
+
       /* Mobile friendly */
       @media (max-width: 600px) {
         .flex-between {
@@ -223,80 +237,83 @@ export async function POST(req: NextRequest) {
   </head>
   <body>
     <div class="invoice-container">
-      <!-- Header -->
-      <div class="flex-between">
-        <div>
-          <h2>${invoiceData.billedBy.businessName}</h2>
-          <p>${invoiceData.billedBy.address}, ${invoiceData.billedBy.city}</p>
-          <p>${invoiceData.billedBy.country}</p>
-          <p>Phone: ${invoiceData.billedBy.phone}</p>
-          <p>GSTIN: ${invoiceData.billedBy.gstin}</p>
+      <div class="inner-border">
+        <!-- Header -->
+        <div class="flex-between">
+          <div>
+            <h2>${invoiceData.billedBy.businessName}</h2>
+            <p>${invoiceData.billedBy.address}, ${invoiceData.billedBy.city}</p>
+            <p>${invoiceData.billedBy.country}</p>
+            <p>Phone: ${invoiceData.billedBy.phone}</p>
+            <p>GSTIN: ${invoiceData.billedBy.gstin}</p>
+          </div>
+          <div class="text-right">
+            ${invoiceData.logoUrl ? `<img src="${invoiceData.logoUrl}" class="logo" />` : ""}
+            <p>Invoice Number: ${invoiceData.invoiceNumber}</p>
+            <p>Date: ${invoiceData.invoiceDate}</p>
+            <p>Due Date: ${invoiceData.dueDate}</p>
+          </div>
         </div>
-        <div class="text-right">
-          ${invoiceData.logoUrl ? `<img src="${invoiceData.logoUrl}" class="logo" />` : ""}
-          <p>Invoice Number: ${invoiceData.invoiceNumber}</p>
-          <p>Date: ${invoiceData.invoiceDate}</p>
-          <p>Due Date: ${invoiceData.dueDate}</p>
+
+        <!-- Billed To -->
+        <div style="margin-top: 20px;">
+          <h3>Billed To (Client)</h3>
+          <p>${invoiceData.billedTo.businessName}</p>
+          <p>${invoiceData.billedTo.address}, ${invoiceData.billedTo.city}</p>
+          <p>${invoiceData.billedTo.country}</p>
+          <p>Phone: ${invoiceData.billedTo.phone}</p>
+          <p>GSTIN: ${invoiceData.billedTo.gstin}</p>
         </div>
-      </div>
 
-      <!-- Billed To -->
-      <div style="margin-top: 20px;">
-        <h3>Billed To (Client)</h3>
-        <p>${invoiceData.billedTo.businessName}</p>
-        <p>${invoiceData.billedTo.address}, ${invoiceData.billedTo.city}</p>
-        <p>${invoiceData.billedTo.country}</p>
-        <p>Phone: ${invoiceData.billedTo.phone}</p>
-        <p>GSTIN: ${invoiceData.billedTo.gstin}</p>
-      </div>
+        <!-- Items Table -->
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>HSN</th>
+              <th>GST %</th>
+              <th>Qty</th>
+              <th>Rate</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${invoiceData.items
+              .map(
+                (item: any) => `
+                  <tr>
+                    <td>${item.itemName}</td>
+                    <td>${item.hsn || "-"}</td>
+                    <td>${item.gst || 0}</td>
+                    <td>${item.qty}</td>
+                    <td>₹${item.rate.toFixed(2)}</td>
+                    <td>₹${(item.qty * item.rate).toFixed(2)}</td>
+                  </tr>
+                `
+              )
+              .join("")}
+          </tbody>
+        </table>
 
-      <!-- Items Table -->
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>HSN</th>
-            <th>GST %</th>
-            <th>Qty</th>
-            <th>Rate</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${invoiceData.items
-        .map(
-          (item: any) => `
-              <tr>
-                <td>${item.itemName}</td>
-                <td>${item.hsn || "-"}</td>
-                <td>${item.gst || 0}</td>
-                <td>${item.qty}</td>
-                <td>₹${item.rate.toFixed(2)}</td>
-                <td>₹${(item.qty * item.rate).toFixed(2)}</td>
-              </tr>
-            `
-        )
-        .join("")}
-        </tbody>
-      </table>
-
-      <!-- Totals -->
-      <div class="totals">
-        <p>Amount: ₹${invoiceData.totals.amount.toFixed(2)}</p>
-        <p>CGST: ₹${invoiceData.totals.cgst.toFixed(2)}</p>
-        <p>SGST: ₹${invoiceData.totals.sgst.toFixed(2)}</p>
-        <p>Discount: ₹${invoiceData.extras?.discount || 0}</p>
-        <p>Additional Charges: ₹${invoiceData.extras?.charges || 0}</p>
-        <p style="font-size: 18px;">Grand Total: ₹${invoiceData.totals.grandTotal.toFixed(2)}</p>
-        ${invoiceData.showTotalInWords
-        ? `<p style="font-style: italic;">Total in words: ${invoiceData.totalInWords}</p>`
-        : ""
-      }
+        <!-- Totals -->
+        <div class="totals">
+          <p>Amount: ₹${invoiceData.totals.amount.toFixed(2)}</p>
+          <p>CGST: ₹${invoiceData.totals.cgst.toFixed(2)}</p>
+          <p>SGST: ₹${invoiceData.totals.sgst.toFixed(2)}</p>
+          <p>Discount: ₹${invoiceData.extras?.discount || 0}</p>
+          <p>Additional Charges: ₹${invoiceData.extras?.charges || 0}</p>
+          <p style="font-size: 18px;">Grand Total: ₹${invoiceData.totals.grandTotal.toFixed(2)}</p>
+          ${invoiceData.showTotalInWords
+            ? `<p style="font-style: italic;">Total in words: ${invoiceData.totalInWords}</p>`
+            : ""
+          }
+        </div>
       </div>
     </div>
   </body>
 </html>
 `;
+
 
     // Generate PDF using Puppeteer
 
