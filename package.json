@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@sparticuz/chromium": "^143.0.4",
     "bcryptjs": "^3.0.3",
     "chrome-aws-lambda": "^10.1.0",
     "cloudinary": "^2.9.0",
@@ -27,7 +28,6 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.12",
     "pdf-lib": "^1.17.1",
-    "puppeteer": "^24.35.0",
     "puppeteer-core": "^10.4.0",
     "razorpay": "^2.9.6",
     "react": "19.2.3",
