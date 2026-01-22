@@ -2,7 +2,8 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 
 export async function POST(req: Request) {
   try {
@@ -93,34 +94,35 @@ export async function POST(req: Request) {
       </html>
     `;
 
-    /* ---------------- GENERATE PDF ---------------- */
+    /* ---------------- GENERATE PDF (VERCEL SAFE) ---------------- */
     const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-      ],
-    });
+  args: chromium.args,
+  executablePath: await chromium.executablePath(),
+  headless: true,
+});
+
 
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "load", timeout: 0 });
+    await page.setContent(html, { waitUntil: "networkidle0" });
 
-    const pdfBuffer = await page.pdf({ format: "A4" });
+    const pdfBuffer = await page.pdf({
+      format: "a4",
+      printBackground: true,
+    });
+
     await browser.close();
 
-    /* ---------------- NODEMAILER (FIXED SSL ISSUE) ---------------- */
+    /* ---------------- NODEMAILER ---------------- */
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 465,
-      secure: true, // SSL
+      secure: true,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS, // Gmail App Password
       },
       tls: {
-        rejectUnauthorized: false, // ✅ fixes self-signed cert error
+        rejectUnauthorized: false,
       },
     });
 
@@ -142,7 +144,7 @@ export async function POST(req: Request) {
       attachments: [
         {
           filename: `Invoice-${invoice.invoiceNumber}.pdf`,
-          content: Buffer.from(pdfBuffer),
+          content: pdfBuffer,
           contentType: "application/pdf",
         },
         ...extraAttachments,
