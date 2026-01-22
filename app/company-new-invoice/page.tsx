@@ -180,49 +180,70 @@ export default function InvoicePage() {
 
   /* ---------------- Validation ---------------- */
   const isValidPhone = (value: string) => /^\d{10}$/.test(value);
-  const validateInvoice = () => {
-    if (!invoiceMeta.invoiceNumber || !invoiceMeta.invoiceDate || !invoiceMeta.dueDate) {
-      alert("Please fill all invoice details.");
+ const validateInvoice = () => {
+  if (!invoiceMeta.invoiceNumber.trim() || !invoiceMeta.invoiceDate || !invoiceMeta.dueDate) {
+    alert("Please fill all invoice details.");
+    return false;
+  }
+
+  // Invoice Date <= Due Date
+  const invoiceDate = new Date(invoiceMeta.invoiceDate);
+  const dueDate = new Date(invoiceMeta.dueDate);
+  if (invoiceDate > dueDate) {
+    alert("Invoice Date cannot be later than Due Date.");
+    return false;
+  }
+
+  if (!isValidPhone(billedBy.phone.trim()) || !isValidPhone(billedTo.phone.trim())) {
+    alert("Please enter valid 10-digit mobile numbers.");
+    return false;
+  }
+
+  if (!isValidEmail(billedBy.email.trim())) {
+    alert("Billed By: Enter a valid email ending with .com or .in");
+    return false;
+  }
+  if (!isValidEmail(billedTo.email.trim())) {
+    alert("Billed To: Enter a valid email ending with .com or .in");
+    return false;
+  }
+
+  // Billed By fields
+  for (const key in billedBy) {
+    const val = (billedBy as any)[key];
+    if (!val || !val.toString().trim()) {
+      alert(`Fill Billed By: ${key}`);
       return false;
     }
+  }
 
-    // Check if Invoice Date <= Due Date
-    const invoiceDate = new Date(invoiceMeta.invoiceDate);
-    const dueDate = new Date(invoiceMeta.dueDate);
-    if (invoiceDate > dueDate) {
-      alert("Invoice Date cannot be later than Due Date.");
+  // Billed To fields
+  for (const key in billedTo) {
+    const val = (billedTo as any)[key];
+    if (!val || !val.toString().trim()) {
+      alert(`Fill Billed To: ${key}`);
       return false;
     }
+  }
 
-    if (!isValidPhone(billedBy.phone) || !isValidPhone(billedTo.phone)) {
-      alert("Please enter valid 10-digit mobile numbers.");
+  // Items
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (
+      !item.itemName.trim() ||
+      !item.hsn.trim() ||
+      item.gst === null ||
+      item.qty === null ||
+      item.rate === null
+    ) {
+      alert(`Fill all fields for Item ${i + 1}`);
       return false;
     }
+  }
 
-    if (!isValidEmail(billedBy.email)) {
-      alert("Billed By: Enter a valid email ending with .com or .in");
-      return false;
-    }
-    if (!isValidEmail(billedTo.email)) {
-      alert("Billed To: Enter a valid email ending with .com or .in");
-      return false;
-    }
+  return true;
+};
 
-    for (const key in billedBy)
-      if (!(billedBy as any)[key]) { alert(`Fill Billed By: ${key}`); return false; }
-    for (const key in billedTo)
-      if (!(billedTo as any)[key]) { alert(`Fill Billed To: ${key}`); return false; }
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (!item.itemName || !item.hsn || item.gst === null || item.qty === null || item.rate === null) {
-        alert(`Fill all fields for Item ${i + 1}`);
-        return false;
-      }
-    }
-
-    return true;
-  };
 
 
 

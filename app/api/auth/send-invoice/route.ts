@@ -33,67 +33,80 @@ export async function POST(req: Request) {
 
     /* ---------------- HTML TEMPLATE ---------------- */
     const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8" />
-      <style>
-        body { font-family: Arial, sans-serif; font-size: 12px; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #000; padding: 6px; }
-        th { background: #f3f3f3; }
-        .header { display: flex; justify-content: space-between; }
-        .logo { max-height: 70px; }
-        .right { text-align: right; }
-      </style>
-    </head>
-    <body>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 12px; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #000; padding: 6px; }
+    th { background: #f3f3f3; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .logo { max-height: 70px; margin-bottom: 5px; }
+    .right { text-align: right; }
+    .section { margin-bottom: 15px; }
+  </style>
+</head>
+<body>
 
-      <div class="header">
-        <h2>Invoice #${invoice.invoiceNumber}</h2>
-        ${logoUrl ? `<img src="${logoUrl}" class="logo" />` : ""}
-      </div>
+  <!-- Header with Invoice Number, Dates, and Logo -->
+  <div class="header">
+    <div>
+      <h2>${invoice.billedBy.businessName}</h2>
+      <p>${invoice.billedBy.address}, ${invoice.billedBy.city}, ${invoice.billedBy.country}</p>
+      <p>Phone: ${invoice.billedBy.phone}</p>
+      <p>GSTIN: ${invoice.billedBy.gstin}</p>
+    </div>
+    <div class="right">
+      ${invoice.logoUrl ? `<img src="${invoice.logoUrl}" class="logo" />` : ""}
+      <p>Invoice Number: ${invoice.invoiceNumber}</p>
+      <p>Date: ${invoice.invoiceDate}</p>
+      <p>Due Date: ${invoice.dueDate}</p>
+    </div>
+  </div>
 
-      <p>
-        <b>Billed By:</b><br/>
-        ${invoice.billedBy.businessName}<br/>
-        ${invoice.billedBy.address}, ${invoice.billedBy.city}, ${invoice.billedBy.country}<br/>
-        Phone: ${invoice.billedBy.phone}<br/>
-        GSTIN: ${invoice.billedBy.gstin}
-      </p>
+  <!-- Billed To -->
+  <div class="section">
+    <b>Billed To (Client):</b><br/>
+    ${invoice.billedTo.businessName}<br/>
+    ${invoice.billedTo.address}, ${invoice.billedTo.city}, ${invoice.billedTo.country}<br/>
+    Phone: ${invoice.billedTo.phone}<br/>
+    GSTIN: ${invoice.billedTo.gstin}
+  </div>
 
-      <p>
-        <b>Billed To:</b><br/>
-        ${invoice.billedTo.businessName}<br/>
-        ${invoice.billedTo.address}, ${invoice.billedTo.city}, ${invoice.billedTo.country}<br/>
-        Phone: ${invoice.billedTo.phone}<br/>
-        GSTIN: ${invoice.billedTo.gstin}
-      </p>
+  <!-- Items Table -->
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>HSN</th>
+        <th>GST%</th>
+        <th>Qty</th>
+        <th>Rate</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemsRows}
+    </tbody>
+  </table>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>HSN</th>
-            <th>GST%</th>
-            <th>Qty</th>
-            <th>Rate</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody>${itemsRows}</tbody>
-      </table>
+  <!-- Totals -->
+  <div class="right section">
+    <p>Amount: ₹${totals.amount.toFixed(2)}</p>
+    <p>CGST: ₹${totals.cgst.toFixed(2)}</p>
+    <p>SGST: ₹${totals.sgst.toFixed(2)}</p>
+    <p><b>Discount: ₹${invoice?.extras?.discount || 0}</b></p>
+    <p><b>Additional Charges: ₹${invoice?.extras?.charges || 0}</b></p>
+    <p><b>Grand Total: ₹${totals.grandTotal.toFixed(2)}</b></p>
+    ${invoice?.showTotalInWords ? `<p><i>Total in words: ${totalInWords}</i></p>` : ""}
+  </div>
 
-      <p class="right">Amount: ₹${totals.amount.toFixed(2)}</p>
-      <p class="right">CGST: ₹${totals.cgst.toFixed(2)}</p>
-      <p class="right">SGST: ₹${totals.sgst.toFixed(2)}</p>
-      <p class="right"><b>Grand Total: ₹${totals.grandTotal.toFixed(2)}</b></p>
+</body>
+</html>
+`;
 
-      <p><i>${totalInWords}</i></p>
-
-    </body>
-    </html>
-    `;
 
     /* ---------------- PUPPETEER (LOCAL + VERCEL SAFE) ---------------- */
     let browser: any;
