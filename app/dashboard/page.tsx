@@ -207,7 +207,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
+    <div className="min-h-screen bg-[#D9D9D9]/20 p-4 md:p-6">
       {/* ---------------- TOP MENU ---------------- */}
       <motion.div
         variants={navbarVariants}

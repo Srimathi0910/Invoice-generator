@@ -199,7 +199,7 @@ export default function ReportsPage() {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible" className="min-h-screen bg-gray-100  p-6 text-black ">
+            animate="visible" className="min-h-screen bg-[#D9D9D9]/20 p-6 text-black ">
             <motion.div
                 variants={navbarVariants}
                 initial="hidden"

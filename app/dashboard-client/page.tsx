@@ -7,7 +7,7 @@ import TetrominosLoader from "../_components/TetrominosLoader";
 import { useRouter } from "next/navigation";
 import {
   FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog,
-  FaUserCircle, FaSearch, FaBars, FaTimes,FaRegUser
+  FaUserCircle, FaSearch, FaBars, FaTimes, FaRegUser
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 
@@ -101,8 +101,8 @@ const Dashboard = () => {
     { icon: <FaChartBar />, label: "Payments", path: "/payment-client" },
     { icon: <FaMoneyCheckAlt />, label: "Reports", path: "/reports-client" },
     { icon: <FaRegUser />, label: "Profile", path: "/profile" },
-    
-    
+
+
     { icon: <FaCog />, label: "Help", path: "/help" },
   ];
 
@@ -178,14 +178,14 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
+    <div className="min-h-screen bg-[#D9D9D9]/20 p-4 md:p-6">
 
       {/* ---------------- TOP MENU ---------------- */}
       <motion.div variants={navbarVariants}
         initial="hidden"
         animate="visible"
         className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">Invoice Dashboard</div>
+        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0"></div>
 
         <div className="md:hidden flex items-center mb-3">
           <button onClick={() => setMenuOpen(!menuOpen)}>
@@ -237,7 +237,7 @@ const Dashboard = () => {
           <div className="bg-white text-black rounded shadow p-4 flex flex-col min-h-[200px]">
             <span className="text-sm text-center text-[20px] font-medium">Total Revenue</span>
             <hr className="border-gray-300 my-2" />
-            <div className="text-center text-xl font-semibold mb-3">₹{totalRevenue.toFixed(2)}</div>
+            <div className="text-center text-4xl font-semibold p-8">₹{totalRevenue.toFixed(2)}</div>
           </div>
         </motion.div>
 
@@ -286,7 +286,7 @@ const Dashboard = () => {
           <thead className="bg-gray-100 hidden md:table-header-group">
             <tr>
               <th className="px-4 py-2 w-1/6">Invoice</th>
-              <th className="px-4 py-2 w-1/6">Billed To</th>
+              {/* <th className="px-4 py-2 w-1/6">Billed To</th> */}
               <th className="px-4 py-2 w-1/6">Amount</th>
               <th className="px-4 py-2 w-1/6">Status</th>
               <th className="px-4 py-2 w-1/6">Date</th>
@@ -310,10 +310,10 @@ const Dashboard = () => {
                         <span className="font-semibold">Invoice:</span>
                         <span>{inv.invoiceNumber}</span>
                       </div>
-                      <div className="flex justify-between w-full px-4">
+                      {/* <div className="flex justify-between w-full px-4">
                         <span className="font-semibold">Billed To:</span>
                         <span>{inv.billedTo.businessName}</span>
-                      </div>
+                      </div> */}
                       <div className="flex justify-between w-full px-4">
                         <span className="font-semibold">Amount:</span>
                         <span>₹{Number(inv.totals?.grandTotal ?? 0).toFixed(2)}</span>
@@ -331,8 +331,16 @@ const Dashboard = () => {
                         <span className="font-semibold">Date:</span>
                         <span>{new Date(inv.invoiceDate).toLocaleDateString()}</span>
                       </div>
-                      <div className="flex justify-end w-full px-4">
-                        {(inv.status === "Unpaid" || inv.status === "Overdue") && (
+                      <div className="flex justify-between w-full px-4">
+                        <span className="font-semibold ">
+                          Action
+                        </span>
+
+                        {inv.status === "Paid" ? (
+                          <span className="px-3 py-1 bg-green-200 text-green-800 rounded font-medium">
+                            Paid
+                          </span>
+                        ) : (
                           <button
                             onClick={() => router.push(`/payment-client/${inv._id}`)}
                             className="px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded font-medium"
@@ -341,15 +349,17 @@ const Dashboard = () => {
                           </button>
                         )}
                       </div>
+
+
                     </div>
                   </td>
 
                   {/* Desktop layout */}
                   <td className="hidden md:table-cell px-4 py-2">{inv.invoiceNumber}</td>
-                  <td className="hidden md:table-cell px-4 py-2">{inv.billedTo.businessName}</td>
+                  {/* <td className="hidden md:table-cell px-4 py-2">{inv.billedTo.businessName}</td> */}
                   <td className="hidden md:table-cell px-4 py-2">
-  ₹{Number(inv.totals?.grandTotal ?? 0).toFixed(2)}
-</td>
+                    ₹{Number(inv.totals?.grandTotal ?? 0).toFixed(2)}
+                  </td>
 
                   <td className="hidden md:table-cell px-4 py-2">
                     <span className={`px-2 py-1 rounded text-white ${getStatusColor(inv.status)}`}>
@@ -358,7 +368,9 @@ const Dashboard = () => {
                   </td>
                   <td className="hidden md:table-cell px-4 py-2">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
                   <td className="hidden md:table-cell px-4 py-2">
-                    {(inv.status === "Unpaid" || inv.status === "Overdue") && (
+                    {inv.status === "Paid" ? (
+                      <span className="px-3 py-1 bg-green-200 text-green-800 rounded font-medium">Paid</span>
+                    ) : (
                       <button
                         onClick={() => router.push(`/payment-client/${inv._id}`)}
                         className="px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded font-medium"
@@ -367,6 +379,7 @@ const Dashboard = () => {
                       </button>
                     )}
                   </td>
+
                 </tr>
               ))
             )}

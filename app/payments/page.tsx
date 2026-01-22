@@ -39,6 +39,8 @@ export default function PaymentsPage() {
     const [activeTab, setActiveTab] = useState("All");
     const tabs = ["All", "Paid", "Unpaid", "Overdue"];
     const [currentPage, setCurrentPage] = useState(1);
+    const [savingRowId, setSavingRowId] = useState<string | null>(null);
+
 
 
     const menuItems = [
@@ -226,7 +228,7 @@ export default function PaymentsPage() {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible" className="p-6">
+            animate="visible" className="p-6 bg-[#D9D9D9]/20">
             <motion.div
                 variants={navbarVariants}
                 initial="hidden"
@@ -295,7 +297,7 @@ export default function PaymentsPage() {
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`bg-white  text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
+                            className={`text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
                                 ? "text-[#29268E] border-b-2 border-[#29268E]"
                                 : "text-black hover:text-[#29268E]"
                                 }`}
@@ -387,44 +389,64 @@ export default function PaymentsPage() {
                                                         <span>{p.paymentMethod}</span>
                                                     )}
                                                 </div>
-                                                <div className="flex justify-between w-full">
+                                                <div className="flex justify-between w-full items-center relative">
                                                     <span className="font-semibold">Payment Status:</span>
+
                                                     {isEditing ? (
-                                                        <select
-                                                            value={p.paymentStatus}
-                                                            className={`px-2 py-1 rounded text-white cursor-pointer ${p.paymentStatus === "Paid"
-                                                                ? "bg-green-500"
-                                                                : p.paymentStatus === "Unpaid"
-                                                                    ? "bg-orange-500"
-                                                                    : "bg-red-500"
-                                                                }`}
-                                                            onChange={(e) =>
-                                                                setPayments((prev) =>
-                                                                    prev.map((pay) =>
-                                                                        pay._id === p._id
-                                                                            ? { ...pay, paymentStatus: e.target.value as "Paid" | "Unpaid" | "Overdue" }
-                                                                            : pay
+                                                        <div className="relative w-32">
+                                                            <select
+                                                                value={p.paymentStatus}
+                                                                onChange={(e) =>
+                                                                    setPayments((prev) =>
+                                                                        prev.map((pay) =>
+                                                                            pay._id === p._id
+                                                                                ? { ...pay, paymentStatus: e.target.value as "Paid" | "Unpaid" | "Overdue" }
+                                                                                : pay
+                                                                        )
                                                                     )
-                                                                )
-                                                            }
-                                                        >
-                                                            <option value="Paid">Paid</option>
-                                                            <option value="Unpaid">Unpaid</option>
-                                                            <option value="Overdue">Overdue</option>
-                                                        </select>
+                                                                }
+                                                                className="px-3 py-1 rounded w-full cursor-pointer border border-gray-300 text-white appearance-none focus:outline-none"
+                                                                style={{
+                                                                    backgroundColor:
+                                                                        p.paymentStatus === "Paid"
+                                                                            ? "#05410C"
+                                                                            : p.paymentStatus === "Unpaid"
+                                                                                ? "#E06A2A"
+                                                                                : "#E51F22",
+                                                                }}
+                                                            >
+                                                                <option value="Paid" className="text-white bg-[#05410C]">Paid</option>
+                                                                <option value="Unpaid" className="text-white bg-[#E06A2A]">Unpaid</option>
+                                                                <option value="Overdue" className="text-white bg-[#E51F22]">Overdue</option>
+                                                            </select>
+
+                                                            {/* Custom arrow using SVG */}
+                                                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                                                                <svg
+                                                                    className="w-4 h-4 text-white"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    strokeWidth="2"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
                                                     ) : (
                                                         <span
                                                             className={`px-2 py-1 rounded text-white ${p.paymentStatus === "Paid"
-                                                                ? "bg-green-500"
+                                                                ? "bg-[#05410C]"
                                                                 : p.paymentStatus === "Unpaid"
-                                                                    ? "bg-orange-500"
-                                                                    : "bg-red-500"
+                                                                    ? "bg-[#E06A2A]"
+                                                                    : "bg-[#E51F22]"
                                                                 }`}
                                                         >
                                                             {p.paymentStatus}
                                                         </span>
                                                     )}
                                                 </div>
+
                                                 <div className="flex justify-between w-full">
                                                     <span className="font-semibold">Amount:</span>
                                                     <span>Rs.{p.amount.toLocaleString()}</span>
@@ -433,19 +455,35 @@ export default function PaymentsPage() {
                                                     {isEditing ? (
                                                         <>
                                                             <button
-                                                            
-                                                                className="bg-green-500 text-white px-2 py-1 rounded mr-2 cursor-pointer"
+                                                                disabled={savingRowId === p._id}
+                                                                className={`px-2 py-1 rounded mr-2 cursor-pointer text-white
+    ${savingRowId === p._id
+                                                                        ? "bg-green-400 cursor-not-allowed"
+                                                                        : "bg-green-500 hover:bg-green-600"
+                                                                    }`}
                                                                 onClick={async () => {
-                                                                    await handleUpdate(p._id, {
-                                                                        paymentDate: p.paymentDate,
-                                                                        paymentMethod: p.paymentMethod,
-                                                                        paymentStatus: p.paymentStatus,
-                                                                    });
-                                                                    setEditRow(null);
+                                                                    if (savingRowId) return; // extra safety
+
+                                                                    setSavingRowId(p._id);
+
+                                                                    try {
+                                                                        await handleUpdate(p._id, {
+                                                                            paymentDate: p.paymentDate,
+                                                                            paymentMethod: p.paymentMethod,
+                                                                            paymentStatus: p.paymentStatus,
+                                                                        });
+
+                                                                        setEditRow(null);
+                                                                    } catch (err) {
+                                                                        console.error("Update failed", err);
+                                                                    } finally {
+                                                                        setSavingRowId(null);
+                                                                    }
                                                                 }}
                                                             >
-                                                                Save
+                                                                {savingRowId === p._id ? "Saving..." : "Save"}
                                                             </button>
+
                                                             <button
                                                                 className="bg-gray-400 text-white px-2 py-1 rounded  cursor-pointer"
                                                                 onClick={() => setEditRow(null)}
@@ -466,9 +504,9 @@ export default function PaymentsPage() {
                                         </td>
 
                                         {/* Desktop Columns */}
-                                        <td className="hidden md:table-cell p-2 border">{p.invoiceNumber}</td>
-                                        <td className="hidden md:table-cell p-2 border">{p.clientName}</td>
-                                        <td className="hidden md:table-cell p-2 border">
+                                        <td className="hidden md:table-cell p-2 text-center text-center border">{p.invoiceNumber}</td>
+                                        <td className="hidden md:table-cell p-2 text-center border">{p.clientName}</td>
+                                        <td className="hidden md:table-cell p-2 text-center border">
                                             {isEditing ? (
                                                 <input
                                                     type="date"
@@ -486,7 +524,7 @@ export default function PaymentsPage() {
                                                 new Date(p.paymentDate).toLocaleDateString()
                                             )}
                                         </td>
-                                        <td className="hidden md:table-cell p-2 border">
+                                        <td className="hidden md:table-cell p-2 text-center border">
                                             {isEditing ? (
                                                 <select
                                                     value={p.paymentMethod || "NA"}
@@ -509,16 +547,11 @@ export default function PaymentsPage() {
                                                 p.paymentMethod
                                             )}
                                         </td>
-                                        <td className="hidden md:table-cell p-2 border">
+                                        <td className="hidden md:table-cell text-center p-2 border">
                                             {isEditing ? (
                                                 <select
                                                     value={p.paymentStatus}
-                                                    className={`px-2 py-1 rounded text-white cursor-pointer ${p.paymentStatus === "Paid"
-                                                        ? "bg-green-500"
-                                                        : p.paymentStatus === "Unpaid"
-                                                            ? "bg-orange-500"
-                                                            : "bg-red-500"
-                                                        }`}
+                                                    className="px-2 py-1 rounded text-black cursor-pointer bg-white text-center border border-gray-300"
                                                     onChange={(e) =>
                                                         setPayments((prev) =>
                                                             prev.map((pay) =>
@@ -528,41 +561,69 @@ export default function PaymentsPage() {
                                                             )
                                                         )
                                                     }
+                                                    style={{
+                                                        color:
+                                                            p.paymentStatus === "Paid"
+                                                                ? "#FFFFFF"
+                                                                : p.paymentStatus === "Unpaid"
+                                                                    ? "#FFFFFF"
+                                                                    : "#FFFFFF", // text color white for contrast if needed
+                                                        backgroundColor:
+                                                            p.paymentStatus === "Paid"
+                                                                ? "#05410C"
+                                                                : p.paymentStatus === "Unpaid"
+                                                                    ? "#E06A2A"
+                                                                    : "#E51F22", // only the selected value color
+                                                    }}
                                                 >
-                                                    <option value="Paid">Paid</option>
-                                                    <option value="Unpaid">Unpaid</option>
-                                                    <option value="Overdue">Overdue</option>
+                                                    <option value="Paid" className="text-white bg-[#05410C]">Paid</option>
+                                                    <option value="Unpaid" className="text-white bg-[#E06A2A]">Unpaid</option>
+                                                    <option value="Overdue" className="text-white bg-[#E51F22]">Overdue</option>
                                                 </select>
                                             ) : (
                                                 <span
-                                                    className={`px-2 py-1 rounded text-white ${p.paymentStatus === "Paid"
-                                                        ? "bg-green-500"
+                                                    className={`px-2 py-1 rounded text-center text-white ${p.paymentStatus === "Paid"
+                                                        ? "bg-[#05410C]"
                                                         : p.paymentStatus === "Unpaid"
-                                                            ? "bg-orange-500"
-                                                            : "bg-red-500"
+                                                            ? "bg-[#E06A2A]"
+                                                            : "bg-[#E51F22]"
                                                         }`}
                                                 >
                                                     {p.paymentStatus}
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="hidden md:table-cell p-2 border">Rs.{p.amount.toLocaleString()}</td>
-                                        <td className="hidden md:table-cell p-2 border">
+
+                                        <td className="hidden md:table-cell text-center p-2 border">Rs.{p.amount.toLocaleString()}</td>
+                                        <td className="hidden md:table-cell p-2 text-center  border">
                                             {isEditing ? (
                                                 <>
                                                     <button
-                                                        className="bg-green-500 text-white px-2 py-1 rounded mr-2  cursor-pointer"
+                                                        disabled={savingRowId === p._id}
+                                                        className={`px-2 py-1 rounded mr-2 text-center cursor-pointer
+    ${savingRowId === p._id
+                                                                ? "bg-green-400 cursor-not-allowed"
+                                                                : "bg-green-500 hover:bg-green-600 text-white"
+                                                            }`}
                                                         onClick={async () => {
-                                                            await handleUpdate(p._id, {
-                                                                paymentDate: p.paymentDate,
-                                                                paymentMethod: p.paymentMethod,
-                                                                paymentStatus: p.paymentStatus,
-                                                            });
-                                                            setEditRow(null);
+                                                            setSavingRowId(p._id);
+
+                                                            try {
+                                                                await handleUpdate(p._id, {
+                                                                    paymentDate: p.paymentDate,
+                                                                    paymentMethod: p.paymentMethod,
+                                                                    paymentStatus: p.paymentStatus,
+                                                                });
+
+                                                                setEditRow(null);
+                                                            } finally {
+                                                                setSavingRowId(null);
+                                                            }
                                                         }}
                                                     >
-                                                        Save
+                                                        {savingRowId === p._id ? "Saving..." : "Save"}
                                                     </button>
+
                                                     <button
                                                         className="bg-gray-400 text-white px-2 py-1 rounded  cursor-pointer"
                                                         onClick={() => setEditRow(null)}

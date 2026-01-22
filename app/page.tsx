@@ -82,10 +82,12 @@ export default function WelcomePage() {
                   Get Started
                 </button>
               </Link>
+              <Link href="/contact">
 
               <button className="bg-white text-black px-4 sm:px-6 rounded-lg w-full sm:w-[220px] h-[50px] text-[20px] sm:text-[24px] flex items-center justify-center hover:bg-gray-100 transition shadow-[10px_10px_10px_rgba(0,0,0,0.25)] stagger-item delay-2000">
                 Contact Us
               </button>
+              </Link >
             </div>
           </div>
         </div>

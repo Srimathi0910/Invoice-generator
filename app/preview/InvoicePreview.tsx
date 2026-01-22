@@ -36,6 +36,17 @@ const InvoicePreview = () => {
   const [showLoader, setShowLoader] = useState(true);
   const [saving, setSaving] = useState(false);
   const [downloading, setDownloading] = useState(false)
+  const [showOverlay, setShowOverlay] = useState(false);
+
+  const [popup, setPopup] = useState<{
+    open: boolean;
+    message: string;
+    type: "success" | "error" | "info";
+  }>({
+    open: false,
+    message: "",
+    type: "info",
+  });
 
   useEffect(() => {
     // Show loader for 3 seconds
@@ -138,21 +149,41 @@ const InvoicePreview = () => {
       throw new Error(res?.error || "Failed to send invoice email");
     }
   };
-
+  const runWithOverlay = async (fn: () => Promise<void> | void) => {
+    setShowOverlay(true);
+    try {
+      await fn();
+    } finally {
+      setShowOverlay(false);
+    }
+  };
   const saveInvoice = async () => {
+    setShowOverlay(true);
     if (!user) {
-      alert("Please login");
+      setPopup({
+        open: true,
+        message: "Please login",
+        type: "error",
+      });
       return;
     }
 
     if (!invoice) {
-      alert("Invoice not loaded");
+      setPopup({
+        open: true,
+        message: "Invoice not loaded",
+        type: "error",
+      });
       return;
     }
 
     const recipientEmail = invoice?.billedTo?.email;
     if (!recipientEmail) {
-      alert("Client email not found");
+      setPopup({
+        open: true,
+        message: "Client email not found",
+        type: "error",
+      });
       return;
     }
 
@@ -161,7 +192,11 @@ const InvoicePreview = () => {
 
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("Unauthorized. Please login again.");
+        setPopup({
+          open: true,
+          message: "Unauthorized. Please login again.",
+          type: "error",
+        });
         return;
       }
 
@@ -199,7 +234,11 @@ const InvoicePreview = () => {
       });
 
       if (!data?.success) {
-        alert(data?.error || "Failed to save invoice");
+        setPopup({
+          open: true,
+          message: data?.error || "Failed to save invoice",
+          type: "error",
+        });
         return;
       }
 
@@ -210,7 +249,11 @@ const InvoicePreview = () => {
       // ✅ AUTO SEND EMAIL AFTER SAVE
       await sendInvoiceToClient(data.invoice, recipientEmail);
 
-      alert("Invoice saved and sent successfully!");
+      setPopup({
+        open: true,
+        message: "Invoice saved and sent successfully!",
+        type: "success",
+      });
 
       // ---------- Reset files ----------
       setInvoiceFiles({
@@ -224,9 +267,14 @@ const InvoicePreview = () => {
 
     } catch (err) {
       console.error("Save invoice error:", err);
-      alert("Invoice saved but email failed.");
+      setPopup({
+        open: true,
+        message: "Invoice saved but email failed.",
+        type: "error",
+      });
     } finally {
       setSaving(false);
+      setShowOverlay(false); 
     }
   };
 
@@ -237,7 +285,15 @@ const InvoicePreview = () => {
 
   /* ---------------- PDF GENERATION ---------------- */
   const generatePDF = async () => {
-    if (!invoiceRef.current) return alert("Invoice content not found");
+   if (!invoiceRef.current) {
+  setPopup({
+    open: true,
+    message: "Invoice content not found",
+    type: "error",
+  });
+  return;
+}
+
 
     try {
       setDownloading(true);
@@ -293,7 +349,11 @@ const InvoicePreview = () => {
       pdf.save(`Invoice-${invoice?.invoiceNumber || "0000"}.pdf`);
     } catch (err) {
       console.error("PDF generation error:", err);
-      alert("Failed to generate PDF.");
+      setPopup({
+        open: true,
+        message: "Failed to generate PDF.",
+        type: "error",
+      });
     } finally {
       setDownloading(false);
     }
@@ -302,7 +362,15 @@ const InvoicePreview = () => {
 
   /* ---------------- SEND INVOICE ---------------- */
   const sendInvoice = async () => {
-    if (!email) return alert("Enter recipient email");
+   if (!email) {
+  setPopup({
+    open: true,
+    message: "Enter recipient email",
+    type: "error",
+  });
+  return;
+}
+
 
     try {
       setSending(true);
@@ -348,7 +416,11 @@ const InvoicePreview = () => {
 
       setEmail("");
     } catch (err: any) {
-      alert(err.message);
+      setPopup({
+        open: true,
+        message: err.message,
+        type: "error",
+      });
     } finally {
       setSending(false);
     }
@@ -481,8 +553,21 @@ const InvoicePreview = () => {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="visible" className="min-h-screen bg-gray-100 p-6">
+      animate="visible" className="min-h-screen bg-[#D9D9D9]/20 p-6">
       {/* Navbar */}
+      {showOverlay && (
+        <div className="fixed inset-0 bg-gray-300/70 z-[9999] flex items-center justify-center">
+
+          {/* Popup box */}
+          <div className="rounded-xl px-8 py-6 shadow-lg flex flex-col items-center gap-4">
+
+            <TetrominosLoader />
+
+
+
+          </div>
+        </div>
+      )}
       <motion.div
         variants={navbarVariants}
         initial="hidden"
@@ -1012,20 +1097,14 @@ const InvoicePreview = () => {
         <button
           disabled={saving}
           onClick={saveInvoice}
-          className={`bg-gray-300 text-black
-      px-6 py-2 h-12 w-64 sm:w-auto
-      rounded flex items-center justify-center gap-2
-      ${saving ? "bg-gray-400 cursor-not-allowed" : ""}
-    `}
+          className={`bg-gray-300 text-black px-6 py-2 h-12 w-64 sm:w-auto rounded flex items-center justify-center gap-2 ${saving ? "bg-gray-400 cursor-not-allowed" : ""}`}
         >
           <Edit2 size={16} />
           {saving ? "Saving..." : "Save Invoice"}
         </button>
 
         <button
-          className="bg-gray-300 text-black
-      px-6 py-2 h-12 w-64 sm:w-auto
-      rounded flex items-center justify-center gap-2"
+          className="bg-gray-300 text-black px-6 py-2 h-12 w-64 sm:w-auto rounded flex items-center justify-center gap-2"
           onClick={async () => {
             if (editMode) await saveInvoice();
             setEditMode(!editMode);
@@ -1036,9 +1115,7 @@ const InvoicePreview = () => {
         </button>
 
         <button
-          className="bg-gray-300 text-black
-      px-6 py-2 h-12 w-64 sm:w-auto
-      rounded flex items-center justify-center gap-2"
+          className="bg-gray-300 text-black px-6 py-2 h-12 w-64 sm:w-auto rounded flex items-center justify-center gap-2"
           onClick={() => setShowEmailForm(!showEmailForm)}
         >
           <Send size={16} />
@@ -1071,7 +1148,11 @@ const InvoicePreview = () => {
       rounded flex items-center justify-center gap-2 ${downloading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-300"}`}
           onClick={() => {
             if (editMode) {
-              alert("Please finish edit to download the PDF");
+              setPopup({
+                open: true,
+                message: "Please finish edit to download the PDF",
+                type: "error",
+              });
               return;
             }
             generatePDF();
@@ -1081,6 +1162,32 @@ const InvoicePreview = () => {
         </button>
 
       </div>
+      {popup.open && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
+
+            <h3
+              className={`text-lg font-semibold mb-3 ${popup.type === "success"
+                ? "text-green-600"
+                : popup.type === "error"
+                  ? "text-red-600"
+                  : "text-gray-700"
+                }`}
+            >
+              {popup.type === "success" ? "Success" : popup.type === "error" ? "Error" : "Info"}
+            </h3>
+
+            <p className="text-gray-700 mb-5">{popup.message}</p>
+
+            <button
+              onClick={() => setPopup({ ...popup, open: false })}
+              className="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };

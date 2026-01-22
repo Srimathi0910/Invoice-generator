@@ -131,9 +131,7 @@ export default function ClientsPage() {
   /* ---------------- PAGINATION ---------------- */
 
   /* ---------------- HANDLERS ---------------- */
-  const handleEdit = (id: string) => {
-    alert(`Edit client ${id}`);
-  };
+
 
   const handleLogout = async () => {
     try {
@@ -157,9 +155,7 @@ export default function ClientsPage() {
   };
 
 
-  const handleAddClient = () => {
-    alert("Add Client Clicked");
-  };
+  
   const navbarVariants: Variants = {
     hidden: { y: -100, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
@@ -234,7 +230,7 @@ export default function ClientsPage() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="min-h-screen bg-gray-100 p-6"
+      className="min-h-screen bg-[#D9D9D9]/20 p-6"
     >
 
       {/* -------- HEADER -------- */}
@@ -335,12 +331,12 @@ export default function ClientsPage() {
             {/* Desktop headers */}
             <thead className="bg-gray-200 hidden md:table-header-group">
               <tr>
-                <th className="border px-4 py-2 text-left">Client Name</th>
-                <th className="border px-4 py-2 text-left">Phone</th>
-                <th className="border px-4 py-2 text-left">GSTIN</th>
+                <th className="border px-4 py-2 text-center">Client Name</th>
+                <th className="border px-4 py-2 text-center">Phone</th>
+                <th className="border px-4 py-2 text-center">GSTIN</th>
                 <th className="border px-4 py-2 text-center">Total Invoices</th>
-                <th className="border px-4 py-2 text-left">Email</th>
-                <th className="border px-4 py-2 text-center">Actions</th>
+                <th className="border px-4 py-2 text-center">Email</th>
+                {/* <th className="border px-4 py-2 text-center">Actions</th> */}
               </tr>
             </thead>
 
@@ -383,19 +379,19 @@ export default function ClientsPage() {
                     </td>
 
                     {/* Desktop layout */}
-                    <td className="hidden md:table-cell border px-4 py-2">{client.name}</td>
-                    <td className="hidden md:table-cell border px-4 py-2">{client.phone}</td>
-                    <td className="hidden md:table-cell border px-4 py-2">{client.gstin}</td>
+                    <td className="hidden md:table-cell border px-4 py-2 text-center">{client.name}</td>
+                    <td className="hidden md:table-cell border px-4 py-2 text-center">{client.phone}</td>
+                    <td className="hidden md:table-cell border px-4 py-2 text-center">{client.gstin}</td>
                     <td className="hidden md:table-cell border px-4 py-2 text-center">{client.totalInvoices}</td>
-                    <td className="hidden md:table-cell border px-4 py-2">{client.email || "-"}</td>
-                    <td className="hidden md:table-cell border px-4 py-2 text-center">
+                    <td className="hidden md:table-cell border px-4 py-2 text-center">{client.email || "-"}</td>
+                    {/* <td className="hidden md:table-cell border px-4 py-2 text-center">
                       <button
                         onClick={() => handleEdit(client.id)}
-                        className="bg-gray-200 px-4 py-1 rounded flex gap-1 items-center justify-center mx-auto"
+                        className="bg-[#3B82F6]/100 px-4 py-1 rounded flex gap-1 items-center justify-center mx-auto"
                       >
                         <Pencil size={14} /> Edit
                       </button>
-                    </td>
+                    </td> */}
                   </tr>
                 ))
               ) : (

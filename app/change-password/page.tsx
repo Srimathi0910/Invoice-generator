@@ -19,14 +19,26 @@ export default function ChangePassword() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [popup, setPopup] = useState<{
+    open: boolean;
+    message: string;
+    type: "success" | "error" | "info";
+  }>({
+    open: false,
+    message: "",
+    type: "info",
+  });
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const t = searchParams.get("token");
     const e = searchParams.get("email");
 
     if (!t || !e) {
-      alert("Invalid reset link");
+      setPopup({
+        open: true,
+        message: "Invalid reset link",
+        type: "error",
+      });
       router.push("/login");
       return;
     }
@@ -152,13 +164,38 @@ export default function ChangePassword() {
         <button
           onClick={handleChangePassword}
           disabled={loading}
-          className={`w-full py-2 rounded-lg bg-[#D9D9D9] hover:bg-gray-300 ${
-            loading ? "opacity-60 cursor-not-allowed" : ""
-          }`}
+          className={`w-full py-2 rounded-lg bg-[#D9D9D9] hover:bg-gray-300 ${loading ? "opacity-60 cursor-not-allowed" : ""
+            }`}
         >
           {loading ? "Changing..." : "Change Password"}
         </button>
       </div>
+      {popup.open && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
+
+            <h3
+              className={`text-lg font-semibold mb-3 ${popup.type === "success"
+                ? "text-green-600"
+                : popup.type === "error"
+                  ? "text-red-600"
+                  : "text-gray-700"
+                }`}
+            >
+              {popup.type === "success" ? "Success" : popup.type === "error" ? "Error" : "Info"}
+            </h3>
+
+            <p className="text-gray-700 mb-5">{popup.message}</p>
+
+            <button
+              onClick={() => setPopup({ ...popup, open: false })}
+              className="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

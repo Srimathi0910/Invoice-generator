@@ -47,6 +47,16 @@ export default function InvoicePage() {
   const [showTotalWords, setShowTotalWords] = useState(true);
   const [showPdfTotal, setShowPdfTotal] = useState(true);
   const [showTotalInWords, setShowTotalInWords] = useState(true);
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [popup, setPopup] = useState<{
+    open: boolean;
+    message: string;
+    type: "success" | "error" | "info";
+  }>({
+    open: false,
+    message: "",
+    type: "info",
+  });
 
 
   useEffect(() => {
@@ -180,69 +190,104 @@ export default function InvoicePage() {
 
   /* ---------------- Validation ---------------- */
   const isValidPhone = (value: string) => /^\d{10}$/.test(value);
- const validateInvoice = () => {
-  if (!invoiceMeta.invoiceNumber.trim() || !invoiceMeta.invoiceDate || !invoiceMeta.dueDate) {
-    alert("Please fill all invoice details.");
-    return false;
-  }
+  const validateInvoice = () => {
+    if (!invoiceMeta.invoiceNumber.trim() || !invoiceMeta.invoiceDate || !invoiceMeta.dueDate) {
 
-  // Invoice Date <= Due Date
-  const invoiceDate = new Date(invoiceMeta.invoiceDate);
-  const dueDate = new Date(invoiceMeta.dueDate);
-  if (invoiceDate > dueDate) {
-    alert("Invoice Date cannot be later than Due Date.");
-    return false;
-  }
+      setPopup({
+        open: true,
+        message: "Please fill all invoice details.",
+        type: "error",
+      });
 
-  if (!isValidPhone(billedBy.phone.trim()) || !isValidPhone(billedTo.phone.trim())) {
-    alert("Please enter valid 10-digit mobile numbers.");
-    return false;
-  }
-
-  if (!isValidEmail(billedBy.email.trim())) {
-    alert("Billed By: Enter a valid email ending with .com or .in");
-    return false;
-  }
-  if (!isValidEmail(billedTo.email.trim())) {
-    alert("Billed To: Enter a valid email ending with .com or .in");
-    return false;
-  }
-
-  // Billed By fields
-  for (const key in billedBy) {
-    const val = (billedBy as any)[key];
-    if (!val || !val.toString().trim()) {
-      alert(`Fill Billed By: ${key}`);
       return false;
     }
-  }
 
-  // Billed To fields
-  for (const key in billedTo) {
-    const val = (billedTo as any)[key];
-    if (!val || !val.toString().trim()) {
-      alert(`Fill Billed To: ${key}`);
+    // Invoice Date <= Due Date
+    const invoiceDate = new Date(invoiceMeta.invoiceDate);
+    const dueDate = new Date(invoiceMeta.dueDate);
+    if (invoiceDate > dueDate) {
+      setPopup({
+        open: true,
+        message: "Invoice Date cannot be later than Due Date.",
+        type: "error",
+      });
+
       return false;
     }
-  }
 
-  // Items
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    if (
-      !item.itemName.trim() ||
-      !item.hsn.trim() ||
-      item.gst === null ||
-      item.qty === null ||
-      item.rate === null
-    ) {
-      alert(`Fill all fields for Item ${i + 1}`);
+    if (!isValidPhone(billedBy.phone.trim()) || !isValidPhone(billedTo.phone.trim())) {
+      setPopup({
+        open: true,
+        message: "Please enter valid 10-digit mobile numbers.",
+        type: "error",
+      });
       return false;
     }
-  }
 
-  return true;
-};
+    if (!isValidEmail(billedBy.email.trim())) {
+      setPopup({
+        open: true,
+        message: "Billed By: Enter a valid email ending with .com or .in",
+        type: "error",
+      });
+      return false;
+    }
+    if (!isValidEmail(billedTo.email.trim())) {
+      setPopup({
+        open: true,
+        message: "Billed To: Enter a valid email ending with .com or .in",
+        type: "error",
+      });
+      return false;
+    }
+
+    // Billed By fields
+    for (const key in billedBy) {
+      const val = (billedBy as any)[key];
+      if (!val || !val.toString().trim()) {
+        setPopup({
+          open: true,
+          message: `Fill Billed By: ${key}`,
+          type: "error",
+        });
+        return false;
+      }
+    }
+
+    // Billed To fields
+    for (const key in billedTo) {
+      const val = (billedTo as any)[key];
+      if (!val || !val.toString().trim()) {
+        setPopup({
+          open: true,
+          message: `Fill Billed To: ${key}`,
+          type: "error",
+        });
+        return false;
+      }
+    }
+
+    // Items
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (
+        !item.itemName.trim() ||
+        !item.hsn.trim() ||
+        item.gst === null ||
+        item.qty === null ||
+        item.rate === null
+      ) {
+        setPopup({
+          open: true,
+          message: `Fill all fields for Item ${i + 1}`,
+          type: "error",
+        });
+        return false;
+      }
+    }
+
+    return true;
+  };
 
 
 
@@ -263,103 +308,117 @@ export default function InvoicePage() {
     if (extras.round === -1) grand = Math.floor(grand);
     return { amount, cgst, sgst, totalQty: qty, grandTotal: grand };
   };
-  const handleCalculate = () => { if (!validateInvoice()) return; setTotals(computeTotals()); };
+  const runWithOverlay = async (fn: () => Promise<void> | void) => {
+    setShowOverlay(true);
+    try {
+      await fn();
+    } finally {
+      setShowOverlay(false);
+    }
+  };
+  const handleCalculate = () => {
+    if (!validateInvoice()) return; setTotals(computeTotals());
+
+
+  };
 
   /* ---------------- Preview ---------------- */
- const handlePreview = async () => {
-  if (!validateInvoice()) return;
+  const handlePreview = async () => {
 
-  const calculatedTotals = computeTotals();
-  setTotals(calculatedTotals);
 
-  // Convert files to Base64 for preview (optional, can be skipped if using FormData for saving)
-  const convertFilesToBase64 = async (files: File[]) => {
-    const promises = files.map(file => fileToBase64(file));
-    return Promise.all(promises);
-  };
+    if (!validateInvoice()) return;
 
-  const invoiceFilesBase64 = {
-    signature: invoiceFiles.signature ? await fileToBase64(invoiceFiles.signature) : null,
-    notes: invoiceFiles.notes ? await fileToBase64(invoiceFiles.notes) : null,
-    terms: await convertFilesToBase64(invoiceFiles.terms),
-    attachments: await convertFilesToBase64(invoiceFiles.attachments),
-    additionalInfo: await convertFilesToBase64(invoiceFiles.additionalInfo),
-    contactDetails: await convertFilesToBase64(invoiceFiles.contactDetails),
-  };
+    const calculatedTotals = computeTotals();
+    setTotals(calculatedTotals);
 
-  const invoiceData = {
-    _id: invoice?._id || undefined,
-    invoiceNumber: invoiceMeta.invoiceNumber.trim(),
-    invoiceDate: new Date(invoiceMeta.invoiceDate),
-    dueDate: new Date(invoiceMeta.dueDate),
-    billedBy,
-    billedTo,
-    items,
-    extras,
-    totals: calculatedTotals,
-    totalInWords: `${calculatedTotals.grandTotal} rupees only`,
-    logoUrl: logoPreview || "",
-    showTotalInWords,
-    files: invoiceFilesBase64,
-    userId: user?._id, // include user ID for saving
-  };
+    // Convert files to Base64 for preview (optional, can be skipped if using FormData for saving)
+    const convertFilesToBase64 = async (files: File[]) => {
+      const promises = files.map(file => fileToBase64(file));
+      return Promise.all(promises);
+    };
 
-  // 1️⃣ Save locally for preview
-  localStorage.setItem("invoiceData", JSON.stringify(invoiceData));
+    const invoiceFilesBase64 = {
+      signature: invoiceFiles.signature ? await fileToBase64(invoiceFiles.signature) : null,
+      notes: invoiceFiles.notes ? await fileToBase64(invoiceFiles.notes) : null,
+      terms: await convertFilesToBase64(invoiceFiles.terms),
+      attachments: await convertFilesToBase64(invoiceFiles.attachments),
+      additionalInfo: await convertFilesToBase64(invoiceFiles.additionalInfo),
+      contactDetails: await convertFilesToBase64(invoiceFiles.contactDetails),
+    };
 
-  // 2️⃣ Save to DB (just like handleSaveInvoice)
-  if (user?._id) {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("User token not found.");
+    const invoiceData = {
+      _id: invoice?._id || undefined,
+      invoiceNumber: invoiceMeta.invoiceNumber.trim(),
+      invoiceDate: new Date(invoiceMeta.invoiceDate),
+      dueDate: new Date(invoiceMeta.dueDate),
+      billedBy,
+      billedTo,
+      items,
+      extras,
+      totals: calculatedTotals,
+      totalInWords: `${calculatedTotals.grandTotal} rupees only`,
+      logoUrl: logoPreview || "",
+      showTotalInWords,
+      files: invoiceFilesBase64,
+      userId: user?._id, // include user ID for saving
+    };
 
-      const formData = new FormData();
-      formData.append("data", JSON.stringify(invoiceData));
+    // 1️⃣ Save locally for preview
+    localStorage.setItem("invoiceData", JSON.stringify(invoiceData));
 
-      if (invoiceFiles.signature) formData.append("signature", invoiceFiles.signature);
-      if (invoiceFiles.notes) formData.append("notes", invoiceFiles.notes);
-      if (invoiceFiles.terms) invoiceFiles.terms.forEach(f => formData.append("terms", f));
-      if (invoiceFiles.attachments) invoiceFiles.attachments.forEach(f => formData.append("attachments", f));
-      if (invoiceFiles.additionalInfo) invoiceFiles.additionalInfo.forEach(f => formData.append("additionalInfo", f));
-      if (invoiceFiles.contactDetails) invoiceFiles.contactDetails.forEach(f => formData.append("contactDetails", f));
-      if (logoFile) formData.append("file", logoFile);
+    // 2️⃣ Save to DB (just like handleSaveInvoice)
+    if (user?._id) {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("User token not found.");
 
-      const res = await fetch("/api/auth/invoice", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+        const formData = new FormData();
+        formData.append("data", JSON.stringify(invoiceData));
 
-      const result = await res.json();
+        if (invoiceFiles.signature) formData.append("signature", invoiceFiles.signature);
+        if (invoiceFiles.notes) formData.append("notes", invoiceFiles.notes);
+        if (invoiceFiles.terms) invoiceFiles.terms.forEach(f => formData.append("terms", f));
+        if (invoiceFiles.attachments) invoiceFiles.attachments.forEach(f => formData.append("attachments", f));
+        if (invoiceFiles.additionalInfo) invoiceFiles.additionalInfo.forEach(f => formData.append("additionalInfo", f));
+        if (invoiceFiles.contactDetails) invoiceFiles.contactDetails.forEach(f => formData.append("contactDetails", f));
+        if (logoFile) formData.append("file", logoFile);
 
-      if (result.success && result.invoice) {
-        setInvoice(result.invoice);
-        localStorage.setItem("invoiceData", JSON.stringify(result.invoice));
-        console.log("Invoice saved successfully on preview!");
+        const res = await authFetch("/api/auth/invoice", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
 
-        // Optionally send email automatically
-        const recipientEmail = result.invoice?.billedTo?.email;
-        if (recipientEmail) {
-          try {
-            await sendInvoiceEmail(result.invoice, recipientEmail);
-            console.log("Invoice email sent to client successfully!");
-          } catch (emailErr: any) {
-            console.warn("Invoice saved but failed to send email:", emailErr);
+        const result = await res.json();
+
+        if (result.success && result.invoice) {
+          setInvoice(result.invoice);
+          localStorage.setItem("invoiceData", JSON.stringify(result.invoice));
+          console.log("Invoice saved successfully on preview!");
+
+          // Optionally send email automatically
+          const recipientEmail = result.invoice?.billedTo?.email;
+          if (recipientEmail) {
+            try {
+              await sendInvoiceEmail(result.invoice, recipientEmail);
+              console.log("Invoice PDF sent to your mail!");
+            } catch (emailErr: any) {
+              console.warn("Invoice saved but failed to send email:", emailErr);
+            }
           }
+        } else {
+          console.warn("Failed to save invoice on preview:", result.error || result.message);
         }
-      } else {
-        console.warn("Failed to save invoice on preview:", result.error || result.message);
+      } catch (err) {
+        console.error("Error saving invoice during preview:", err);
       }
-    } catch (err) {
-      console.error("Error saving invoice during preview:", err);
     }
-  }
 
-  // 3️⃣ Navigate to preview page
-  router.push("/preview");
-};
+    // 3️⃣ Navigate to preview page
+    router.push("/preview");
+  };
 
 
 
@@ -395,25 +454,25 @@ export default function InvoicePage() {
   const handleSaveInvoice = async (e?: React.FormEvent) => {
     e?.preventDefault();
 
-    // 1️⃣ Validate invoice first
     if (!validateInvoice()) return;
 
-    // 2️⃣ Ensure user is logged in
     if (!user?._id) {
-      alert("User not logged in");
-      return router.push("/login");
+      setPopup({ open: true, message: "User not logged in", type: "error" });
+      router.push("/login");
+      return;
     }
 
     const token = localStorage.getItem("token");
-    if (!token) return router.push("/login");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
 
     setIsSaving(true);
 
     try {
-      // 3️⃣ Compute totals
       const calculatedTotals = computeTotals();
 
-      // 4️⃣ Prepare invoice object
       const invoiceData: any = {
         _id: invoice?._id || undefined,
         invoiceNumber: invoiceMeta.invoiceNumber.trim(),
@@ -429,11 +488,9 @@ export default function InvoicePage() {
         userId: user._id,
       };
 
-      // 5️⃣ Prepare FormData
       const formData = new FormData();
       formData.append("data", JSON.stringify(invoiceData));
 
-      // 6️⃣ Append files
       if (invoiceFiles.signature) formData.append("signature", invoiceFiles.signature);
       if (invoiceFiles.notes) formData.append("notes", invoiceFiles.notes);
       if (invoiceFiles.terms) invoiceFiles.terms.forEach(f => formData.append("terms", f));
@@ -442,49 +499,60 @@ export default function InvoicePage() {
       if (invoiceFiles.contactDetails) invoiceFiles.contactDetails.forEach(f => formData.append("contactDetails", f));
       if (logoFile) formData.append("file", logoFile);
 
-      // 7️⃣ Call API to SAVE invoice
-      const res = await fetch("/api/auth/invoice", {
+      const result = await authFetch("/api/auth/invoice", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
-      const result = await res.json();
-
-      // 8️⃣ Handle SAVE response
-      if (result.success && result.invoice) {
+      if (result?.success && result?.invoice) {
         setInvoice(result.invoice);
         localStorage.setItem("invoiceData", JSON.stringify(result.invoice));
 
-        alert("Invoice saved successfully!");
+        setPopup({
+          open: true,
+          message: "Invoice saved successfully!",
+          type: "success",
+        });
 
-        // 9️⃣ Send invoice email automatically
         const recipientEmail = result.invoice?.billedTo?.email;
         if (recipientEmail) {
           try {
             await sendInvoiceEmail(result.invoice, recipientEmail);
-            alert("Invoice email sent to client successfully!");
-          } catch (emailErr: any) {
-            console.error("Email sending failed:", emailErr);
-            alert("Invoice saved but failed to send email.");
+            setPopup({
+              open: true,
+              message: "Invoice email sent to client successfully!",
+              type: "success",
+            });
+          } catch {
+            setPopup({
+              open: true,
+              message: "Invoice saved but failed to send email.",
+              type: "info",
+            });
           }
-        } else {
-          console.warn("No client email found. Email not sent.");
         }
 
       } else {
-        alert(`Failed to save invoice: ${result.error || result.message || "Unknown error"}`);
+        setPopup({
+          open: true,
+          message: result?.error || result?.message || "Failed to save invoice",
+          type: "error",
+        });
       }
 
     } catch (err: any) {
-      console.error(err);
-      alert("Error saving invoice.");
+      console.error("SAVE INVOICE ERROR 👉", err);
+      setPopup({
+        open: true,
+        message: err?.error || err?.message || "Error saving invoice.",
+        type: "error",
+      });
     } finally {
       setIsSaving(false);
     }
   };
+
 
 
   /* ---------------- Logout ---------------- */
@@ -511,52 +579,61 @@ export default function InvoicePage() {
   };
 
   useEffect(() => {
+    // 🛑 Run only on client
+    if (typeof window === "undefined") return;
+
     const token = localStorage.getItem("token");
-    if (!token) return router.push("/login");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
 
     const loadCompanySettings = async () => {
       try {
-        const res = await fetch("/api/auth/company/settings", {
+        // authFetch already returns parsed JSON
+        const response = await authFetch("/api/auth/company/settings", {
           method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           cache: "no-store",
         });
 
-        if (res.status === 401) return router.push("/login");
+        const company = response?.data;
+        if (!company) return;
 
-        const json = await res.json();
-        const data = json.data;
-
-        // 1️⃣ Set default invoice prefix in invoice number
+        // 1️⃣ Invoice prefix
         setInvoiceMeta((prev) => ({
           ...prev,
-          invoiceNumber: (data.invoicePrefix || "INV-"),
+          invoiceNumber: company.invoicePrefix || "INV-",
         }));
 
-        // 2️⃣ Set default GST rate for all items
+        // 2️⃣ GST rate
         setItems((prev) =>
           prev.map((item) => ({
             ...item,
-            gst: data.gstRate ?? 18,
+            gst: company.gstRate ?? 18,
           }))
         );
 
-        // 3️⃣ Set currency
-        setCurrency(data.currency || "₹");
+        // 3️⃣ Currency
+        setCurrency(company.currency || "₹");
 
-        // 4️⃣ Set Billed By details
+        // 4️⃣ Billed By details
         setBilledBy({
-          country: data.country || "",
-          businessName: data.companyName || "",
-          email: data.email || "",
-          phone: data.phone || "",
-          gstin: data.gstin || "",
-          address: data.address || "",
-          city: data.city || "",
+          country: company.country ?? "",
+          businessName: company.companyName ?? "",
+          email: company.email ?? "",
+          phone: company.phone ?? "",
+          gstin: company.gstin ?? "",
+          address: company.address ?? "",
+          city: company.city ?? "",
         });
 
-        // 5️⃣ Set logo
-        if (data.logoUrl) setLogoPreview(data.logoUrl);
+        // 5️⃣ Logo
+        if (company.logoUrl) {
+          setLogoPreview(company.logoUrl);
+        }
 
       } catch (err) {
         console.error("Error loading company settings:", err);
@@ -565,6 +642,8 @@ export default function InvoicePage() {
 
     loadCompanySettings();
   }, [router]);
+
+
 
 
   /* ---------------- Menu Items ---------------- */
@@ -635,7 +714,22 @@ export default function InvoicePage() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="visible" className="min-h-screen bg-gray-100 p-6">
+      animate="visible" className="min-h-screen bg-[#D9D9D9]/20 p-6">
+      {showOverlay && (
+        <div className="fixed inset-0 bg-gray-300/70 z-[9999] flex items-center justify-center">
+
+          {/* Popup box */}
+          <div className="rounded-xl px-8 py-6 shadow-lg flex flex-col items-center gap-4">
+
+            <TetrominosLoader />
+
+
+
+          </div>
+        </div>
+      )}
+
+
       {/* ---------------- HEADER + MENU ---------------- */}
       <motion.div
         variants={navbarVariants}
@@ -1119,7 +1213,7 @@ export default function InvoicePage() {
         <motion.div variants={itemVariant} className="flex flex-col items-center gap-4 mt-6">
           <button
             type="button"
-            onClick={handleCalculate}
+            onClick={() => runWithOverlay(handleCalculate)}
             className="w-[300px] bg-gray-300 text-black py-3 px-4 rounded-lg cursor-pointer"
           >
             Calculate Total
@@ -1127,7 +1221,7 @@ export default function InvoicePage() {
 
           <button
             type="button"
-            onClick={handlePreview}
+            onClick={() => runWithOverlay(handlePreview)}
             className="bg-white  w-[300px] text-black underline py-3 px-4 rounded-lg cursor-pointer"
           >
             Preview
@@ -1135,9 +1229,9 @@ export default function InvoicePage() {
 
           <button
             type="button"
-            onClick={handleSaveInvoice}
+            onClick={() => runWithOverlay(() => handleSaveInvoice())}
             className={`w-[300px] py-3 px-4 rounded-lg transition
-    ${isSaving
+              ${isSaving
                 ? "bg-green-500 text-white cursor-not-allowed pointer-events-none"
                 : "bg-green-500 hover:bg-green-600 text-white"
               }`}
@@ -1149,9 +1243,37 @@ export default function InvoicePage() {
         </motion.div>
 
       </motion.form>
+      {popup.open && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
+
+            <h3
+              className={`text-lg font-semibold mb-3 ${popup.type === "success"
+                ? "text-green-600"
+                : popup.type === "error"
+                  ? "text-red-600"
+                  : "text-gray-700"
+                }`}
+            >
+              {popup.type === "success" ? "Success" : popup.type === "error" ? "Error" : "Info"}
+            </h3>
+
+            <p className="text-gray-700 mb-5">{popup.message}</p>
+
+            <button
+              onClick={() => setPopup({ ...popup, open: false })}
+              className="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
     </motion.div>
   );
 }
+
 
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
   <div onClick={onClick} className={`bg-white  flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-2" : "text-black"}`}>

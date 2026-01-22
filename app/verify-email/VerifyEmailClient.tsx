@@ -13,6 +13,15 @@ export default function VerifyEmail() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const [popup, setPopup] = useState<{
+    open: boolean;
+    message: string;
+    type: "success" | "error" | "info";
+  }>({
+    open: false,
+    message: "",
+    type: "info",
+  });
 
   useEffect(() => {
     const e = searchParams.get("email");
@@ -72,7 +81,12 @@ export default function VerifyEmail() {
       if (!res.ok) {
         setError(data.error || "Invalid OTP");
       } else {
-        alert(data.message || "OTP verified successfully ✅");
+        setPopup({
+          open: true,
+          message: data.message || "OTP verified successfully ✅",
+          type: "success",
+        });
+
         router.push("/change-password");
       }
     } catch (err) {
@@ -135,6 +149,32 @@ export default function VerifyEmail() {
           {loading ? "Verifying..." : "Verify"}
         </button>
       </div>
+      {popup.open && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
+
+            <h3
+              className={`text-lg font-semibold mb-3 ${popup.type === "success"
+                ? "text-green-600"
+                : popup.type === "error"
+                  ? "text-red-600"
+                  : "text-gray-700"
+                }`}
+            >
+              {popup.type === "success" ? "Success" : popup.type === "error" ? "Error" : "Info"}
+            </h3>
+
+            <p className="text-gray-700 mb-5">{popup.message}</p>
+
+            <button
+              onClick={() => setPopup({ ...popup, open: false })}
+              className="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

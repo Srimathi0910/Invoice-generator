@@ -118,12 +118,12 @@ export default function HelpPage() {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible" className="min-h-screen bg-gray-100 p-6">
+            animate="visible" className="min-h-screen bg-[#D9D9D9]/20 p-6">
             <motion.div
                 variants={navbarVariants}
                 initial="hidden"
                 animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-                <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">Invoice Dashboard</motion.div>
+                <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0"></motion.div>
 
                 <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
                     <button onClick={() => setMenuOpen(!menuOpen)}>

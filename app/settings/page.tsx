@@ -14,6 +14,8 @@ import {
 } from "react-icons/fa";
 import { authFetch } from "@/utils/authFetch";
 import { motion, Variants } from "framer-motion";
+import TetrominosLoader from "../_components/TetrominosLoader";
+
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -26,7 +28,26 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<"company" | "preferences">("company");
   const [loadingCompany, setLoadingCompany] = useState(false);
   const [loadingPreferences, setLoadingPreferences] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
 
+  const [popup, setPopup] = useState<{
+    open: boolean;
+    message: string;
+    type: "success" | "error" | "info";
+  }>({
+    open: false,
+    message: "",
+    type: "info",
+  });
+
+  useEffect(() => {
+    // Show loader for 3 seconds
+    const timer = setTimeout(() => {
+      setShowLoader(false);
+    }, 1200); // 3000ms = 3 seconds
+
+    return () => clearTimeout(timer); // cleanup
+  }, []);
 
   const [formData, setFormData] = useState({
     companyName: "",
@@ -125,7 +146,11 @@ export default function SettingsPage() {
   const handleSave = async () => {
     const phoneRegex = /^\d{10}$/; // exactly 10 digits
     if (!phoneRegex.test(formData.phone)) {
-      alert("Phone number must be exactly 10 digits.");
+      setPopup({
+        open: true,
+        message: "Phone number must be exactly 10 digits.",
+        type: "error",
+      });
       return; // stop saving
     }
     try {
@@ -165,18 +190,30 @@ export default function SettingsPage() {
       const result = await res.json();
 
       if (result.success) {
-        alert("Settings updated successfully!");
+        setPopup({
+          open: true,
+          message: "Settings updated successfully!",
+          type: "success",
+        });
         setFormData((prev) => ({
           ...prev,
           logoUrl: result.data.logoUrl,
         }));
         setLogoPreview(result.data.logoUrl);
       } else {
-        alert("Error: " + result.message);
+        setPopup({
+          open: true,
+          message: "Error: " + result.message,
+          type: "error",
+        });
       }
     } catch (err) {
       console.error(err);
-      alert("Failed to update settings");
+      setPopup({
+        open: true,
+        message: "Failed to update settings",
+        type: "error",
+      });
     }
     finally {
       setLoadingCompany(false); // ✅ End loading
@@ -202,13 +239,25 @@ export default function SettingsPage() {
       });
 
       if (data.message === "Preferences saved") {
-        alert("Preferences saved successfully!");
+        setPopup({
+          open: true,
+          message: "Preferences saved successfully!",
+          type: "success",
+        });
       } else {
-        alert("Error saving preferences: " + data.message);
+        setPopup({
+          open: true,
+          message: "Error saving preferences: " + data.message,
+          type: "error",
+        });
       }
     } catch (err) {
       console.error(err);
-      alert("Error saving preferences");
+      setPopup({
+        open: true,
+        message: "Error saving preferences",
+        type: "error",
+      });
     }
     finally {
       setLoadingPreferences(false); // end loading
@@ -278,8 +327,15 @@ export default function SettingsPage() {
     hidden: { y: -50, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
   };
+  if (showLoader) {
+    return (
+      <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
+        <TetrominosLoader />
+      </div>
+    );
+  }
   return (
-    <div className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
+    <div className="min-h-screen bg-[#D9D9D9]/20 p-4 md:p-6">
       {/* NAVBAR */}
       <motion.div
         variants={navbarVariants}
@@ -490,6 +546,32 @@ export default function SettingsPage() {
           )}
         </div>
       </motion.div>
+      {popup.open && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
+
+            <h3
+              className={`text-lg font-semibold mb-3 ${popup.type === "success"
+                ? "text-green-600"
+                : popup.type === "error"
+                  ? "text-red-600"
+                  : "text-gray-700"
+                }`}
+            >
+              {popup.type === "success" ? "Success" : popup.type === "error" ? "Error" : "Info"}
+            </h3>
+
+            <p className="text-gray-700 mb-5">{popup.message}</p>
+
+            <button
+              onClick={() => setPopup({ ...popup, open: false })}
+              className="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

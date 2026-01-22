@@ -25,6 +25,15 @@ const ProfilePage = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
+   const [popup, setPopup] = useState<{
+      open: boolean;
+      message: string;
+      type: "success" | "error" | "info";
+    }>({
+      open: false,
+      message: "",
+      type: "info",
+    });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -154,11 +163,19 @@ const ProfilePage = () => {
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setUser(updatedUser);
 
-      alert("Profile updated successfully!");
+      setPopup({
+        open: true,
+        message:"Profile updated successfully!",
+        type: "success",
+      });
       setFormData({ ...formData, password: "", confirmPassword: "" });
     } catch (err) {
       console.error(err);
-      alert("Failed to update profile");
+      setPopup({
+        open: true,
+        message:"Failed to update profile",
+        type: "success",
+      });
     } finally {
       setLoading(false);
     }
@@ -198,7 +215,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="min-h-screen bg-gray-200 p-6">
+    <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="min-h-screen bg-[#D9D9D9]/20 p-6">
       {/* TOP BAR */}
       <motion.div
         variants={navbarVariants}
@@ -275,6 +292,32 @@ const ProfilePage = () => {
           </button>
         </div>
       </motion.div>
+      {popup.open && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
+
+            <h3
+              className={`text-lg font-semibold mb-3 ${popup.type === "success"
+                ? "text-green-600"
+                : popup.type === "error"
+                  ? "text-red-600"
+                  : "text-gray-700"
+                }`}
+            >
+              {popup.type === "success" ? "Success" : popup.type === "error" ? "Error" : "Info"}
+            </h3>
+
+            <p className="text-gray-700 mb-5">{popup.message}</p>
+
+            <button
+              onClick={() => setPopup({ ...popup, open: false })}
+              className="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };
@@ -313,7 +356,9 @@ const Input = ({ label, error, type = "text", ...props }: any) => {
       </div>
 
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+       
     </div>
+    
   );
 };
 

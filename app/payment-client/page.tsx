@@ -162,14 +162,14 @@ const Dashboard = () => {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="visible" className="min-h-screen bg-[#D9D9D9] p-4 md:p-6">
+      animate="visible" className="min-h-screen bg-[#D9D9D9]/20 p-4 md:p-6">
 
       {/* ---------------- TOP MENU ---------------- */}
       <motion.div
         variants={navbarVariants}
         initial="hidden"
         animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">Invoice Dashboard</div>
+        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0"></div>
 
         <div className="md:hidden flex items-center mb-3">
           <button onClick={() => setMenuOpen(!menuOpen)}>
@@ -276,7 +276,7 @@ const Dashboard = () => {
               </div>
               <div className="flex justify-between w-full">
                 <span className="font-semibold">Amount:</span>
-                <span>₹{inv.totals?.grandTotal ?? 0}</span>
+                <span>₹{Number(inv.totals?.grandTotal ?? 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between w-full">
                 <span className="font-semibold">Status:</span>
@@ -292,14 +292,24 @@ const Dashboard = () => {
                 <span className="font-semibold">Date:</span>
                 <span>{new Date(inv.invoiceDate).toLocaleDateString()}</span>
               </div>
-              {(inv.status === "Unpaid" || inv.status === "Overdue") && (
-                <button
-                  onClick={() => router.push(`/payment-client/${inv._id}`)}
-                  className="bg-blue-200 text-blue-700 font-medium px-3 py-1 rounded hover:bg-blue-300 mt-2"
-                >
-                  Pay
-                </button>
-              )}
+              <div className="flex justify-between w-full">
+                        <span className="font-semibold ">
+                          Action
+                        </span>
+
+                        {inv.status === "Paid" ? (
+                          <span className="px-3 py-1 bg-green-200 text-green-800 rounded font-medium">
+                            Paid
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => router.push(`/payment-client/${inv._id}`)}
+                            className="px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded font-medium"
+                          >
+                            Pay
+                          </button>
+                        )}
+                      </div>
             </div>
           </td>
 
@@ -309,7 +319,7 @@ const Dashboard = () => {
             {inv.billedTo.businessName}
           </td>
           <td className="hidden md:table-cell px-4 py-2">
-            ₹{inv.totals?.grandTotal ?? 0}
+            ₹{Number(inv.totals?.grandTotal ?? 0).toFixed(2)}
           </td>
           <td className="hidden md:table-cell px-4 py-2">
             <span
@@ -323,16 +333,18 @@ const Dashboard = () => {
           <td className="hidden md:table-cell px-4 py-2">
             {new Date(inv.invoiceDate).toLocaleDateString()}
           </td>
-          <td className="hidden md:table-cell px-4 py-2">
-            {(inv.status === "Unpaid" || inv.status === "Overdue") && (
-              <button
-                onClick={() => router.push(`/payment-client/${inv._id}`)}
-                className="bg-blue-200 text-blue-700 font-medium px-3 py-1 rounded hover:bg-blue-300"
-              >
-                Pay
-              </button>
-            )}
-          </td>
+            <td className="hidden md:table-cell px-4 py-2">
+                    {inv.status === "Paid" ? (
+                      <span className="px-3 py-1 bg-green-200 text-green-800 rounded font-medium">Paid</span>
+                    ) : (
+                      <button
+                        onClick={() => router.push(`/payment-client/${inv._id}`)}
+                        className="px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded font-medium"
+                      >
+                        Pay
+                      </button>
+                    )}
+                  </td>
         </tr>
       ))
     )}
