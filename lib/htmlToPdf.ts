@@ -1,24 +1,44 @@
-import chromium from "chrome-aws-lambda";
-import puppeteer from "puppeteer-core";
+export async function generateInvoicePDF(
+  html: string,
+  invoiceNumber: string
+) {
+  let browser;
 
-export async function generateInvoicePDF(html: string, invoiceNumber: string) {
-  // Determine executablePath depending on environment
-  const isProduction = process.env.NODE_ENV === "production";
+  const isVercel =
+    process.env.VERCEL === "1" ||
+    process.env.VERCEL_ENV === "production";
 
-  const browser = await puppeteer.launch({
-    args: isProduction ? chromium.args : [],
-    defaultViewport: chromium.defaultViewport,
-    executablePath: isProduction
-      ? await chromium.executablePath // Vercel / Lambda
-      : undefined, // Local Chrome
-    headless: true,
-  });
+  if (isVercel) {
+    // ✅ Vercel (Linux serverless)
+    const chromium = (await import("@sparticuz/chromium")).default;
+    const puppeteer = await import("puppeteer-core");
+
+    browser = await puppeteer.default.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    });
+  } else {
+    // ✅ Localhost (Windows / Mac)
+    const puppeteer = await import("puppeteer");
+
+    browser = await puppeteer.default.launch({
+      headless: true,
+    });
+  }
 
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: "networkidle0" });
 
-  const pdfBuffer = await page.pdf({ format: "a4", printBackground: true });
+  const pdfBuffer = await page.pdf({
+    format: "a4",
+    printBackground: true,
+  });
+
   await browser.close();
 
-  return { pdfBuffer, fileName: `Invoice-${invoiceNumber}.pdf` };
+  return {
+    pdfBuffer,
+    fileName: `Invoice-${invoiceNumber}.pdf`,
+  };
 }

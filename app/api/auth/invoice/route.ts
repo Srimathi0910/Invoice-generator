@@ -10,9 +10,10 @@ import { uploadPdfToCloudinary } from "@/utils/uploadPdfToCloudinary";
 import { Buffer } from "buffer";
 import { generateInvoicePDF } from "@/lib/htmlToPdf"; // Puppeteer HTML-to-PDF generator
 // Puppeteer + Chrome for serverless
-import puppeteer from "puppeteer-core";
-import chromium from "chrome-aws-lambda";
 
+
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 
 export async function POST(req: NextRequest) {
   await connectDB();
