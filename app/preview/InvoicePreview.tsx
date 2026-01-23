@@ -623,14 +623,14 @@ const InvoicePreview = () => {
               <h2 className="font-bold">{invoice?.billedBy?.businessName || "Your Business"}</h2>
               <p>{invoice?.billedBy?.address}, {invoice?.billedBy?.city}</p>
               <p>{invoice?.billedBy?.country}</p>
-              <p>Phone: {invoice?.billedBy?.phone}</p>
-              <p>GSTIN: {invoice?.billedBy?.gstin}</p>
+              <p><b>Phone: </b>{invoice?.billedBy?.phone}</p>
+              <p><b>GSTIN: </b>{invoice?.billedBy?.gstin}</p>
             </div>
             <div className="text-right">
               {invoice?.logoUrl && <img src={invoice.logoUrl} alt="Company Logo" className="h-16 object-contain mb-2" />}
-              <p>Invoice Number: {invoice?.invoiceNumber}</p>
-              <p>Date: {formatDate(invoice?.invoiceDate)}</p>
-              <p>Due Date: {formatDate(invoice?.dueDate)}</p>
+              <p><b>Invoice Number: </b>{invoice?.invoiceNumber}</p>
+              <p><b>Date: </b>{formatDate(invoice?.invoiceDate)}</p>
+              <p><b>Due Date:</b> {formatDate(invoice?.dueDate)}</p>
             </div>
           </div>
 
@@ -640,8 +640,8 @@ const InvoicePreview = () => {
             <p>{invoice?.billedTo?.businessName || "Client Name"}</p>
             <p>{invoice?.billedTo?.address}, {invoice?.billedTo?.city}</p>
             <p>{invoice?.billedTo?.country}</p>
-            <p>Phone: {invoice?.billedTo?.phone}</p>
-            <p>GSTIN: {invoice?.billedTo?.gstin}</p>
+            <p><b>Phone:</b> {invoice?.billedTo?.phone}</p>
+            <p><b>GSTIN:</b> {invoice?.billedTo?.gstin}</p>
           </div>
 
           {/* Items Table */}
@@ -840,7 +840,7 @@ const InvoicePreview = () => {
 
 
             <FileText size={18} className="text-gray-500" />
-            <span className="bg-white  text-sm text-gray-600 text-center">
+            <span className=" text-sm text-gray-600 text-center">
               Add Signature
             </span>
 
@@ -883,7 +883,7 @@ const InvoicePreview = () => {
           <div className="flex flex-col items-start mb-4 w-64">
             <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-full h-10">
               <FileText size={18} className="text-gray-500" />
-              <span className="bg-white  text-sm text-gray-600 text-center">
+              <span className="text-sm text-gray-600 text-center">
                 Add Terms & Conditions
               </span>
               <input
@@ -944,7 +944,7 @@ const InvoicePreview = () => {
           <div className="mb-4">
             <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
               <StickyNote size={18} className="text-gray-500" />
-              <span className="bg-white  text-sm text-gray-600 text-center">
+              <span className="text-sm text-gray-600 text-center">
                 Add Notes
               </span>
               <input
@@ -974,7 +974,7 @@ const InvoicePreview = () => {
           <div className="mb-4">
             <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
               <Paperclip size={18} className="text-gray-500" />
-              <span className="bg-white  text-sm text-gray-600 text-center">
+              <span className="text-sm text-gray-600 text-center">
                 Add Attachments
               </span>
               <input
@@ -1014,7 +1014,7 @@ const InvoicePreview = () => {
         <div className="mb-4">
           <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
             <Info size={18} className="text-gray-500" />
-            <span className="bg-white  text-sm text-gray-600 text-center">
+            <span className="text-sm text-gray-600 text-center">
               Additional Information
             </span>
             <input
@@ -1051,7 +1051,7 @@ const InvoicePreview = () => {
         <div className="mb-4">
           <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
             <Phone size={18} className="text-gray-500" />
-            <span className="bg-white  text-sm text-gray-600 text-center">
+            <span className="text-sm text-gray-600 text-center">
               Contact Details
             </span>
             <input
