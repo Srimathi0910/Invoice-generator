@@ -403,7 +403,11 @@ const InvoicePreview = () => {
         throw new Error(data?.error || "Failed to send invoice");
       }
 
-      setSuccessMsg("Invoice sent successfully!");
+      setPopup({
+        open: true,
+        message: "Invoice sent successfully!",
+        type: "success",
+      });
 
       setInvoiceFiles({
         signature: null,
@@ -553,7 +557,7 @@ const InvoicePreview = () => {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="visible" className="min-h-screen bg-[#D9D9D9]/20 p-6">
+      animate="visible" className="min-h-screen bg-gray-300 p-4 md:p-6">
       {/* Navbar */}
       {showOverlay && (
         <div className="fixed inset-0 bg-gray-300/70 z-[9999] flex items-center justify-center">
@@ -571,7 +575,7 @@ const InvoicePreview = () => {
       <motion.div
         variants={navbarVariants}
         initial="hidden"
-        animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+        animate="visible" className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
           {/* LOGO */}
         </motion.div>
@@ -600,7 +604,7 @@ const InvoicePreview = () => {
           ))}
 
           <div className="flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+            <div className="glass flex items-center space-x-3 px-4 py-2 rounded-xl">
               <FaUserCircle size={28} />
               <span className="font-medium">{user?.username || "User"}</span>
             </div>
@@ -877,7 +881,7 @@ const InvoicePreview = () => {
 
 
       <motion.div variants={itemVariant} className="p-10">
-        <div className="grid md:grid-cols-3 gap-4 justify-items-center">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 justify-items-center">
           {/* Terms & Conditions */}
           {/* Terms & Conditions */}
           <div className="flex flex-col items-start mb-4 w-64">
@@ -1009,7 +1013,7 @@ const InvoicePreview = () => {
 
         </div>
       </motion.div>
-      <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-4 justify-items-center mt-4">
+      <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-4 justify-items-center">
         {/* Additional Info */}
         <div className="mb-4">
           <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
@@ -1122,12 +1126,18 @@ const InvoicePreview = () => {
         <div className="flex justify-center gap-2 mb-6">
           <input type="email" placeholder="Enter recipient email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-2 rounded" />
           <button
-            onClick={sendInvoice}
             disabled={sending}
-            className={`px-4 py-2 rounded text-white ${sending ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500"}`}
+            className={`px-4 py-2 rounded text-white 
+    ${sending ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500"}`}
+            onClick={() =>
+              runWithOverlay(async () => {
+                await sendInvoice();
+              })
+            }
           >
             {sending ? "Sending..." : "Send PDF"}
           </button>
+
         </div>
       )}
 
@@ -1138,8 +1148,10 @@ const InvoicePreview = () => {
       <div className="flex justify-center mb-6">
         <button
           className={`bg-gray-300 text-black
-      px-6 py-2 h-12 w-64 sm:w-auto
-      rounded flex items-center justify-center gap-2 ${downloading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-300"}`}
+    px-6 py-2 h-12 w-64 sm:w-auto
+    rounded flex items-center justify-center gap-2
+    ${downloading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-300"}`}
+          disabled={downloading}
           onClick={() => {
             if (editMode) {
               setPopup({
@@ -1149,11 +1161,16 @@ const InvoicePreview = () => {
               });
               return;
             }
-            generatePDF();
+
+            runWithOverlay(async () => {
+              await generatePDF();
+            });
           }}
         >
-          <Download size={16} />{downloading ? "Downloading PDF" : "Download PDF"}
+          <Download size={16} />
+          {downloading ? "Downloading PDF" : "Download PDF"}
         </button>
+
 
       </div>
       {popup.open && (
@@ -1182,12 +1199,22 @@ const InvoicePreview = () => {
           </div>
         </div>
       )}
+
     </motion.div>
   );
 };
 
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-  <div onClick={onClick} className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-1" : "text-black"}`}>
+  <div
+    onClick={onClick}
+    className={`
+       px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
+      transition
+      ${isActive
+        ? "text-black bg-white/30"
+        : "text-black hover:bg-white/20"}
+    `}
+  >
     {icon}
     <span>{label}</span>
   </div>

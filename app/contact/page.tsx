@@ -173,7 +173,7 @@ export default function ContactPage() {
             <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Contact Info */}
               <motion.div
-                initial={{ opacity: 0, x: -40 }}
+                initial={{ opacity: 0, x: 100 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
                 className="bg-[#D9D9D9]/20 rounded-lg shadow p-6 space-y-6"
@@ -210,7 +210,7 @@ export default function ContactPage() {
 
               {/* Contact Form */}
               <motion.form
-                initial={{ opacity: 0, x: 40 }}
+                initial={{ opacity: 0, x: -100 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
                 className="bg-[#D9D9D9]/20 rounded-lg shadow p-6 space-y-4"

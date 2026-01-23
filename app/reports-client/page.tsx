@@ -200,11 +200,11 @@ export default function ReportsPage() {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible" className="min-h-screen bg-[#D9D9D9]/20  p-6 text-black ">
+            animate="visible" className="min-h-screen bg-gray-300 p-4 md:p-6">
             <motion.div
                 variants={navbarVariants}
                 initial="hidden"
-                animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+                animate="visible" className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                 <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
                     {/* LOGO */}
                 </motion.div>
@@ -233,7 +233,7 @@ export default function ReportsPage() {
                     ))}
 
                     <div className="flex flex-col items-end space-y-2">
-                        <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+                        <div className="flex items-center space-x-3 glass px-4 py-2 rounded shadow">
                             <FaUserCircle size={28} />
                             <span className="font-medium">{user?.username || "User"}</span>
                         </div>
@@ -251,12 +251,12 @@ export default function ReportsPage() {
             </motion.div>
             {/* Summary Cards */}
             <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-6 mb-6">
-                <div className="bg-white p-6 rounded shadow">
+                <div className="glass p-6 rounded shadow">
                     <p className="text-sm text-gray-500 mb-2">Total Revenues</p>
                     <h2 className="text-3xl font-bold text-blue-600">${Number(totalRevenue).toFixed(2)}</h2>
                 </div>
 
-                <div className="bg-white p-6 rounded shadow">
+                <div className="glass p-6 rounded shadow">
                     <h2 className="text-xl font-bold mb-2">Total: {totalInvoices}</h2>
                     <div className="flex gap-6 text-sm">
                         <span className="text-green-600">Paid Invoices: {paidInvoices}</span>
@@ -268,19 +268,19 @@ export default function ReportsPage() {
 
             {/* Charts */}
             <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-6 mb-10">
-                <div className="bg-white p-6 rounded shadow">
+                <div className="glass p-6 rounded shadow">
                     <h3 className="font-bold mb-4">Monthly Revenue</h3>
                     <ResponsiveContainer width="100%" height={250}>
                         <BarChart data={monthlyData}>
-                            <XAxis dataKey="month" />
-                            <YAxis />
+                            <XAxis stroke="black" dataKey="month" />
+                            <YAxis stroke="black"/>
                             <Tooltip />
                             <Bar dataKey="amount" fill="#E5E7EB" />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
 
-                <div className="bg-white p-6 rounded shadow">
+                <div className="glass p-6 rounded shadow">
                     <h3 className="font-bold mb-4">Invoice Status</h3>
                     <ResponsiveContainer width="100%" height={250}>
                         <PieChart>
@@ -296,7 +296,7 @@ export default function ReportsPage() {
             </motion.div>
             <h2 className="text-xl font-semibold pl-2 pt-20 mb-4">Recent Invoices</h2>
 
-            <motion.div variants={itemVariant} className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
+            <motion.div variants={itemVariant} className="glass bg-white/20 rounded-lg p-4 md:p-6 shadow overflow-x-auto">
                 <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
                     <div className="relative w-full md:w-1/3">
                         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -315,7 +315,7 @@ export default function ReportsPage() {
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`bg-white  text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
+                                className={`text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
                                     ? "text-[#29268E] border-b-2 border-[#29268E]"
                                     : "text-black hover:text-[#29268E]"
                                     }`}
@@ -326,9 +326,10 @@ export default function ReportsPage() {
                     </div>
                 </div>
                 <div className="overflow-x-auto w-full">
-                    <table className="min-w-full border table-auto text-sm md:text-base">
-                        <thead className="bg-gray-100">
-                            <tr className="hidden md:table-row"> {/* Hide headers on small screens */}
+                    <table className="min-w-full  table-auto text-sm md:text-base min-w-full table-auto text-sm md:text-base">
+                        <thead className="bg-gray-100 glass bg-white/20 backdrop-blur">
+                            <tr className="hidden md:table-row hidden md:table-row border-t-[10px] border-white/20
+"> {/* Hide headers on small screens */}
                                 <Th>Invoice</Th>
                                 <Th>Client</Th>
                                 <Th>Amount</Th>
@@ -396,14 +397,19 @@ export default function ReportsPage() {
     );
 }
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-    <div
-        onClick={onClick}
-        className={`bg-white  flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-1" : "text-black"
-            }`}
-    >
-        {icon}
-        <span>{label}</span>
-    </div>
+  <div
+    onClick={onClick}
+    className={`
+       px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
+      transition
+      ${isActive
+        ? "text-black bg-white/30"
+        : "text-black hover:bg-white/20"}
+    `}
+  >
+    {icon}
+    <span>{label}</span>
+  </div>
 );
 const Th = ({ children }: { children: React.ReactNode }) => (
     <th className="px-4 py-2 text-left whitespace-nowrap">{children}</th>
@@ -417,7 +423,7 @@ const InvoiceRow = ({ id, client, amount, status, date }: any) => {
     };
 
     return (
-        <tr className="border-t md:table-row block md:table-row mb-4 md:mb-0">
+        <tr className="border-t border-t-[1px] border-white md:table-row block md:table-row mb-4 md:mb-0">
             {/* Mobile layout */}
             <td colSpan={5} className="block md:hidden px-2 py-2">
                 <div className="flex flex-col items-center gap-2">

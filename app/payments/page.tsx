@@ -228,22 +228,26 @@ export default function PaymentsPage() {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible" className="p-6 bg-[#D9D9D9]/20">
+            animate="visible" className="min-h-screen bg-gray-300 p-4 md:p-6">
             <motion.div
                 variants={navbarVariants}
                 initial="hidden"
-                animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-                <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
-                    {/* LOGO */}
-                </motion.div>
+                animate="visible"
+                className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
 
-                <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
+
+
+                <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+                    {/* LOGO */}
+                </div>
+
+                <div className="md:hidden flex items-center mb-3">
                     <button onClick={() => setMenuOpen(!menuOpen)}>
                         {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
                     </button>
-                </motion.div>
+                </div>
 
-                <motion.div variants={itemVariant}
+                <div
                     className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
                         }`}
                 >
@@ -261,64 +265,98 @@ export default function PaymentsPage() {
                     ))}
 
                     <div className="flex flex-col items-end space-y-2">
-                        <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+                        <div className="glass flex items-center space-x-3 px-4 py-2 rounded-xl">
+
                             <FaUserCircle size={28} />
                             <span className="font-medium">{user?.username || "User"}</span>
                         </div>
-                        <button
-                            onClick={handleLogout}
-                            className="text-sm text-red-600 hover:underline"
-                        >
-                            Logout
-                        </button>
+                        <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">Logout</button>
                     </div>
-                </motion.div>
+
+                </div>
             </motion.div>
             <h1 className="text-2xl font-bold mb-4">Payments</h1>
 
             {/* <motion.div variants={itemVariant} className="mb-4">
-                <button className="bg-white px-4 py-2 rounded shadow">+ Add Payment</button>
+                <button className=" glass px-4 py-2 rounded shadow">+ Add Payment</button>
             </motion.div> */}
-            <motion.div variants={itemVariant} className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
-                <div className="relative w-full md:w-1/3">
-                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search by client..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
-                    />
+            {/* <motion.div variants={itemVariant} className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
 
+                    <div className="relative w-full md:w-1/3">
+                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by client..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full glass rounded-b-xl pl-10 pr-3 py-2 text-white placeholder-black focus:outline-none"
+                        />
+
+                    </div>
+
+
+                    <div className="flex flex-wrap gap-4 md:gap-6">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
+                                    ? "text-[#29268E] border-b-2 border-[#29268E]"
+                                    : "text-black hover:text-[#29268E]"
+                                    }`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
                 </div>
+            </motion.div> */}
 
-                <div className="flex flex-wrap gap-4 md:gap-6">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
-                                ? "text-[#29268E] border-b-2 border-[#29268E]"
-                                : "text-black hover:text-[#29268E]"
-                                }`}
-                        >
-                            {tab}
-                        </button>
-                    ))}
+            <motion.div variants={itemVariant} className="overflow-x-auto glass rounded shadow p-4">
+                <motion.div variants={itemVariant} className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4 z-100">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
+
+                    <div className="relative w-full md:w-1/3">
+                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by client..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full glass rounded-b-xl pl-10 pr-3 py-2 text-black placeholder-black focus:outline-none"
+
+                        />
+
+                    </div>
+
+
+                    <div className="flex flex-wrap gap-4 md:gap-6">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
+                                    ? "text-[#29268E] border-b-2 border-[#29268E]"
+                                    : "text-black hover:text-[#29268E]"
+                                    }`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </motion.div>
-
-            <motion.div variants={itemVariant} className="overflow-x-auto bg-white rounded shadow p-4">
-                <table className="w-full text-sm border">
-                    <thead className="bg-gray-200 hidden md:table-header-group">
-                        <tr>
-                            <th className="p-2 border">Invoice Number</th>
-                            <th className="p-2 border">Client Name</th>
-                            <th className="p-2 border">Payment Date</th>
-                            <th className="p-2 border">Payment Method</th>
-                            <th className="p-2 border">Payment Status</th>
-                            <th className="p-2 border">Amount</th>
-                            <th className="p-2 border">Actions</th>
+                <table className="w-full text-sm border min-w-full table-auto text-sm md:text-base">
+                    <thead className="bg-gray-200 hidden md:table-header-group glass backdrop-blur">
+                        <tr className="hidden md:table-row border-t border-white/20">
+                            <Th >Invoice Number</Th>
+                            <Th >Client Name</Th>
+                            <Th >Payment Date</Th>
+                            <Th >Payment Method</Th>
+                            <Th >Payment Status</Th>
+                            <Th >Amount</Th>
+                            <Th >Actions</Th>
                         </tr>
                     </thead>
                     <tbody>
@@ -332,7 +370,8 @@ export default function PaymentsPage() {
                                     >
                                         {/* Mobile Card */}
                                         <td colSpan={7} className="block md:hidden p-2">
-                                            <div className="flex flex-col gap-2 bg-gray-50 rounded p-4 shadow-sm">
+                                           <div className="flex flex-col gap-2 border-t border-white p-4">
+
                                                 <div className="flex justify-between w-full">
                                                     <span className="font-semibold">Invoice Number:</span>
                                                     <span>{p.invoiceNumber}</span>
@@ -456,10 +495,9 @@ export default function PaymentsPage() {
                                                         <>
                                                             <button
                                                                 disabled={savingRowId === p._id}
-                                                                className={`px-2 py-1 rounded mr-2 cursor-pointer text-white
-    ${savingRowId === p._id
-                                                                        ? "bg-green-400 cursor-not-allowed"
-                                                                        : "bg-green-500 hover:bg-green-600"
+                                                                className={`px-2 py-1 rounded mr-2 cursor-pointer text-white${savingRowId === p._id
+                                                                    ? "bg-green-400 cursor-not-allowed"
+                                                                    : "bg-green-500 hover:bg-green-600"
                                                                     }`}
                                                                 onClick={async () => {
                                                                     if (savingRowId) return; // extra safety
@@ -551,7 +589,7 @@ export default function PaymentsPage() {
                                             {isEditing ? (
                                                 <select
                                                     value={p.paymentStatus}
-                                                    className="px-2 py-1 rounded text-black cursor-pointer bg-white text-center border border-gray-300"
+                                                    className="px-2 py-1 rounded text-black cursor-pointer glass text-center border border-gray-300"
                                                     onChange={(e) =>
                                                         setPayments((prev) =>
                                                             prev.map((pay) =>
@@ -600,8 +638,7 @@ export default function PaymentsPage() {
                                                 <>
                                                     <button
                                                         disabled={savingRowId === p._id}
-                                                        className={`px-2 py-1 rounded mr-2 text-center cursor-pointer
-    ${savingRowId === p._id
+                                                        className={`px-2 py-1 rounded mr-2 text-center cursor-pointer${savingRowId === p._id
                                                                 ? "bg-green-400 cursor-not-allowed"
                                                                 : "bg-green-500 hover:bg-green-600 text-white"
                                                             }`}
@@ -690,12 +727,22 @@ export default function PaymentsPage() {
     );
 }
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-    <div
-        onClick={onClick}
-        className={`bg-white  flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-1" : "text-black"
-            }`}
-    >
-        {icon}
-        <span>{label}</span>
-    </div>
+  <div
+    onClick={onClick}
+    className={`
+       px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
+      transition
+      ${isActive
+        ? "text-black bg-white/30"
+        : "text-black hover:bg-white/20"}
+    `}
+  >
+    {icon}
+    <span>{label}</span>
+  </div>
+);
+const Th = ({ children }: { children: React.ReactNode }) => (
+    <th className="px-2 md:px-4 py-1 md:py-2 text-center whitespace-nowrap text-sm md:text-base">
+        {children}
+    </th>
 );

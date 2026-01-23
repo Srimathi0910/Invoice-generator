@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { Akaya_Telivigala } from "next/font/google";
+import { Akaya_Telivigala, Inter } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "./_components/ThemeProvider";
 import ConditionalFooter from "./_components/ConditionalFooter";
+
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 const akayaTelivigala = Akaya_Telivigala({
   subsets: ["latin"],
@@ -21,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body className={`${akayaTelivigala.className} antialiased`}>
         <ThemeProvider>
           {children}

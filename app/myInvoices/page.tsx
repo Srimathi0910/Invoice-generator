@@ -182,13 +182,14 @@ const Dashboard = () => {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible" className="min-h-screen bg-[#D9D9D9]/20 p-4 md:p-6">
+            animate="visible"className="min-h-screen bg-gray-300 p-4 md:p-6">
+
 
             {/* ---------------- TOP MENU ---------------- */}
             <motion.div
                 variants={navbarVariants}
                 initial="hidden"
-                animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+                animate="visible" className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                 <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0"></div>
 
                 <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
@@ -212,7 +213,7 @@ const Dashboard = () => {
                     ))}
 
                     <motion.div variants={itemVariant} className="flex flex-col items-end space-y-2">
-                        <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+                        <div className="flex items-center space-x-3  glass px-4 py-2 rounded shadow">
                             <FaUserCircle size={28} />
                             <span className="font-medium">{user?.username || "User"}</span>
                         </div>
@@ -227,7 +228,7 @@ const Dashboard = () => {
             {/* ---------------- RECENT INVOICES ---------------- */}
 
             <motion.h2 variants={itemVariant} className="text-xl font-semibold pl-2 pt-20 mb-4">My Invoices</motion.h2>
-            <motion.div variants={itemVariant} className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
+            <motion.div variants={itemVariant} className=" glass rounded-lg p-4 md:p-6 shadow overflow-x-auto">
                 <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
                     <div className="relative w-full md:w-1/3">
                         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -236,7 +237,7 @@ const Dashboard = () => {
                             placeholder="Search invoices..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
+                            className="w-full glass  pl-10 pr-3 py-2 text-white placeholder-black focus:outline-none"
                         />
 
                     </div>
@@ -255,9 +256,9 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <table className="min-w-full table-fixed border border-gray-200 text-left">
-                    <thead className="bg-gray-100 hidden md:table-header-group">
-                        <tr>
+                <table className="min-w-full table-fixed border border-gray-200 text-left min-w-full table-auto text-sm md:text-base">
+                    <thead className="bg-gray-100 hidden md:table-header-group  glass/20 backdrop-blur">
+                        <tr className="hidden md:table-row border-t border-white/20">
                             <th className="px-4 py-2 w-1/5">Invoice</th>
                             <th className="px-4 py-2 w-1/5">Billed To</th>
                             <th className="px-4 py-2 w-1/5">Amount</th>
@@ -383,11 +384,21 @@ const Dashboard = () => {
 
 /* ---------------- COMPONENTS ---------------- */
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-    <div onClick={onClick} className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-1" : "text-black"}`}>
-        {icon}
-        <span>{label}</span>
-    </div>
+  <div
+    onClick={onClick}
+    className={`
+       px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
+      transition
+      ${isActive
+        ? "text-black bg-white/30"
+        : "text-black hover:bg-white/20"}
+    `}
+  >
+    {icon}
+    <span>{label}</span>
+  </div>
 );
+
 
 
 

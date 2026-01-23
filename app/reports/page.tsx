@@ -199,64 +199,66 @@ export default function ReportsPage() {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible" className="min-h-screen bg-[#D9D9D9]/20 p-6 text-black ">
-            <motion.div
-                variants={navbarVariants}
-                initial="hidden"
-                animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-                <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+            animate="visible"className="min-h-screen bg-gray-300 p-4 md:p-6">
+
+           <motion.div
+                  variants={navbarVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          
+          
+          
+                  <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
                     {/* LOGO */}
-                </motion.div>
-
-                <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
+                  </div>
+          
+                  <div className="md:hidden flex items-center mb-3">
                     <button onClick={() => setMenuOpen(!menuOpen)}>
-                        {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+                      {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
                     </button>
-                </motion.div>
-
-                <motion.div variants={itemVariant}
+                  </div>
+          
+                  <div
                     className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
-                        }`}
-                >
+                      }`}
+                  >
                     {menuItems.map((item) => (
-                        <MenuItem
-                            key={item.label}
-                            icon={item.icon}
-                            label={item.label}
-                            isActive={activeMenu === item.label}
-                            onClick={() => {
-                                setActiveMenu(item.label); // set active menu
-                                if (item.path) router.push(item.path); // navigate to page
-                            }}
-                        />
+                      <MenuItem
+                        key={item.label}
+                        icon={item.icon}
+                        label={item.label}
+                        isActive={activeMenu === item.label}
+                        onClick={() => {
+                          setActiveMenu(item.label); // set active menu
+                          if (item.path) router.push(item.path); // navigate to page
+                        }}
+                      />
                     ))}
-
+          
                     <div className="flex flex-col items-end space-y-2">
-                        <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
-                            <FaUserCircle size={28} />
-                            <span className="font-medium">{user?.username || "User"}</span>
-                        </div>
-                        <button
-                            onClick={handleLogout}
-                            className="text-sm text-red-600 hover:underline"
-                        >
-                            Logout
-                        </button>
+                      <div className="glass flex items-center space-x-3 px-4 py-2 rounded-xl">
+          
+                        <FaUserCircle size={28} />
+                        <span className="font-medium">{user?.username || "User"}</span>
+                      </div>
+                      <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">Logout</button>
                     </div>
+          
+                  </div>
                 </motion.div>
-            </motion.div>
             <motion.div variants={itemVariant}>
                 <h1 className="text-3xl font-bold mb-6">Reports</h1>
             </motion.div>
             {/* Summary Cards */}
             <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-6 mb-6">
-                <div className="bg-white p-6 rounded shadow">
-                    <p className="text-sm text-gray-500 mb-2">Total Revenues</p>
+                <div className="glass rounded-2x p-6 rounded shadow">
+                    <p className="text-sm text-white mb-2">Total Revenues</p>
                     <h2 className="text-3xl font-bold text-blue-600">${Number(totalRevenue).toFixed(2)}</h2>
                 </div>
 
-                <div className="bg-white p-6 rounded shadow">
-                    <h2 className="text-xl font-bold mb-2">Total: {totalInvoices}</h2>
+                <div className="glass rounded-2x p-6 rounded shadow">
+                    <h2 className="text-xl text-white font-bold mb-2">Total: {totalInvoices}</h2>
                     <div className="flex gap-6 text-sm">
                         <span className="text-green-600">Paid Invoices: {paidInvoices}</span>
                         <span className="text-orange-500">Unpaid Invoices: {unpaidInvoices}</span>
@@ -267,19 +269,19 @@ export default function ReportsPage() {
 
             {/* Charts */}
             <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-6 mb-10">
-                <div className="bg-white p-6 rounded shadow">
+                <div className="glass rounded-2x p-6 rounded shadow">
                     <h3 className="font-bold mb-4">Monthly Revenue</h3>
                     <ResponsiveContainer width="100%" height={250}>
                         <BarChart data={monthlyData}>
-                            <XAxis dataKey="month" />
-                            <YAxis />
+                            <XAxis stroke="black" dataKey="month" />
+                            <YAxis stroke="black" />
                             <Tooltip />
                             <Bar dataKey="amount" fill="#E5E7EB" />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
 
-                <div className="bg-white p-6 rounded shadow">
+                <div className="glass rounded-2x p-6 rounded shadow">
                     <h3 className="font-bold mb-4">Invoice Status</h3>
                     <ResponsiveContainer width="100%" height={250}>
                         <PieChart>
@@ -295,114 +297,128 @@ export default function ReportsPage() {
             </motion.div>
             <h2 className="text-xl font-semibold pl-2 pt-20 mb-4">Recent Invoices</h2>
 
-            <motion.div variants={itemVariant} className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
-                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
-                    <div className="relative w-full md:w-1/3">
+            <motion.div
+                    variants={recentInvoicesVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="glass rounded-2xl rounded-lg p-4 md:p-6 shadow overflow-x-auto"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
+                      <div className="relative w-full md:w-1/3">
                         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
-                            type="text"
-                            placeholder="Search by client..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
+                          type="text"
+                          placeholder="Search by client..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full glass rounded-xl pl-10 pr-3 py-2 text-white placeholder-white/70 focus:outline-none"
+            
                         />
-
-                    </div>
-
-                    <div className="flex flex-wrap gap-4 md:gap-6">
+            
+                      </div>
+            
+                      <div className="flex flex-wrap gap-4 md:gap-6">
                         {tabs.map((tab) => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`bg-white  text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
-                                    ? "text-[#29268E] border-b-2 border-[#29268E]"
-                                    : "text-black hover:text-[#29268E]"
-                                    }`}
-                            >
-                                {tab}
-                            </button>
+                          <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={` text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
+                              ? "text-[#29268E] border-b-2 border-[#29268E]"
+                              : "text-black hover:text-[#29268E]"
+                              }`}
+                          >
+                            {tab}
+                          </button>
                         ))}
+                      </div>
                     </div>
-                </div>
-                <div className="overflow-x-auto w-full">
-                    <table className="min-w-full border table-auto text-sm md:text-base">
-                        <thead className="bg-gray-100">
-                            <tr className="hidden md:table-row"> {/* Hide headers on small screens */}
-                                <Th>Invoice</Th>
-                                <Th>Client</Th>
-                                <Th>Amount</Th>
-                                <Th>Status</Th>
-                                <Th>Date</Th>
-                            </tr>
+            
+                    <div className="overflow-x-auto w-full">
+                      <table className="min-w-full table-auto text-sm md:text-base">
+                        <thead className="bg-white/20 backdrop-blur">
+                          <tr className="hidden md:table-row border-t border-white/20">
+                            <Th>Invoice</Th>
+                            <Th>Client</Th>
+                            <Th>Amount</Th>
+                            <Th>Status</Th>
+                            <Th>Date</Th>
+                          </tr>
                         </thead>
                         <tbody>
-                            {filteredInvoices.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="text-center py-6 text-gray-500">
-                                        No invoices created yet
-                                    </td>
-                                </tr>
-                            ) : (
-                                paginatedInvoices.map((inv) => (
-                                    <InvoiceRow
-                                        key={inv._id}
-                                        id={inv.invoiceNumber}
-                                        client={inv.billedTo.businessName}
-                                        amount={`₹${inv.totals?.grandTotal ?? 0}`}
-                                        status={(inv.status ?? "N/A").trim()}
-                                        date={new Date(inv.invoiceDate).toLocaleDateString()}
-                                    />
-                                ))
-
-                            )}
+                          {filteredInvoices.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="text-center py-6 text-gray-500">
+                                No invoices created yet
+                              </td>
+                            </tr>
+                          ) : (
+                            paginatedInvoices.map((inv) => (
+                              <InvoiceRow
+                                key={inv._id}
+                                id={inv.invoiceNumber}
+                                client={inv.billedTo.businessName}
+                                amount={`₹${inv.totals?.grandTotal ?? 0}`}
+                                status={(inv.status ?? "N/A").trim()}
+                                date={new Date(inv.invoiceDate).toLocaleDateString()}
+                              />
+                            ))
+            
+                          )}
                         </tbody>
-                    </table>
-                    {/* ---------------- PAGINATION CONTROLS ---------------- */}
-                    {totalPages > 1 && (
+                      </table>
+                      {/* ---------------- PAGINATION CONTROLS ---------------- */}
+                      {totalPages > 1 && (
                         <div className="flex justify-center mt-4 gap-2">
+                          <button
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                          >
+                            &lt;
+                          </button>
+            
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                             <button
-                                onClick={() => handlePageChange(currentPage - 1)}
-                                disabled={currentPage === 1}
-                                className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                              key={page}
+                              onClick={() => handlePageChange(page)}
+                              className={`px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
+                                }`}
                             >
-                                &lt;
+                              {page}
                             </button>
-
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                <button
-                                    key={page}
-                                    onClick={() => handlePageChange(page)}
-                                    className={`px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
-                                        }`}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-
-                            <button
-                                onClick={() => handlePageChange(currentPage + 1)}
-                                disabled={currentPage === totalPages}
-                                className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-                            >
-                                &gt;
-                            </button>
+                          ))}
+            
+                          <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                          >
+                            &gt;
+                          </button>
                         </div>
-                    )}
-
-                </div>
-            </motion.div>
+                      )}
+            
+                    </div>
+            
+            
+                  </motion.div>
         </motion.div>
     );
 }
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-    <div
-        onClick={onClick}
-        className={`bg-white  flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-1" : "text-black"
-            }`}
-    >
-        {icon}
-        <span>{label}</span>
-    </div>
+  <div
+    onClick={onClick}
+    className={`
+       px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
+      transition
+      ${isActive
+        ? "text-black bg-white/30"
+        : "text-black hover:bg-white/20"}
+    `}
+  >
+    {icon}
+    <span>{label}</span>
+  </div>
 );
 const Th = ({ children }: { children: React.ReactNode }) => (
     <th className="px-4 py-2 text-left whitespace-nowrap">{children}</th>

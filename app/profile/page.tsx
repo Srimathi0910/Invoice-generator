@@ -215,13 +215,13 @@ const ProfilePage = () => {
   }
 
   return (
-    <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="min-h-screen bg-[#D9D9D9]/20 p-6">
+    <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="min-h-screen bg-gray-300 p-4 md:p-6">
       {/* TOP BAR */}
       <motion.div
         variants={navbarVariants}
         initial="hidden"
         animate="visible"
-        className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
+        className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6"
       >
         <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
           {/* LOGO */}
@@ -253,7 +253,7 @@ const ProfilePage = () => {
           ))}
 
           <div className="flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+            <div className="flex items-center space-x-3 glass px-4 py-2 rounded shadow">
               <FaUserCircle size={28} />
               <span className="font-medium">{user?.username || "User"}</span>
             </div>
@@ -265,9 +265,9 @@ const ProfilePage = () => {
       </motion.div>
 
       {/* PROFILE CARD */}
-      <motion.div variants={itemVariant} className="bg-white max-w-4xl mx-auto p-8 rounded shadow">
+      <motion.div variants={itemVariant} className="glass backdrop-blur bg-white/30 border border-black rounded-xl  placeholder-white/70 max-w-4xl mx-auto p-8 rounded shadow">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center text-3xl font-bold">
+          <div className=" bg-white/50 w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center text-3xl font-bold">
             {user?.username?.charAt(0).toUpperCase() || "U"}
           </div>
           <h2 className="text-2xl font-bold">{user?.username}</h2>
@@ -287,7 +287,7 @@ const ProfilePage = () => {
         </div>
 
         <div className="mt-6 flex justify-center">
-          <button onClick={handleUpdate} className="bg-gray-300 px-6 py-2 rounded font-medium hover:bg-gray-400">
+          <button onClick={handleUpdate} className="border border-black bg-gray-300 px-6 py-2 rounded font-medium hover:bg-gray-400">
             {loading ? "Updating" : "Update profile"}
           </button>
         </div>
@@ -332,15 +332,15 @@ const Input = ({ label, error, type = "text", ...props }: any) => {
 
   return (
     <div>
-      <label className="block mb-1 font-medium">{label}</label>
+      <label className="block mb-1 font-medium ">{label}</label>
 
       {/* Input wrapper */}
       <div className="relative">
         <input
           {...props}
           type={inputType}
-          className={`w-full border px-3 py-2 rounded pr-10 ${
-            error ? "border-red-500" : "border-gray-300"
+          className={`w-full border px-3 py-2 rounded pr-10  backdrop-blur ${
+            error ? "border-red-500" : "border-black"
           }`}
         />
 
@@ -368,8 +368,18 @@ const Input = ({ label, error, type = "text", ...props }: any) => {
 
 // ---------------- MENU ITEM ----------------
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-  <div onClick={onClick} className={`flex items-center gap-2 cursor-pointer ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-1" : ""}`}>
-    {icon} <span>{label}</span>
+  <div
+    onClick={onClick}
+    className={`
+       px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
+      transition
+      ${isActive
+        ? "text-black bg-white/30"
+        : "text-black hover:bg-white/20"}
+    `}
+  >
+    {icon}
+    <span>{label}</span>
   </div>
 );
 

@@ -178,14 +178,13 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#D9D9D9]/20 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-300 p-4 md:p-6">
 
       {/* ---------------- TOP MENU ---------------- */}
       <motion.div variants={navbarVariants}
         initial="hidden"
         animate="visible"
-        className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0"></div>
+        className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0"></div>
 
         <div className="md:hidden flex items-center mb-3">
           <button onClick={() => setMenuOpen(!menuOpen)}>
@@ -208,7 +207,7 @@ const Dashboard = () => {
           ))}
 
           <div className="flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+            <div className="glass flex items-center space-x-3 px-4 py-2 rounded-xl">
               <FaUserCircle size={28} />
               <span className="font-medium">{user?.username || "User"}</span>
             </div>
@@ -222,19 +221,19 @@ const Dashboard = () => {
         initial="hidden"
         animate="visible">
         <motion.div variants={summaryItemVariants}>
-          <SummaryBox title="Total Invoices" value={totalInvoices} bg="#29268E" innerBg="#2326AF" />
+          <SummaryBox title="Total Invoices" value={totalInvoices} bg="#504e9e" innerBg="#464494" />
         </motion.div>
         <motion.div variants={summaryItemVariants}>
-          <SummaryBox title="Paid Invoices" value={paidInvoices} bg="#05410C" innerBg="#086212" />
+          <SummaryBox title="Paid Invoices" value={paidInvoices} bg="#418f4c" innerBg="#2c8136" />
         </motion.div>
         <motion.div variants={summaryItemVariants}>
-          <SummaryBox title="Unpaid Invoices" value={unpaidInvoices} bg="#E06A2A" innerBg="#F87731" />
+          <SummaryBox title="Unpaid Invoices" value={unpaidInvoices} bg="#db7944" innerBg="#d3672d"/>
         </motion.div>
         <motion.div variants={summaryItemVariants}>
-          <SummaryBox title="Overdue Invoices" value={overdueInvoices} bg="#E51F22" innerBg="#F91A1E" />
+          <SummaryBox title="Overdue Invoices" value={overdueInvoices} bg="#dd2528" innerBg="#c22427" />
         </motion.div>
         <motion.div variants={revenueVariants}>
-          <div className="bg-white text-black rounded shadow p-4 flex flex-col min-h-[200px]">
+          <div className="glass-strong text-white rounded-2xl p-4 flex flex-col min-h-[200px]">
             <span className="text-sm text-center text-[20px] font-medium">Total Revenue</span>
             <hr className="border-gray-300 my-2" />
             <div className="text-center text-4xl font-semibold p-8">₹{totalRevenue.toFixed(2)}</div>
@@ -248,12 +247,12 @@ const Dashboard = () => {
       <motion.div
         variants={recentInvoicesVariants}
         initial="hidden"
-        animate="visible" className="bg-white rounded-lg p-4 md:p-6 shadow overflow-x-auto">
+        animate="visible" className="glass rounded-2xl rounded-lg p-4 md:p-6 shadow overflow-x-auto"
+      >
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4">
           <div className="relative w-full md:w-1/3">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <div className="relative w-full md:w-1/3">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            
               <input
                 type="text"
                 placeholder="Search invoices..."
@@ -262,9 +261,9 @@ const Dashboard = () => {
                   setSearchTerm(e.target.value); // ✅ Update state
                   setCurrentPage(1); // ✅ Reset to first page when searching
                 }}
-                className="w-full border border-gray-300 rounded pl-10 pr-3 py-2"
+                className="w-full glass pl-10 pr-3 py-2 text-white placeholder-white/70 focus:outline-none"
               />
-            </div>
+            
 
           </div>
 
@@ -282,15 +281,15 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <table className="min-w-full table-fixed border border-gray-200 text-left">
-          <thead className="bg-gray-100 hidden md:table-header-group">
-            <tr>
-              <th className="px-4 py-2 w-1/6">Invoice</th>
+        <table className="min-w-full table-auto text-sm md:text-base">
+          <thead className="bg-white/20 backdrop-blur">
+            <tr className="hidden md:table-row border-t border-white/20">
+              <Th>Invoice</Th>
               {/* <th className="px-4 py-2 w-1/6">Billed To</th> */}
-              <th className="px-4 py-2 w-1/6">Amount</th>
-              <th className="px-4 py-2 w-1/6">Status</th>
-              <th className="px-4 py-2 w-1/6">Date</th>
-              <th className="px-4 py-2 w-1/6">Action</th>
+              <Th>Amount</Th>
+              <Th>Status</Th>
+              <Th>Date</Th>
+              <Th>Action</Th>
             </tr>
           </thead>
           <tbody>
@@ -302,7 +301,7 @@ const Dashboard = () => {
               </tr>
             ) : (
               paginatedInvoices.map((inv) => (
-                <tr key={inv._id} className="border-t md:table-row block md:table-row mb-4 md:mb-0">
+                <tr key={inv._id} className="border-t md:table-row block md:table-row mb-4 md:mb-0 hidden md:table-row hidden md:table-row border-t-[10px] border-white/20">
                   {/* Mobile layout */}
                   <td colSpan={6} className="block md:hidden px-2 py-2">
                     <div className="flex flex-col gap-2">
@@ -355,16 +354,16 @@ const Dashboard = () => {
                   </td>
 
                   {/* Desktop layout */}
-                  <td className="hidden md:table-cell px-4 py-2">{inv.invoiceNumber}</td>
+                  <td className="hidden md:table-cell px-4 py-4">{inv.invoiceNumber}</td>
                   {/* <td className="hidden md:table-cell px-4 py-2">{inv.billedTo.businessName}</td> */}
                   <td className="hidden md:table-cell px-4 py-2">
                     ₹{Number(inv.totals?.grandTotal ?? 0).toFixed(2)}
                   </td>
 
                   <td className="hidden md:table-cell px-4 py-2">
-                    <span className={`px-2 py-1 rounded text-white ${getStatusColor(inv.status)}`}>
+                    <button className={`px-2 py-2 text-white rounded ${getStatusColor(inv.status)}`}>
                       {inv.status ?? "Unpaid"}
-                    </span>
+                    </button>
                   </td>
                   <td className="hidden md:table-cell px-4 py-2">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
                   <td className="hidden md:table-cell px-4 py-2">
@@ -422,16 +421,38 @@ const Dashboard = () => {
 
 /* ---------------- COMPONENTS ---------------- */
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-  <div onClick={onClick} className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-2" : "text-black"}`}>
+  <div
+    onClick={onClick}
+    className={`
+       px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
+      transition
+      ${isActive
+        ? "text-black bg-white/30"
+        : "text-black hover:bg-white/20"}
+    `}
+  >
     {icon}
     <span>{label}</span>
   </div>
 );
+const Th = ({ children }: { children: React.ReactNode }) => (
+  <th className="px-6 md:px-4 py-1 md:py-2 text-left whitespace-nowrap text-sm md:text-base">
+    {children}
+  </th>
+);
 
 const SummaryBox = ({ title, value, bg, innerBg }: any) => (
-  <div className="text-white rounded shadow flex flex-col justify-between" style={{ backgroundColor: bg }}>
-    <span className="text-sm text-center pt-3">{title}</span>
-    <div className="w-full text-center py-4 font-semibold text-lg" style={{ backgroundColor: innerBg }}>{value}</div>
+  <div
+    className="text-white rounded-b-2xl shadow flex flex-col justify-between rounded-t-2xl"
+    style={{ backgroundColor: bg }}
+  >
+    <span className="text-sm text-center p-3 rounded-t-2xl">{title}</span>
+    <div
+      className="w-full  rounded-b-2xl text-center py-4 font-semibold text-lg"
+      style={{ backgroundColor: innerBg }}
+    >
+      {value}
+    </div>
   </div>
 );
 

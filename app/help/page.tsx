@@ -118,11 +118,11 @@ export default function HelpPage() {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible" className="min-h-screen bg-[#D9D9D9]/20 p-6">
+            animate="visible" className="min-h-screen bg-gray-300 p-4 md:p-6">
             <motion.div
                 variants={navbarVariants}
                 initial="hidden"
-                animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+                animate="visible" className="glass rounded-2xl backdrop-blur rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
                 <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0"></motion.div>
 
                 <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
@@ -158,7 +158,7 @@ export default function HelpPage() {
                 <h1 className="text-3xl font-bold mb-6">How can we assist you?</h1>
 
                 {/* FAQ Section */}
-                <div className="bg-gray-300 p-4 rounded-md mb-8">
+                <div className="glass bg-white/20 p-6 rounded-md mb-8">
                     <h2 className="text-2xl font-bold mb-4">FAQs</h2>
                     <div className="space-y-2">
                         {faqsData.map((faq, index) => (
@@ -180,7 +180,7 @@ export default function HelpPage() {
                 </div>
 
                 {/* Contact Support */}
-<div className="bg-gray-300 p-6 sm:p-10 rounded-md">
+<div className="glass bg-white/20 p-6  p-6 sm:p-10 rounded-md">
   <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
     <span>👤</span> Contact support
   </h2>
@@ -223,8 +223,17 @@ export default function HelpPage() {
     );
 }
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-    <div onClick={onClick} className={`flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-2" : "text-black"}`}>
-        {icon}
-        <span>{label}</span>
-    </div>
+  <div
+    onClick={onClick}
+    className={`
+       px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
+      transition
+      ${isActive
+        ? "text-black bg-white/30"
+        : "text-black hover:bg-white/20"}
+    `}
+  >
+    {icon}
+    <span>{label}</span>
+  </div>
 );

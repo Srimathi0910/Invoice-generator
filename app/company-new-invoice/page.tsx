@@ -452,107 +452,97 @@ export default function InvoicePage() {
 
   /* ---------------- Save Invoice ---------------- */
   const handleSaveInvoice = async (e?: React.FormEvent) => {
-    e?.preventDefault();
+  e?.preventDefault();
 
-    if (!validateInvoice()) return;
+  if (!validateInvoice()) return;
 
-    if (!user?._id) {
-      setPopup({ open: true, message: "User not logged in", type: "error" });
-      router.push("/login");
-      return;
+  if (!user?._id) {
+    setPopup({ open: true, message: "User not logged in", type: "error" });
+    router.push("/login");
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    router.push("/login");
+    return;
+  }
+
+  setIsSaving(true);
+
+  try {
+    const calculatedTotals = computeTotals();
+
+    const invoiceData: any = {
+      _id: invoice?._id || undefined,
+      invoiceNumber: invoiceMeta.invoiceNumber.trim(),
+      invoiceDate: new Date(invoiceMeta.invoiceDate),
+      dueDate: new Date(invoiceMeta.dueDate),
+      billedBy,
+      billedTo,
+      items,
+      extras,
+      totals: calculatedTotals,
+      totalInWords: `${calculatedTotals.grandTotal} rupees only`,
+      logoUrl: logoPreview || "",
+      userId: user._id,
+    };
+
+    const formData = new FormData();
+    formData.append("data", JSON.stringify(invoiceData));
+
+    if (invoiceFiles.signature) formData.append("signature", invoiceFiles.signature);
+    if (invoiceFiles.notes) formData.append("notes", invoiceFiles.notes);
+    if (invoiceFiles.terms) invoiceFiles.terms.forEach(f => formData.append("terms", f));
+    if (invoiceFiles.attachments) invoiceFiles.attachments.forEach(f => formData.append("attachments", f));
+    if (invoiceFiles.additionalInfo) invoiceFiles.additionalInfo.forEach(f => formData.append("additionalInfo", f));
+    if (invoiceFiles.contactDetails) invoiceFiles.contactDetails.forEach(f => formData.append("contactDetails", f));
+    if (logoFile) formData.append("file", logoFile);
+
+    const result = await authFetch("/api/auth/invoice", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (!result?.success || !result?.invoice) {
+      throw new Error(result?.error || result?.message || "Failed to save invoice");
     }
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+    setInvoice(result.invoice);
+    localStorage.setItem("invoiceData", JSON.stringify(result.invoice));
 
-    setIsSaving(true);
+    // 📌 Try sending email, but decide message once
+    let successMessage = "Invoice saved successfully!";
 
-    try {
-      const calculatedTotals = computeTotals();
-
-      const invoiceData: any = {
-        _id: invoice?._id || undefined,
-        invoiceNumber: invoiceMeta.invoiceNumber.trim(),
-        invoiceDate: new Date(invoiceMeta.invoiceDate),
-        dueDate: new Date(invoiceMeta.dueDate),
-        billedBy,
-        billedTo,
-        items,
-        extras,
-        totals: calculatedTotals,
-        totalInWords: `${calculatedTotals.grandTotal} rupees only`,
-        logoUrl: logoPreview || "",
-        userId: user._id,
-      };
-
-      const formData = new FormData();
-      formData.append("data", JSON.stringify(invoiceData));
-
-      if (invoiceFiles.signature) formData.append("signature", invoiceFiles.signature);
-      if (invoiceFiles.notes) formData.append("notes", invoiceFiles.notes);
-      if (invoiceFiles.terms) invoiceFiles.terms.forEach(f => formData.append("terms", f));
-      if (invoiceFiles.attachments) invoiceFiles.attachments.forEach(f => formData.append("attachments", f));
-      if (invoiceFiles.additionalInfo) invoiceFiles.additionalInfo.forEach(f => formData.append("additionalInfo", f));
-      if (invoiceFiles.contactDetails) invoiceFiles.contactDetails.forEach(f => formData.append("contactDetails", f));
-      if (logoFile) formData.append("file", logoFile);
-
-      const result = await authFetch("/api/auth/invoice", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      if (result?.success && result?.invoice) {
-        setInvoice(result.invoice);
-        localStorage.setItem("invoiceData", JSON.stringify(result.invoice));
-
-        setPopup({
-          open: true,
-          message: "Invoice saved successfully!",
-          type: "success",
-        });
-
-        const recipientEmail = result.invoice?.billedTo?.email;
-        if (recipientEmail) {
-          try {
-            await sendInvoiceEmail(result.invoice, recipientEmail);
-            setPopup({
-              open: true,
-              message: "Invoice email sent to client successfully!",
-              type: "success",
-            });
-          } catch {
-            setPopup({
-              open: true,
-              message: "Invoice saved but failed to send email.",
-              type: "info",
-            });
-          }
-        }
-
-      } else {
-        setPopup({
-          open: true,
-          message: result?.error || result?.message || "Failed to save invoice",
-          type: "error",
-        });
+    const recipientEmail = result.invoice?.billedTo?.email;
+    if (recipientEmail) {
+      try {
+        await sendInvoiceEmail(result.invoice, recipientEmail);
+        successMessage = "Invoice saved and email sent successfully!";
+      } catch {
+        successMessage = "Invoice saved, but email could not be sent.";
       }
-
-    } catch (err: any) {
-      console.error("SAVE INVOICE ERROR 👉", err);
-      setPopup({
-        open: true,
-        message: err?.error || err?.message || "Error saving invoice.",
-        type: "error",
-      });
-    } finally {
-      setIsSaving(false);
     }
-  };
 
+    // ✅ ONE popup only
+    setPopup({
+      open: true,
+      message: successMessage,
+      type: "success",
+    });
+
+  } catch (err: any) {
+    console.error("SAVE INVOICE ERROR 👉", err);
+    setPopup({
+      open: true,
+      message: err?.error || err?.message || "Error saving invoice.",
+      type: "error",
+    });
+  } finally {
+    setIsSaving(false);
+  }
+};
 
 
   /* ---------------- Logout ---------------- */
@@ -714,7 +704,7 @@ export default function InvoicePage() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="visible" className="min-h-screen bg-[#D9D9D9]/20 p-6">
+      animate="visible" className="min-h-screen bg-gray-300 p-4 md:p-6">
       {showOverlay && (
         <div className="fixed inset-0 bg-gray-300/70 z-[9999] flex items-center justify-center">
 
@@ -734,7 +724,7 @@ export default function InvoicePage() {
       <motion.div
         variants={navbarVariants}
         initial="hidden"
-        animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+        animate="visible" className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
           {/* LOGO */}
         </motion.div>
@@ -762,8 +752,8 @@ export default function InvoicePage() {
             />
           ))}
 
-          <div className="flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+          <div className=" flex flex-col items-end space-y-2">
+            <div className=" glass flex items-center space-x-3 px-4 py-2 rounded-xl">
               <FaUserCircle size={28} />
               <span className="font-medium">{user?.username || "User"}</span>
             </div>
@@ -1274,9 +1264,18 @@ export default function InvoicePage() {
   );
 }
 
-
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-  <div onClick={onClick} className={`bg-white  flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-2" : "text-black"}`}>
-    {icon} <span>{label}</span>
+  <div
+    onClick={onClick}
+    className={`
+       px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
+      transition
+      ${isActive
+        ? "text-black bg-white/30"
+        : "text-black hover:bg-white/20"}
+    `}
+  >
+    {icon}
+    <span>{label}</span>
   </div>
 );

@@ -155,7 +155,7 @@ export default function ClientsPage() {
   };
 
 
-  
+
   const navbarVariants: Variants = {
     hidden: { y: -100, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
@@ -203,7 +203,7 @@ export default function ClientsPage() {
       transition: { duration: 0.4, ease: "easeOut" },
     },
   };
- 
+
   /* ---------------- PAGINATION ---------------- */
   const itemsPerPage = 5;
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
@@ -217,7 +217,7 @@ export default function ClientsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [search]);
- if (showLoader) {
+  if (showLoader) {
     return (
       <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
         <TetrominosLoader />
@@ -230,56 +230,55 @@ export default function ClientsPage() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="min-h-screen bg-[#D9D9D9]/20 p-6"
-    >
+      className="min-h-screen bg-gray-300 p-4 md:p-6">
+
 
       {/* -------- HEADER -------- */}
       <motion.div
         variants={navbarVariants}
         initial="hidden"
-        animate="visible" className="bg-white rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-        <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
-          {/* LOGO */}
-        </motion.div>
+        animate="visible"
+        className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
 
-        <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
+
+
+        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+          {/* LOGO */}
+        </div>
+
+        <div className="md:hidden flex items-center mb-3">
           <button onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
           </button>
-        </motion.div>
+        </div>
 
-        <motion.div variants={itemVariant}
+        <div
           className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
             }`}
         >
-          <div className="flex flex-col md:flex-row gap-4 md:gap-8 mb-3 md:mb-0">
-            {menuItems.map((item) => (
-              <MenuItem
-                key={item.label}
-                icon={item.icon}
-                label={item.label}
-                isActive={activeMenu === item.label}
-                onClick={() => {
-                  setActiveMenu(item.label); // set active menu
-                  if (item.path) router.push(item.path); // navigate to page
-                }}
-              />
-            ))}
-          </div>
+          {menuItems.map((item) => (
+            <MenuItem
+              key={item.label}
+              icon={item.icon}
+              label={item.label}
+              isActive={activeMenu === item.label}
+              onClick={() => {
+                setActiveMenu(item.label); // set active menu
+                if (item.path) router.push(item.path); // navigate to page
+              }}
+            />
+          ))}
 
           <div className="flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+            <div className="glass flex items-center space-x-3 px-4 py-2 rounded-xl">
+
               <FaUserCircle size={28} />
               <span className="font-medium">{user?.username || "User"}</span>
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:underline"
-            >
-              Logout
-            </button>
+            <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">Logout</button>
           </div>
-        </motion.div>
+
+        </div>
       </motion.div>
       <motion.div
         variants={summaryContainerVariants}
@@ -323,89 +322,75 @@ export default function ClientsPage() {
       </motion.div>
 
       {/* -------- TABLE -------- */}
-      <motion.div variants={itemVariant} className="bg-white rounded shadow overflow-x-auto">
+      <motion.div
+        variants={itemVariant}
+        className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg overflow-x-auto border border-white/30"
+      >
         {loading ? (
-          <div className="text-center py-10">Loading clients...</div>
+          <div className="text-center py-10 text-gray-700">Loading clients...</div>
         ) : (
-          <table className="w-full text-sm border-collapse border">
+          <table className="w-full text-sm md:text-base border-collapse table-auto">
             {/* Desktop headers */}
-            <thead className="bg-gray-200 hidden md:table-header-group">
-              <tr>
-                <th className="border px-4 py-2 text-center">Client Name</th>
-                <th className="border px-4 py-2 text-center">Phone</th>
-                <th className="border px-4 py-2 text-center">GSTIN</th>
-                <th className="border px-4 py-2 text-center">Total Invoices</th>
-                <th className="border px-4 py-2 text-center">Email</th>
-                {/* <th className="border px-4 py-2 text-center">Actions</th> */}
+            <thead className="hidden md:table-header-group">
+              <tr className="border-t border-white/20">
+                <th className="px-4 py-2 text-center bg-white/30 backdrop-blur-md bg-gray-100 glass bg-white/20 backdrop-blur">Client Name</th>
+                <th className=" px-4 py-2 text-center bg-white/30 backdrop-blur-md bg-gray-100 glass bg-white/20 backdrop-blur">Phone</th>
+                <th className=" px-4 py-2 text-center bg-white/30 backdrop-blur-md bg-gray-100 glass bg-white/20 backdrop-blur">GSTIN</th>
+                <th className=" px-4 py-2 text-center bg-white/30 backdrop-blur-md bg-gray-100 glass bg-white/20 backdrop-blur">Total Invoices</th>
+                <th className=" px-4 py-2 text-center bg-white/30 backdrop-blur-md bg-gray-100 glass bg-white/20 backdrop-blur">Email</th>
               </tr>
             </thead>
 
             <tbody>
               {paginatedClients.length > 0 ? (
                 paginatedClients.map((client) => (
-                  <tr key={client.id} className="border-t md:table-row block md:table-row mb-4 md:mb-0">
+                  <tr key={client.id} className="md:table-row block md:mb-0 border-t border-white/20 ">
                     {/* Mobile layout */}
                     <td colSpan={6} className="block md:hidden px-2 py-2">
-                      <div className="flex flex-col gap-2 bg-gray-50 rounded p-4 shadow-sm">
+                      <div className="flex flex-col gap-2 border-t  p-4 shadow-inner ">
                         <div className="flex justify-between w-full">
-                          <span className="font-semibold">Client Name:</span>
-                          <span>{client.name}</span>
+                          <span className="font-semibold text-gray-800">Client Name:</span>
+                          <span className="text-gray-900">{client.name}</span>
                         </div>
                         <div className="flex justify-between w-full">
-                          <span className="font-semibold">Phone:</span>
-                          <span>{client.phone}</span>
+                          <span className="font-semibold text-gray-800">Phone:</span>
+                          <span className="text-gray-900">{client.phone}</span>
                         </div>
                         <div className="flex justify-between w-full">
-                          <span className="font-semibold">GSTIN:</span>
-                          <span>{client.gstin}</span>
+                          <span className="font-semibold text-gray-800">GSTIN:</span>
+                          <span className="text-gray-900">{client.gstin}</span>
                         </div>
                         <div className="flex justify-between w-full">
-                          <span className="font-semibold">Total Invoices:</span>
-                          <span>{client.totalInvoices}</span>
+                          <span className="font-semibold text-gray-800">Total Invoices:</span>
+                          <span className="text-gray-900">{client.totalInvoices}</span>
                         </div>
                         <div className="flex justify-between w-full">
-                          <span className="font-semibold">Email:</span>
-                          <span>{client.email || "-"}</span>
+                          <span className="font-semibold text-gray-800">Email:</span>
+                          <span className="text-gray-900">{client.email || "-"}</span>
                         </div>
-                        {/* <div className="flex justify-end w-full mt-2">
-                    <button
-                      onClick={() => handleEdit(client.id)}
-                      className="bg-gray-200 px-4 py-1 rounded flex gap-1 items-center justify-center"
-                    >
-                      <Pencil size={14} /> Edit
-                    </button>
-                  </div> */}
                       </div>
                     </td>
 
                     {/* Desktop layout */}
-                    <td className="hidden md:table-cell border px-4 py-2 text-center">{client.name}</td>
-                    <td className="hidden md:table-cell border px-4 py-2 text-center">{client.phone}</td>
-                    <td className="hidden md:table-cell border px-4 py-2 text-center">{client.gstin}</td>
-                    <td className="hidden md:table-cell border px-4 py-2 text-center">{client.totalInvoices}</td>
-                    <td className="hidden md:table-cell border px-4 py-2 text-center">{client.email || "-"}</td>
-                    {/* <td className="hidden md:table-cell border px-4 py-2 text-center">
-                      <button
-                        onClick={() => handleEdit(client.id)}
-                        className="bg-[#3B82F6]/100 px-4 py-1 rounded flex gap-1 items-center justify-center mx-auto"
-                      >
-                        <Pencil size={14} /> Edit
-                      </button>
-                    </td> */}
+                    <td className="hidden md:table-cell  px-4 py-2 text-center backdrop-blur-md">{client.name}</td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center  backdrop-blur-md">{client.phone}</td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center backdrop-blur-md">{client.gstin}</td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center backdrop-blur-md">{client.totalInvoices}</td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center backdrop-blur-md">{client.email || "-"}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center">
+                  <td colSpan={6} className="py-6 text-center text-gray-700">
                     No clients found
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-
         )}
       </motion.div>
+
 
 
       {/* -------- PAGINATION -------- */}
@@ -448,8 +433,13 @@ export default function ClientsPage() {
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
   <div
     onClick={onClick}
-    className={`bg-white  flex flex-row gap-2 items-center cursor-pointer whitespace-nowrap ${isActive ? "text-[#8F90DF] underline underline-offset-4 pb-1" : "text-black"
-      }`}
+    className={`
+       px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
+      transition
+      ${isActive
+        ? "text-black bg-white/30"
+        : "text-black hover:bg-white/20"}
+    `}
   >
     {icon}
     <span>{label}</span>
