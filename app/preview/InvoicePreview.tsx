@@ -274,7 +274,7 @@ const InvoicePreview = () => {
       });
     } finally {
       setSaving(false);
-      setShowOverlay(false); 
+      setShowOverlay(false);
     }
   };
 
@@ -285,14 +285,14 @@ const InvoicePreview = () => {
 
   /* ---------------- PDF GENERATION ---------------- */
   const generatePDF = async () => {
-   if (!invoiceRef.current) {
-  setPopup({
-    open: true,
-    message: "Invoice content not found",
-    type: "error",
-  });
-  return;
-}
+    if (!invoiceRef.current) {
+      setPopup({
+        open: true,
+        message: "Invoice content not found",
+        type: "error",
+      });
+      return;
+    }
 
 
     try {
@@ -362,14 +362,14 @@ const InvoicePreview = () => {
 
   /* ---------------- SEND INVOICE ---------------- */
   const sendInvoice = async () => {
-   if (!email) {
-  setPopup({
-    open: true,
-    message: "Enter recipient email",
-    type: "error",
-  });
-  return;
-}
+    if (!email) {
+      setPopup({
+        open: true,
+        message: "Enter recipient email",
+        type: "error",
+      });
+      return;
+    }
 
 
     try {
@@ -811,8 +811,8 @@ const InvoicePreview = () => {
           )}
 
           {/* Totals */}
-          <div className="flex justify-end text-right mb-4">
-            <div className="w-1/3 space-y-1">
+          <div className="flex justify-end text-right mb-4 sm:text-center">
+            <div className="sm:w-2/3 space-y-1">
               <p>Amount: ₹{totals.amount.toFixed(2)}</p>
               <p>CGST: ₹{totals.cgst.toFixed(2)}</p>
               <p>SGST: ₹{totals.sgst.toFixed(2)}</p>
@@ -831,22 +831,16 @@ const InvoicePreview = () => {
         </div>
       </motion.div>
 
-      <motion.div variants={itemVariant} className="px-30 py-6">
+      <motion.div variants={itemVariant} className="p-10">
         <div className="flex flex-col items-center md:items-end mb-4 w-full md:w-64 md:ml-auto">
 
           <label
-            className="
-        flex items-center justify-center
-        gap-3 px-4
-        border-2 border-dashed
-        rounded-lg cursor-pointer
-        hover:bg-gray-50
-        w-full h-10
-        text-center
-      "
+            className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-full h-10"
           >
+
+
             <FileText size={18} className="text-gray-500" />
-            <span className="bg-white text-sm text-gray-600">
+            <span className="bg-white  text-sm text-gray-600 text-center">
               Add Signature
             </span>
 
