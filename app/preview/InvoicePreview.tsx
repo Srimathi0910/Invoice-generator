@@ -318,82 +318,86 @@ const InvoicePreview = () => {
   };
 
   /* ---------------- PDF GENERATION ---------------- */
-  const generatePDF = async () => {
-    if (!invoiceRef.current) {
-      setPopup({
-        open: true,
-        message: "Invoice content not found",
-        type: "error",
-      });
-      return;
-    }
+const generatePDF = async () => {
+  if (!invoiceRef.current) {
+    setPopup({
+      open: true,
+      message: "Invoice content not found",
+      type: "error",
+    });
+    return;
+  }
 
-    try {
-      setDownloading(true);
+  try {
+    setDownloading(true);
 
-      const html2canvas = (await import("html2canvas")).default;
-      const { jsPDF } = await import("jspdf");
+    const html2canvas = (await import("html2canvas")).default;
+    const { jsPDF } = await import("jspdf");
 
-      const element = invoiceRef.current;
+    const element = invoiceRef.current;
 
-      // 🔴 SAVE ORIGINAL STYLES
-      const originalWidth = element.style.width;
-      const originalTransform = element.style.transform;
-      const originalOverflowX = document.body.style.overflowX;
-      document.body.style.overflowX = "hidden";
+    // ✅ CLONE THE INVOICE (DO NOT TOUCH REAL UI)
+    const clone = element.cloneNode(true) as HTMLElement;
 
-      // ✅ FORCE DESKTOP WIDTH (A4 SAFE WIDTH)
-      element.style.width = "794px"; // ≈ A4 width in px
-      element.style.transform = "scale(1)";
+    clone.style.width = "794px"; // A4 width
+    clone.style.position = "fixed";
+    clone.style.top = "-9999px";
+    clone.style.left = "-9999px";
+    clone.style.background = "#ffffff";
+    clone.style.transform = "scale(1)";
+    clone.style.overflow = "hidden";
 
-      // ✅ CAPTURE
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        windowWidth: 794, // IMPORTANT
-      });
+    document.body.appendChild(clone);
 
-      // 🔵 RESTORE STYLES
-      // ✅ FORCE DESKTOP WIDTH (A4 SAFE WIDTH)
-      element.style.width = "794px"; // ≈ A4 width in px
-      element.style.transform = "scale(1)";
+    // ✅ CAPTURE CLONE
+    const canvas = await html2canvas(clone, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      windowWidth: 794,
+    });
 
-      const imgData = canvas.toDataURL("image/png");
+    // 🧹 CLEANUP
+    document.body.removeChild(clone);
 
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgData = canvas.toDataURL("image/png");
 
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      let heightLeft = imgHeight;
-      let position = 0;
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      // FIRST PAGE
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    // ✅ FIRST PAGE
+    pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+    heightLeft -= pdfHeight;
+
+    // ✅ NEXT PAGES
+    while (heightLeft > 0) {
+      position -= pdfHeight;
+      pdf.addPage();
       pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
       heightLeft -= pdfHeight;
-
-      // NEXT PAGES (NO SHRINKING)
-      while (heightLeft > 0) {
-        pdf.addPage();
-        position = heightLeft - imgHeight;
-        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
-
-      pdf.save(`Invoice-${invoice?.invoiceNumber || "0000"}.pdf`);
-    } catch (err) {
-      console.error("PDF generation error:", err);
-      setPopup({
-        open: true,
-        message: "Failed to generate PDF.",
-        type: "error",
-      });
-    } finally {
-      setDownloading(false);
     }
-  };
+
+    pdf.save(`Invoice-${invoice?.invoiceNumber || "0000"}.pdf`);
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    setPopup({
+      open: true,
+      message: "Failed to generate PDF.",
+      type: "error",
+    });
+  } finally {
+    setDownloading(false);
+  }
+};
+
+
+
 
   /* ---------------- SEND INVOICE ---------------- */
   const sendInvoice = async () => {
@@ -616,7 +620,7 @@ const InvoicePreview = () => {
     >
       {/* Navbar */}
       {showOverlay && (
-        <div className="fixed inset-0 bg-gray-300/70 z-[9999] flex items-center justify-center">
+        <div className="fixed inset-0 bg-gray-300/70 z-[9999] flex items-center justify-center overflow-hidden">
           {/* Popup box */}
           <div className="rounded-xl px-8 py-6 shadow-lg flex flex-col items-center gap-4">
             <TetrominosLoader />
@@ -683,12 +687,16 @@ const InvoicePreview = () => {
       <motion.div
         variants={itemVariant}
         ref={invoiceRef}
-        className="pdf-root max-w-5xl mx-auto bg-white p-6 rounded shadow space-y-6"
+        className="pdf-root w-full max-w-5xl mx-auto bg-white 
+             p-3 sm:p-4 md:p-6 
+             rounded-lg shadow space-y-6 
+             overflow-x-hidden"
       >
         {/* Billed By */}
         <div className="border border-black p-4 rounded">
-          <div className="flex justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-4 mb-6">
             <div>
+
               <h2 className="font-bold">
                 {invoice?.billedBy?.businessName || "Your Business"}
               </h2>
@@ -710,7 +718,7 @@ const InvoicePreview = () => {
                 <img
                   src={invoice.logoUrl}
                   alt="Company Logo"
-                  className="h-16 object-contain mb-2"
+                  className="h-12 sm:h-16 max-w-[140px] object-contain mb-2 ml-auto"
                 />
               )}
               <p>

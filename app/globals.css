@@ -213,3 +213,9 @@ html.dark textarea {
 .dark .glass {
   @apply bg-black/30 border-white/10;
 }
+/* PDF MODE */
+.pdf-mode {
+  width: 794px !important;   /* A4 width */
+  max-width: 794px !important;
+  margin: 0 auto !important;
+}
