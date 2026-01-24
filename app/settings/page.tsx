@@ -11,6 +11,7 @@ import {
   FaUserCircle,
   FaBars,
   FaTimes,
+  FaPhoneAlt
 } from "react-icons/fa";
 import { authFetch } from "@/utils/authFetch";
 import { motion, Variants } from "framer-motion";
@@ -284,6 +285,7 @@ export default function SettingsPage() {
     { icon: <FaChartBar />, label: "Reports", path: "/reports" },
     { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
     { icon: <FaCog />, label: "Settings", path: "/settings" },
+    { icon: <FaPhoneAlt />, label: "Contact us", path: "/contact" },
   ];
 
   // -------------------- Theme effect --------------------
@@ -413,7 +415,7 @@ export default function SettingsPage() {
                     {logoPreview ? <img src={logoPreview} alt="Logo" className="w-full h-full object-contain border-white bg-white/20" /> : <span className=" border-white bg-white/20 text-sm text-gray-500">Logo</span>}
                     <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleLogoChange} />
                   </div>
-                  <input className="border border-white bg-white/20 px-3 py-2 w-full bg-transparent text-black placeholder-white/60 " placeholder="Company Name" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} />
+                  <input className="border border-white bg-white/20 px-3 py-2 w-full bg-transparent text-black placeholder-black/60 " placeholder="Company Name" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} />
                 </div>
 
                 <input className="border border-white bg-white/20 px-3 py-2 w-full mb-3" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />

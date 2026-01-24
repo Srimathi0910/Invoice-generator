@@ -15,6 +15,7 @@ import {
   FaSearch,
   FaBars,
   FaTimes,
+  FaPhoneAlt,
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 
@@ -22,16 +23,16 @@ const Dashboard = () => {
   const router = useRouter();
 
   /* ---------------- AUTH ---------------- */
-  const [user, setUser] = useState<{ username: string; email?: string } | null>(null);
+  const [user, setUser] = useState<{ username: string; email?: string } | null>(
+    null,
+  );
   const [loadingUser, setLoadingUser] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showLoader, setShowLoader] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [email, setEmail] = useState<string | null>(null);
 
-
   useEffect(() => {
-
     const timer = setTimeout(() => {
       setShowLoader(false);
     }, 1200);
@@ -54,7 +55,6 @@ const Dashboard = () => {
     setLoadingUser(false);
   }, [router]);
 
-
   const handleLogout = async () => {
     try {
       const res = await fetch("/api/auth/logout", {
@@ -75,8 +75,6 @@ const Dashboard = () => {
       console.error("Logout failed:", err);
     }
   };
-
-
 
   /* ---------------- INVOICES ---------------- */
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -99,9 +97,6 @@ const Dashboard = () => {
       .catch(() => setInvoices([]));
   }, [email]);
 
-
-
-
   /* ---------------- CALCULATIONS ---------------- */
   const totalInvoices = invoices.length;
   const paidInvoices = invoices.filter((i) => i.status === "Paid").length;
@@ -111,7 +106,6 @@ const Dashboard = () => {
   const totalRevenue = invoices
     .filter((i) => i.status === "Paid")
     .reduce((sum, i) => sum + Number(i.totals?.grandTotal ?? 0), 0);
-
 
   /* ---------------- UI STATE ---------------- */
   const [activeTab, setActiveTab] = useState("All");
@@ -126,6 +120,7 @@ const Dashboard = () => {
     { icon: <FaChartBar />, label: "Reports", path: "/reports" },
     { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
     { icon: <FaCog />, label: "Settings", path: "/settings" },
+    { icon: <FaPhoneAlt />, label: "Contact us", path: "/contact" },
   ];
   // ---------------- FILTERED INVOICES ----------------
   const filteredInvoices = invoices.filter((inv) => {
@@ -142,7 +137,6 @@ const Dashboard = () => {
     return statusMatch && searchMatch;
   });
 
-
   /* ---------------- PAGINATION STATE ---------------- */
   const invoicesPerPage = 5;
 
@@ -150,27 +144,28 @@ const Dashboard = () => {
   // ---------------- SORTED INVOICES (RECENT FIRST) ----------------
   const sortedInvoices = [...filteredInvoices].sort(
     (a, b) =>
-      new Date(b.invoiceDate).getTime() -
-      new Date(a.invoiceDate).getTime()
+      new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime(),
   );
 
   // Slice invoices for current page
   const paginatedInvoices = sortedInvoices.slice(
     (currentPage - 1) * invoicesPerPage,
-    currentPage * invoicesPerPage
+    currentPage * invoicesPerPage,
   );
-
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
 
-
   // Navbar slides from top
   const navbarVariants: Variants = {
     hidden: { y: -100, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
   };
 
   // Summary boxes stagger
@@ -179,24 +174,34 @@ const Dashboard = () => {
     visible: { transition: { staggerChildren: 0.15 } },
   };
 
-
   // Total revenue box appears after summary boxes
 
   // Recent invoices appear last
   const recentInvoicesVariants: Variants = {
     hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 1 } },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5, ease: "easeOut", delay: 1 },
+    },
   };
-
 
   const summaryItemVariants: Variants = {
     hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
   };
 
   const revenueVariants: Variants = {
     hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5, ease: "easeOut", delay: 0.6 },
+    },
   };
   if (showLoader) {
     return (
@@ -213,10 +218,8 @@ const Dashboard = () => {
         variants={navbarVariants}
         initial="hidden"
         animate="visible"
-        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
-
-
-
+        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
+      >
         <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
           {/* LOGO */}
         </div>
@@ -228,8 +231,9 @@ const Dashboard = () => {
         </div>
 
         <div
-          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
-            }`}
+          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${
+            menuOpen ? "flex" : "hidden md:flex"
+          }`}
         >
           {menuItems.map((item) => (
             <MenuItem
@@ -246,13 +250,16 @@ const Dashboard = () => {
 
           <div className="flex flex-col items-end space-y-2">
             <div className="glass flex items-center space-x-3 px-4 py-2 rounded-xl">
-
               <FaUserCircle size={28} />
               <span className="font-medium">{user?.username || "User"}</span>
             </div>
-            <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">Logout</button>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-red-600 hover:underline"
+            >
+              Logout
+            </button>
           </div>
-
         </div>
       </motion.div>
 
@@ -262,22 +269,41 @@ const Dashboard = () => {
         initial="hidden"
         animate="visible"
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-12 auto-rows-[120px]"
-
       >
-     <motion.div variants={summaryItemVariants}>
-          <SummaryBox title="Total Invoices" value={totalInvoices} bg="#504e9e" innerBg="#464494" />
+        <motion.div variants={summaryItemVariants}>
+          <SummaryBox
+            title="Total Invoices"
+            value={totalInvoices}
+            bg="#504e9e"
+            innerBg="#464494"
+          />
         </motion.div>
 
         <motion.div variants={summaryItemVariants}>
-          <SummaryBox title="Paid Invoices" value={paidInvoices} bg="#418f4c" innerBg="#2c8136" />
+          <SummaryBox
+            title="Paid Invoices"
+            value={paidInvoices}
+            bg="#418f4c"
+            innerBg="#2c8136"
+          />
         </motion.div>
 
         <motion.div variants={summaryItemVariants}>
-          <SummaryBox title="Unpaid Invoices" value={unpaidInvoices} bg="#db7944" innerBg="#d3672d" />
+          <SummaryBox
+            title="Unpaid Invoices"
+            value={unpaidInvoices}
+            bg="#db7944"
+            innerBg="#d3672d"
+          />
         </motion.div>
 
         <motion.div variants={summaryItemVariants}>
-          <SummaryBox title="Overdue Invoices" value={overdueInvoices} bg="#dd2528" innerBg="#c22427" />
+          <SummaryBox
+            title="Overdue Invoices"
+            value={overdueInvoices}
+            bg="#dd2528"
+            innerBg="#c22427"
+          />
         </motion.div>
 
         <motion.div variants={revenueVariants}>
@@ -289,7 +315,6 @@ const Dashboard = () => {
             <div className="text-center text-xl text-black font-semibold mb-3">
               ${Number(totalRevenue).toFixed(2)}
             </div>
-
 
             <Link
               href="/company-new-invoice"
@@ -304,7 +329,11 @@ const Dashboard = () => {
       <motion.h2
         variants={navbarVariants}
         initial="hidden"
-        animate="visible" className="text-xl font-semibold pl-2 pt-20 mb-4">Recent Invoices</motion.h2>
+        animate="visible"
+        className="text-xl font-semibold pl-2 pt-20 mb-4"
+      >
+        Recent Invoices
+      </motion.h2>
 
       <motion.div
         variants={recentInvoicesVariants}
@@ -321,10 +350,7 @@ const Dashboard = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full glass  pl-10 pr-3 py-2 text-black placeholder-black focus:outline-none"
-
-
             />
-
           </div>
 
           <div className="flex flex-wrap gap-4 md:gap-6">
@@ -332,10 +358,11 @@ const Dashboard = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={` text-sm font-medium text-[20px] transition pb-1 ${activeTab === tab
-                  ? "text-[#29268E] border-b-2 border-[#29268E]"
-                  : "text-black hover:text-[#29268E]"
-                  }`}
+                className={` text-sm font-medium text-[20px] transition pb-1 ${
+                  activeTab === tab
+                    ? "text-[#29268E] border-b-2 border-[#29268E]"
+                    : "text-black hover:text-[#29268E]"
+                }`}
               >
                 {tab}
               </button>
@@ -372,7 +399,6 @@ const Dashboard = () => {
                     date={new Date(inv.invoiceDate).toLocaleDateString()}
                   />
                 ))
-
               )}
             </tbody>
           </table>
@@ -387,16 +413,21 @@ const Dashboard = () => {
                 &lt;
               </button>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-300"
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-1 rounded ${
+                      page === currentPage
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 hover:bg-gray-300"
                     }`}
-                >
-                  {page}
-                </button>
-              ))}
+                  >
+                    {page}
+                  </button>
+                ),
+              )}
 
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
@@ -407,12 +438,9 @@ const Dashboard = () => {
               </button>
             </div>
           )}
-
         </div>
-
-
       </motion.div>
-    </div >
+    </div>
   );
 };
 
@@ -424,9 +452,7 @@ const MenuItem = ({ icon, label, isActive, onClick }: any) => (
     className={`
        px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
       transition
-      ${isActive
-        ? "text-black bg-white/30"
-        : "text-black hover:bg-white/20"}
+      ${isActive ? "text-black bg-white/30" : "text-black hover:bg-white/20"}
     `}
   >
     {icon}
@@ -449,13 +475,11 @@ const SummaryBox = ({ title, value, bg, innerBg }: any) => (
   </div>
 );
 
-
 const Th = ({ children }: { children: React.ReactNode }) => (
   <th className="px-2 md:px-4 py-1 md:py-2 text-left whitespace-nowrap text-sm md:text-base">
     {children}
   </th>
 );
-
 
 const InvoiceRow = ({ id, client, amount, status, date }: any) => {
   const colors: Record<string, string> = {
@@ -498,9 +522,15 @@ const InvoiceRow = ({ id, client, amount, status, date }: any) => {
       </td>
 
       {/* Desktop layout */}
-      <td className="hidden md:table-cell px-2 md:px-6 py-1 md:py-4 text-left">{id}</td>
-      <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">{client}</td>
-      <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">{amount}</td>
+      <td className="hidden md:table-cell px-2 md:px-6 py-1 md:py-4 text-left">
+        {id}
+      </td>
+      <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">
+        {client}
+      </td>
+      <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">
+        {amount}
+      </td>
       <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">
         <button
           className={`px-2 py-1 text-white rounded ${colors[status] ?? "bg-gray-400"}`}
@@ -508,11 +538,11 @@ const InvoiceRow = ({ id, client, amount, status, date }: any) => {
           {status}
         </button>
       </td>
-      <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">{date}</td>
+      <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">
+        {date}
+      </td>
     </tr>
   );
 };
-
-
 
 export default Dashboard;

@@ -7,7 +7,7 @@ import TetrominosLoader from "../_components/TetrominosLoader";
 import { useRouter } from "next/navigation";
 import {
   FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog,
-  FaUserCircle, FaSearch, FaBars, FaTimes, FaRegUser
+  FaUserCircle, FaSearch, FaBars, FaTimes, FaRegUser,FaPhoneAlt
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 
@@ -101,9 +101,12 @@ const Dashboard = () => {
     { icon: <FaChartBar />, label: "Payments", path: "/payment-client" },
     { icon: <FaMoneyCheckAlt />, label: "Reports", path: "/reports-client" },
     { icon: <FaRegUser />, label: "Profile", path: "/profile" },
+     { icon: <FaCog />, label: "Help", path: "/help" },
+        { icon: <FaPhoneAlt />, label: "Contact us", path: "/contact" },
+    
 
 
-    { icon: <FaCog />, label: "Help", path: "/help" },
+   
   ];
 
   // Filter based on active tab

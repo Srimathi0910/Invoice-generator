@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
     FaFileInvoiceDollar, FaUsers, FaChartBar, FaMoneyCheckAlt, FaCog,
-    FaUserCircle, FaSearch, FaBars, FaTimes,FaRegUser
+    FaUserCircle, FaSearch, FaBars, FaTimes,FaRegUser,FaPhoneAlt
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
@@ -106,6 +106,8 @@ const Dashboard = () => {
        { icon: <FaMoneyCheckAlt />, label: "Reports", path: "/reports-client" },
            { icon: <FaRegUser />, label: "Profile", path: "/profile" },
         { icon: <FaCog />, label: "Help", path: "/help" },
+            { icon: <FaPhoneAlt />, label: "Contact us", path: "/contact" },
+        
     ];
 
     const filteredInvoices = invoices.filter((inv) => {

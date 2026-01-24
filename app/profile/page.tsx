@@ -1,5 +1,5 @@
 "use client";
-import { authFetch } from "@/utils/authFetch"; 
+import { authFetch } from "@/utils/authFetch";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -10,12 +10,13 @@ import {
   FaCog,
   FaUserCircle,
   FaBars,
-  FaTimes,FaRegUser
+  FaTimes,
+  FaRegUser,
+  FaPhoneAlt,
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
 import { Eye, EyeOff } from "lucide-react";
-
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -25,20 +26,20 @@ const ProfilePage = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
-   const [popup, setPopup] = useState<{
-      open: boolean;
-      message: string;
-      type: "success" | "error" | "info";
-    }>({
-      open: false,
-      message: "",
-      type: "info",
-    });
+  const [popup, setPopup] = useState<{
+    open: boolean;
+    message: string;
+    type: "success" | "error" | "info";
+  }>({
+    open: false,
+    message: "",
+    type: "info",
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLoader(false);
-    }, 1200); 
+    }, 1200);
     return () => clearTimeout(timer);
   }, []);
 
@@ -111,7 +112,7 @@ const ProfilePage = () => {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
 
-      router.replace("/"); 
+      router.replace("/");
     } catch (err) {
       console.error("Logout failed:", err);
     }
@@ -165,7 +166,7 @@ const ProfilePage = () => {
 
       setPopup({
         open: true,
-        message:"Profile updated successfully!",
+        message: "Profile updated successfully!",
         type: "success",
       });
       setFormData({ ...formData, password: "", confirmPassword: "" });
@@ -173,7 +174,7 @@ const ProfilePage = () => {
       console.error(err);
       setPopup({
         open: true,
-        message:"Failed to update profile",
+        message: "Failed to update profile",
         type: "success",
       });
     } finally {
@@ -183,17 +184,26 @@ const ProfilePage = () => {
 
   // ---------------- MENU ----------------
   const menuItems = [
-    { icon: <FaFileInvoiceDollar />, label: "Dashboard", path: "/dashboard-client" },
+    {
+      icon: <FaFileInvoiceDollar />,
+      label: "Dashboard",
+      path: "/dashboard-client",
+    },
     { icon: <FaUsers />, label: "My Invoices", path: "/myInvoices" },
     { icon: <FaChartBar />, label: "Payments", path: "/payment-client" },
-   { icon: <FaMoneyCheckAlt />, label: "Reports", path: "/reports-client" },
-       { icon: <FaRegUser />, label: "Profile", path: "/profile" },
+    { icon: <FaMoneyCheckAlt />, label: "Reports", path: "/reports-client" },
+    { icon: <FaRegUser />, label: "Profile", path: "/profile" },
     { icon: <FaCog />, label: "Help", path: "/help" },
+    { icon: <FaPhoneAlt />, label: "Contact us", path: "/contact" },
   ];
 
   const navbarVariants: Variants = {
     hidden: { y: -100, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
   };
 
   const staggerContainer: Variants = {
@@ -203,7 +213,11 @@ const ProfilePage = () => {
 
   const itemVariant: Variants = {
     hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.4, ease: "easeOut" } },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.4, ease: "easeOut" },
+    },
   };
 
   if (showLoader) {
@@ -215,7 +229,12 @@ const ProfilePage = () => {
   }
 
   return (
-    <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="min-h-screen bg-gray-200 p-4 md:p-6">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+      className="min-h-screen bg-gray-200 p-4 md:p-6"
+    >
       {/* TOP BAR */}
       <motion.div
         variants={navbarVariants}
@@ -223,11 +242,17 @@ const ProfilePage = () => {
         animate="visible"
         className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
       >
-        <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
+        <motion.div
+          variants={itemVariant}
+          className="text-xl font-bold cursor-pointer mb-3 md:mb-0"
+        >
           {/* LOGO */}
         </motion.div>
 
-        <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
+        <motion.div
+          variants={itemVariant}
+          className="md:hidden flex items-center mb-3"
+        >
           <button onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
           </button>
@@ -257,7 +282,10 @@ const ProfilePage = () => {
               <FaUserCircle size={28} />
               <span className="font-medium">{user?.username || "User"}</span>
             </div>
-            <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">
+            <button
+              onClick={handleLogout}
+              className="text-sm text-red-600 hover:underline"
+            >
               Logout
             </button>
           </div>
@@ -265,7 +293,10 @@ const ProfilePage = () => {
       </motion.div>
 
       {/* PROFILE CARD */}
-      <motion.div variants={itemVariant} className="glass backdrop-blur bg-white/30 border border-black rounded-xl  placeholder-white/70 max-w-4xl mx-auto p-8 rounded shadow">
+      <motion.div
+        variants={itemVariant}
+        className="glass backdrop-blur bg-white/30 border border-black rounded-xl  placeholder-white/70 max-w-4xl mx-auto p-8 rounded shadow"
+      >
         <div className="flex items-center gap-4 mb-6">
           <div className=" bg-white/50 w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center text-3xl font-bold">
             {user?.username?.charAt(0).toUpperCase() || "U"}
@@ -275,19 +306,51 @@ const ProfilePage = () => {
 
         <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-6">
-            <Input label="Contact Person" name="contactPerson" value={formData.contactPerson} onChange={handleChange} />
-            <Input label="Phone Number" name="phone" value={formData.phone} onChange={handleChange} />
-            <Input label="Email ID" name="email" value={formData.email} readOnly />
+            <Input
+              label="Contact Person"
+              name="contactPerson"
+              value={formData.contactPerson}
+              onChange={handleChange}
+            />
+            <Input
+              label="Phone Number"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+            />
+            <Input
+              label="Email ID"
+              name="email"
+              value={formData.email}
+              readOnly
+            />
           </div>
 
           <div className="space-y-6">
-            <Input label="Change Password" type="password" name="password" value={formData.password} onChange={handleChange} error={errors.password} />
-            <Input label="Confirm Password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} error={errors.confirmPassword} />
+            <Input
+              label="Change Password"
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              error={errors.password}
+            />
+            <Input
+              label="Confirm Password"
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              error={errors.confirmPassword}
+            />
           </div>
         </div>
 
         <div className="mt-6 flex justify-center">
-          <button onClick={handleUpdate} className="border border-white bg-white/40 px-6 py-2 rounded font-medium hover:bg-gray-400">
+          <button
+            onClick={handleUpdate}
+            className="border border-white bg-white/40 px-6 py-2 rounded font-medium hover:bg-gray-400"
+          >
             {loading ? "Updating" : "Update profile"}
           </button>
         </div>
@@ -295,16 +358,20 @@ const ProfilePage = () => {
       {popup.open && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
-
             <h3
-              className={`text-lg font-semibold mb-3 ${popup.type === "success"
-                ? "text-green-600"
-                : popup.type === "error"
-                  ? "text-red-600"
-                  : "text-gray-700"
-                }`}
+              className={`text-lg font-semibold mb-3 ${
+                popup.type === "success"
+                  ? "text-green-600"
+                  : popup.type === "error"
+                    ? "text-red-600"
+                    : "text-gray-700"
+              }`}
             >
-              {popup.type === "success" ? "Success" : popup.type === "error" ? "Error" : "Info"}
+              {popup.type === "success"
+                ? "Success"
+                : popup.type === "error"
+                  ? "Error"
+                  : "Info"}
             </h3>
 
             <p className="text-gray-700 mb-5">{popup.message}</p>
@@ -323,7 +390,6 @@ const ProfilePage = () => {
 };
 
 // ---------------- INPUT WITH EYE TOGGLE ----------------
-
 
 const Input = ({ label, error, type = "text", ...props }: any) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -356,15 +422,9 @@ const Input = ({ label, error, type = "text", ...props }: any) => {
       </div>
 
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-       
     </div>
-    
   );
 };
-
-
-
-
 
 // ---------------- MENU ITEM ----------------
 const MenuItem = ({ icon, label, isActive, onClick }: any) => (
@@ -373,9 +433,7 @@ const MenuItem = ({ icon, label, isActive, onClick }: any) => (
     className={`
        px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
       transition
-      ${isActive
-        ? "text-black bg-white/30"
-        : "text-black hover:bg-white/20"}
+      ${isActive ? "text-black bg-white/30" : "text-black hover:bg-white/20"}
     `}
   >
     {icon}

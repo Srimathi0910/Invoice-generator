@@ -21,6 +21,7 @@ import {
   FaUserCircle,
   FaBars,
   FaTimes,
+  FaPhoneAlt
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
@@ -527,6 +528,7 @@ const generatePDF = async () => {
     { icon: <FaChartBar />, label: "Reports", path: "/reports" },
     { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
     { icon: <FaCog />, label: "Settings", path: "/settings" },
+    { icon: <FaPhoneAlt />, label: "Contact us", path: "/contact" },
   ];
 
   const handleFileChange = (

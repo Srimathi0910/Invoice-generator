@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Calendar, Download } from "lucide-react";
-import { FaFileInvoiceDollar, FaUsers, FaChartBar, FaSearch, FaMoneyCheckAlt, FaCog, FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
+import { FaFileInvoiceDollar, FaUsers, FaChartBar, FaSearch, FaMoneyCheckAlt, FaCog, FaUserCircle, FaBars, FaTimes,FaPhoneAlt } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
 
@@ -109,6 +109,7 @@ export default function ReportsPage() {
         { icon: <FaChartBar />, label: "Reports", path: "/reports" },
         { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
         { icon: <FaCog />, label: "Settings", path: "/settings" },
+        { icon: <FaPhoneAlt />, label: "Contact us", path: "/contact" },
     ];
     // Pie chart
     const pieData = [

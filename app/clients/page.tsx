@@ -15,6 +15,7 @@ import {
   FaUserCircle,
   FaBars,
   FaTimes,
+  FaPhoneAlt
 } from "react-icons/fa";
 
 /* ---------------- TYPES ---------------- */
@@ -58,6 +59,7 @@ export default function ClientsPage() {
     { icon: <FaChartBar />, label: "Reports", path: "/reports" },
     { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
     { icon: <FaCog />, label: "Settings", path: "/settings" },
+    { icon: <FaPhoneAlt />, label: "Contact us", path: "/contact" },
   ];
 
   /* ---------------- AUTH CHECK ---------------- */
