@@ -1270,10 +1270,9 @@ const InvoicePreview = () => {
         </p>
       )}
 
-      <motion.div variants={itemVariant} className="flex justify-center mb-6">
+      {/* <motion.div variants={itemVariant} className="flex justify-center mb-6">
         <button
-          className={`bg-indigo-400 text-black px-6 py-2 h-12 w-64
- rounded flex items-center justify-center gap-2 ${downloading ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-300"}`}
+          className={`bg-indigo-400 text-black px-6 py-2 h-12 w-64 rounded flex items-center justify-center gap-2 ${downloading ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-300"}`}
           disabled={downloading}
           onClick={() => {
             if (editMode) {
@@ -1293,7 +1292,54 @@ const InvoicePreview = () => {
           <Download size={16} />
           {downloading ? "Downloading PDF" : "Download PDF"}
         </button>
-      </motion.div>
+      </motion.div> */}
+      <motion.div
+  variants={itemVariant}
+  className="flex justify-center mb-6"
+>
+  <button
+    disabled={downloading}
+    className={`relative w-64 h-12 px-6 rounded bg-indigo-400 text-black
+      flex items-center justify-center overflow-hidden
+      ${downloading ? "cursor-not-allowed opacity-80" : "hover:bg-indigo-300"}
+    `}
+    onClick={() => {
+      if (editMode) {
+        setPopup({
+          open: true,
+          message: "Please finish edit to download the PDF",
+          type: "error",
+        });
+        return;
+      }
+
+      runWithOverlay(async () => {
+        await generatePDF();
+      });
+    }}
+  >
+    {/* NORMAL STATE */}
+    <span
+      className={`absolute flex items-center gap-2 transition-opacity duration-200 ${
+        downloading ? "opacity-0" : "opacity-100"
+      }`}
+    >
+      <Download size={16} />
+      Download PDF
+    </span>
+
+    {/* LOADING STATE */}
+    <span
+      className={`absolute flex items-center gap-2 transition-opacity duration-200 ${
+        downloading ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <Download size={16} className="animate-spin" />
+      Downloading PDF
+    </span>
+  </button>
+</motion.div>
+
       {popup.open && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
