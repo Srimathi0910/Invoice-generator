@@ -182,14 +182,14 @@ const Dashboard = () => {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible"className="min-h-screen bg-gray-300 p-4 md:p-6">
+            animate="visible"className="min-h-screen bg-gray-200 p-4 md:p-6">
 
 
             {/* ---------------- TOP MENU ---------------- */}
             <motion.div
                 variants={navbarVariants}
                 initial="hidden"
-                animate="visible" className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                animate="visible" className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
                 <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0"></div>
 
                 <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
@@ -237,7 +237,7 @@ const Dashboard = () => {
                             placeholder="Search invoices..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full glass  pl-10 pr-3 py-2 text-white placeholder-black focus:outline-none"
+                            className="w-full glass  pl-10 pr-3 py-2 text-black placeholder-black focus:outline-none"
                         />
 
                     </div>
@@ -256,7 +256,7 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <table className="min-w-full table-fixed border border-gray-200 text-left min-w-full table-auto text-sm md:text-base">
+                <table className="min-w-full table-fixed  text-left min-w-full table-auto text-sm md:text-base">
                     <thead className="bg-gray-100 hidden md:table-header-group  glass/20 backdrop-blur">
                         <tr className="hidden md:table-row border-t border-white/20">
                             <th className="px-4 py-2 w-1/5">Invoice</th>
@@ -277,10 +277,10 @@ const Dashboard = () => {
                             </tr>
                         ) : (
                             paginatedInvoices.map(inv => (
-                                <tr key={inv._id} className="border-t md:table-row block md:table-row mb-4 md:mb-0">
+                                <tr key={inv._id} className="border-t border-white md:table-row block md:table-row mb-4 md:mb-0">
                                     {/* Mobile Card */}
                                     <td colSpan={6} className="block md:hidden p-2">
-                                        <div className="flex flex-col gap-2 bg-gray-50 rounded p-4 shadow-sm">
+                                        <div className="flex flex-col gap-2  p-4">
                                             <div className="flex justify-between w-full">
                                                 <span className="font-semibold">Invoice:</span>
                                                 <span>{inv.invoiceNumber}</span>
@@ -318,16 +318,16 @@ const Dashboard = () => {
                                     </td>
 
                                     {/* Desktop */}
-                                    <td className="hidden md:table-cell px-4 py-2">{inv.invoiceNumber}</td>
-                                    <td className="hidden md:table-cell px-4 py-2">{inv.billedTo.businessName}</td>
-                                    <td className="hidden md:table-cell px-4 py-2">₹{Number(inv.totals?.grandTotal ?? 0).toFixed(2)}</td>
-                                    <td className="hidden md:table-cell px-4 py-2">
+                                    <td className="hidden md:table-cell px-4 py-4">{inv.invoiceNumber}</td>
+                                    <td className="hidden md:table-cell px-4 py-4">{inv.billedTo.businessName}</td>
+                                    <td className="hidden md:table-cell px-4 py-4">₹{Number(inv.totals?.grandTotal ?? 0).toFixed(2)}</td>
+                                    <td className="hidden md:table-cell px-4 py-4">
                                         <span className={`px-2 py-1 rounded text-white ${getStatusColor(inv.status)}`}>
                                             {inv.status ?? "Unpaid"}
                                         </span>
                                     </td>
-                                    <td className="hidden md:table-cell px-4 py-2">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
-                                    <td className="hidden md:table-cell px-4 py-2">
+                                    <td className="hidden md:table-cell px-4 py-4">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
+                                    <td className="hidden md:table-cell px-4 py-4">
                                         <button className="bg-blue-200 text-blue-700 font-medium px-3 py-1 rounded hover:bg-blue-300">
                                             <div className="flex justify-end w-full">
                                                 <a
@@ -361,7 +361,7 @@ const Dashboard = () => {
                         <button
                             key={i}
                             onClick={() => setCurrentPage(i + 1)}
-                            className={`px-3 py-1 border rounded ${currentPage === i + 1 ? "bg-blue-500 text-white" : ""}`}
+                            className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-300"}`}
                         >
                             {i + 1}
                         </button>

@@ -178,13 +178,13 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-300 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-200 p-4 md:p-6">
 
       {/* ---------------- TOP MENU ---------------- */}
       <motion.div variants={navbarVariants}
         initial="hidden"
         animate="visible"
-        className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0"></div>
+        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0"></div>
 
         <div className="md:hidden flex items-center mb-3">
           <button onClick={() => setMenuOpen(!menuOpen)}>
@@ -233,10 +233,10 @@ const Dashboard = () => {
           <SummaryBox title="Overdue Invoices" value={overdueInvoices} bg="#dd2528" innerBg="#c22427" />
         </motion.div>
         <motion.div variants={revenueVariants}>
-          <div className="glass-strong text-white rounded-2xl p-4 flex flex-col min-h-[200px]">
-            <span className="text-sm text-center text-[20px] font-medium">Total Revenue</span>
-            <hr className="border-gray-300 my-2" />
-            <div className="text-center text-4xl font-semibold p-8">₹{totalRevenue.toFixed(2)}</div>
+          <div className="glass-strong bg-white/40 text-white rounded-2xl p-4 flex flex-col min-h-[200px]">
+            <span className="text-sm text-center text-[20px] text-black font-medium">Total Revenue</span>
+          <hr className="border-black my-2" />
+            <div className="text-center text-4xl text-black font-semibold p-8">₹{totalRevenue.toFixed(2)}</div>
           </div>
         </motion.div>
 
@@ -261,7 +261,7 @@ const Dashboard = () => {
                   setSearchTerm(e.target.value); // ✅ Update state
                   setCurrentPage(1); // ✅ Reset to first page when searching
                 }}
-                className="w-full glass pl-10 pr-3 py-2 text-white placeholder-white/70 focus:outline-none"
+                className="w-full glass pl-10 pr-3 py-2 text-black placeholder-black focus:outline-none"
               />
             
 
@@ -301,7 +301,7 @@ const Dashboard = () => {
               </tr>
             ) : (
               paginatedInvoices.map((inv) => (
-                <tr key={inv._id} className="border-t md:table-row block md:table-row mb-4 md:mb-0 hidden md:table-row hidden md:table-row border-t-[10px] border-white/20">
+                <tr key={inv._id} className="border-t border-t border-white">
                   {/* Mobile layout */}
                   <td colSpan={6} className="block md:hidden px-2 py-2">
                     <div className="flex flex-col gap-2">
@@ -361,7 +361,7 @@ const Dashboard = () => {
                   </td>
 
                   <td className="hidden md:table-cell px-4 py-2">
-                    <button className={`px-2 py-2 text-white rounded ${getStatusColor(inv.status)}`}>
+                    <button className={`px-2 py-1 text-white rounded ${getStatusColor(inv.status)}`}>
                       {inv.status ?? "Unpaid"}
                     </button>
                   </td>
@@ -397,7 +397,7 @@ const Dashboard = () => {
             <button
               key={i + 1}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+              className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-100"}`}
             >
               {i + 1}
             </button>

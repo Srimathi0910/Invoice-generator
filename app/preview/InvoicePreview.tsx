@@ -356,6 +356,7 @@ const InvoicePreview = () => {
       });
     } finally {
       setDownloading(false);
+      
     }
   };
 
@@ -557,7 +558,7 @@ const InvoicePreview = () => {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="visible" className="min-h-screen bg-gray-300 p-4 md:p-6">
+      animate="visible" className="min-h-screen bg-gray-200 p-4 md:p-6">
       {/* Navbar */}
       {showOverlay && (
         <div className="fixed inset-0 bg-gray-300/70 z-[9999] flex items-center justify-center">
@@ -575,7 +576,7 @@ const InvoicePreview = () => {
       <motion.div
         variants={navbarVariants}
         initial="hidden"
-        animate="visible" className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        animate="visible" className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
         <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
           {/* LOGO */}
         </motion.div>
@@ -619,9 +620,10 @@ const InvoicePreview = () => {
       </motion.div>
 
       {/* Invoice Preview */}
-      <motion.div variants={itemVariant} ref={invoiceRef} className="max-w-5xl mx-auto bg-white p-6 rounded shadow space-y-6">
+      <motion.div variants={itemVariant} ref={invoiceRef} className="pdf-root max-w-5xl mx-auto bg-white p-6 rounded shadow space-y-6">
         {/* Billed By */}
-        <div className="border border-black-300 p-4 rounded">
+       <div className="border border-black p-4 rounded" >
+
           <div className="flex justify-between mb-6">
             <div>
               <h2 className="font-bold">{invoice?.billedBy?.businessName || "Your Business"}</h2>
@@ -815,7 +817,7 @@ const InvoicePreview = () => {
           )}
 
           {/* Totals */}
-          <div className="flex justify-end text-right mb-4 sm:text-center">
+          <div className="flex justify-end text-right mb-4 sm:text-right p-10">
             <div className="sm:w-2/3 space-y-1">
               <p>Amount: ₹{totals.amount.toFixed(2)}</p>
               <p>CGST: ₹{totals.cgst.toFixed(2)}</p>
@@ -839,7 +841,7 @@ const InvoicePreview = () => {
         <div className="flex flex-col items-center md:items-end mb-4 w-full md:w-64 md:ml-auto">
 
           <label
-            className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-full h-10"
+            className="flex items-center justify-center gap-3 px-4 border-2 border-dashed border-black rounded-lg cursor-pointer hover:bg-gray-50 w-full h-10"
           >
 
 
@@ -885,7 +887,7 @@ const InvoicePreview = () => {
           {/* Terms & Conditions */}
           {/* Terms & Conditions */}
           <div className="flex flex-col items-start mb-4 w-64">
-            <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-full h-10">
+            <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed border-black rounded-lg cursor-pointer hover:bg-gray-50 w-full h-10">
               <FileText size={18} className="text-gray-500" />
               <span className="text-sm text-gray-600 text-center">
                 Add Terms & Conditions
@@ -946,7 +948,7 @@ const InvoicePreview = () => {
 
           {/* Notes */}
           <div className="mb-4">
-            <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
+            <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed border-black rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
               <StickyNote size={18} className="text-gray-500" />
               <span className="text-sm text-gray-600 text-center">
                 Add Notes
@@ -976,7 +978,7 @@ const InvoicePreview = () => {
 
           {/* Attachments */}
           <div className="mb-4">
-            <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
+            <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed border-black rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
               <Paperclip size={18} className="text-gray-500" />
               <span className="text-sm text-gray-600 text-center">
                 Add Attachments
@@ -1016,7 +1018,7 @@ const InvoicePreview = () => {
       <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-4 justify-items-center">
         {/* Additional Info */}
         <div className="mb-4">
-          <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
+          <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed border-black rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
             <Info size={18} className="text-gray-500" />
             <span className="text-sm text-gray-600 text-center">
               Additional Information
@@ -1053,7 +1055,7 @@ const InvoicePreview = () => {
 
         {/* Contact Details */}
         <div className="mb-4">
-          <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
+          <label className="flex items-center justify-center gap-3 px-4 border-2 border-dashed border-black rounded-lg cursor-pointer hover:bg-gray-50 w-64 h-10">
             <Phone size={18} className="text-gray-500" />
             <span className="text-sm text-gray-600 text-center">
               Contact Details
@@ -1095,14 +1097,14 @@ const InvoicePreview = () => {
         <button
           disabled={saving}
           onClick={saveInvoice}
-          className={`bg-gray-300 text-black px-6 py-2 h-12 w-64 sm:w-auto rounded flex items-center justify-center gap-2 ${saving ? "bg-gray-400 cursor-not-allowed" : ""}`}
+          className={`bg-green-300 text-black px-6 py-2 h-12 w-64 sm:w-auto rounded flex items-center justify-center gap-2 ${saving ? "bg-gray-400 cursor-not-allowed" : ""}`}
         >
           <Edit2 size={16} />
           {saving ? "Saving..." : "Save Invoice"}
         </button>
 
         <button
-          className="bg-gray-300 text-black px-6 py-2 h-12 w-64 sm:w-auto rounded flex items-center justify-center gap-2"
+          className="bg-blue-300 text-black px-6 py-2 h-12 w-64 sm:w-auto rounded flex items-center justify-center gap-2 "
           onClick={async () => {
             if (editMode) await saveInvoice();
             setEditMode(!editMode);
@@ -1113,7 +1115,7 @@ const InvoicePreview = () => {
         </button>
 
         <button
-          className="bg-gray-300 text-black px-6 py-2 h-12 w-64 sm:w-auto rounded flex items-center justify-center gap-2"
+          className="bg-white text-black px-6 py-2 h-12 w-64 sm:w-auto rounded flex items-center justify-center gap-2"
           onClick={() => setShowEmailForm(!showEmailForm)}
         >
           <Send size={16} />
@@ -1124,7 +1126,7 @@ const InvoicePreview = () => {
 
       {showEmailForm && (
         <div className="flex justify-center gap-2 mb-6">
-          <input type="email" placeholder="Enter recipient email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-2 rounded" />
+          <input type="email" placeholder="Enter recipient email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-2 border-black rounded" />
           <button
             disabled={sending}
             className={`px-4 py-2 rounded text-white 
@@ -1145,12 +1147,10 @@ const InvoicePreview = () => {
         <p className="text-green-600 text-center font-medium mt-2">{successMsg}</p>
       )}
 
-      <div className="flex justify-center mb-6">
+    <motion.div
+        variants={itemVariant}className="flex justify-center mb-6">
         <button
-          className={`bg-gray-300 text-black
-    px-6 py-2 h-12 w-64 sm:w-auto
-    rounded flex items-center justify-center gap-2
-    ${downloading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-300"}`}
+          className={`bg-indigo-400 text-black px-6 py-2 h-12 w-64 sm:w-auto rounded flex items-center justify-center gap-2 ${downloading ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-300"}`}
           disabled={downloading}
           onClick={() => {
             if (editMode) {
@@ -1172,7 +1172,7 @@ const InvoicePreview = () => {
         </button>
 
 
-      </div>
+      </motion.div>
       {popup.open && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">

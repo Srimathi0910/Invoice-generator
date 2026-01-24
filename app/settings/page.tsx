@@ -335,13 +335,13 @@ export default function SettingsPage() {
     );
   }
   return (
-    <div className="min-h-screen bg-gray-300 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-200 p-4 md:p-6">
       {/* NAVBAR */}
       <motion.div
         variants={navbarVariants}
         initial="hidden"
         animate="visible"
-        className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6"
+        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
       >
 
 
@@ -400,8 +400,8 @@ export default function SettingsPage() {
         <div className="glass rounded-xl p-6 sm:p-8">
           {/* Tabs */}
           <div className="flex gap-10 mb-8">
-            <span onClick={() => setActiveTab("company")} className={`cursor-pointer font-semibold pb-1 ${activeTab === "company" ? "text-[#8F90DF] underline underline-offset-4 pb-1" : "text-gray-800"}`}>Company Profile</span>
-            <span onClick={() => setActiveTab("preferences")} className={`cursor-pointer font-semibold pb-1 ${activeTab === "preferences" ? "text-[#8F90DF] underline underline-offset-4 pb-1" : "text-gray-800"}`}>Preferences</span>
+            <span onClick={() => setActiveTab("company")} className={`cursor-pointer font-semibold pb-1 ${activeTab === "company" ? "text-[#8F90DF] underline underline-offset-7 pb-2" : "text-gray-800"}`}>Company Profile</span>
+            <span onClick={() => setActiveTab("preferences")} className={`cursor-pointer font-semibold pb-1 ${activeTab === "preferences" ? "text-[#8F90DF] underline underline-offset-7 pb-1" : "text-gray-800"}`}>Preferences</span>
           </div>
 
           {/* Company Profile */}
@@ -409,18 +409,18 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Card title="Company Profile">
                 <div className="flex gap-4 mb-4 items-center">
-                  <div onClick={() => fileInputRef.current?.click()} className="w-20 h-20 border border-dashed border-black rounded flex items-center justify-center cursor-pointer overflow-hidden hover:bg-gray-50">
-                    {logoPreview ? <img src={logoPreview} alt="Logo" className="w-full h-full object-contain border-black" /> : <span className=" border-black text-sm text-gray-500">Logo</span>}
+                  <div onClick={() => fileInputRef.current?.click()} className="w-20 h-20 border border-dashed border-white bg-white/20 rounded flex items-center justify-center cursor-pointer overflow-hidden hover:bg-gray-50">
+                    {logoPreview ? <img src={logoPreview} alt="Logo" className="w-full h-full object-contain border-white bg-white/20" /> : <span className=" border-white bg-white/20 text-sm text-gray-500">Logo</span>}
                     <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleLogoChange} />
                   </div>
-                  <input className="border border-black px-3 py-2 w-full bg-transparent text-black placeholder-white/60 focus:outline-none focus:border-black" placeholder="Company Name" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} />
+                  <input className="border border-white bg-white/20 px-3 py-2 w-full bg-transparent text-black placeholder-white/60 " placeholder="Company Name" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} />
                 </div>
 
-                <input className="border border-black px-3 py-2 w-full mb-3" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-                <textarea className="border border-black px-3 py-2 w-full mb-3" rows={4} placeholder="Address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
-                <input className="border border-black px-3 py-2 w-full mb-3" placeholder="GSTIN" value={formData.gstin} onChange={(e) => setFormData({ ...formData, gstin: e.target.value })} />
+                <input className="border border-white bg-white/20 px-3 py-2 w-full mb-3" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                <textarea className="borderborder-white bg-white/20 px-3 py-2 w-full mb-3" rows={4} placeholder="Address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+                <input className="border border-white bg-white/20 px-3 py-2 w-full mb-3" placeholder="GSTIN" value={formData.gstin} onChange={(e) => setFormData({ ...formData, gstin: e.target.value })} />
                 <input
-                  className="border border-black px-3 py-2 w-full mb-3"
+                  className="border border-white bg-white/20 px-3 py-2 w-full mb-3"
                   placeholder="Phone"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -430,23 +430,23 @@ export default function SettingsPage() {
 
               <Card title="Payment Settings">
                 <label className="block mb-1 font-medium">Default Currency</label>
-                <select className="border border-black px-3 py-2 w-full mb-4" value={formData.currency} onChange={(e) => setFormData({ ...formData, currency: e.target.value })}>
+                <select className="border border-white bg-white/20 px-3 py-2 w-full mb-4" value={formData.currency} onChange={(e) => setFormData({ ...formData, currency: e.target.value })}>
                   <option value="INR">Indian Rupee</option>
                   <option value="USD">USD</option>
                 </select>
 
                 <label className="block mb-1 font-medium">Default GST Rate</label>
-                <select className="border border-black px-3 py-2 w-full mb-4" value={formData.gstRate} onChange={(e) => setFormData({ ...formData, gstRate: Number(e.target.value) })}>
+                <select className="border border-white bg-white/20 px-3 py-2 w-full mb-4" value={formData.gstRate} onChange={(e) => setFormData({ ...formData, gstRate: Number(e.target.value) })}>
                   <option value={18}>18%</option>
                   <option value={12}>12%</option>
                   <option value={5}>5%</option>
                 </select>
 
                 <label className="block mb-1 font-medium">Invoice Number Prefix</label>
-                <input className="border border-black px-3 py-2 w-full mb-6" value={formData.invoicePrefix} onChange={(e) => setFormData({ ...formData, invoicePrefix: e.target.value })} />
+                <input className="border border-white bg-white/20 px-3 py-2 w-full mb-6" value={formData.invoicePrefix} onChange={(e) => setFormData({ ...formData, invoicePrefix: e.target.value })} />
 
                 <button
-                  className="bg-gray-300 px-6 py-2 border border-black rounded text-sm"
+                  className="bg-gray-300 px-6 py-2 border border-white  rounded text-sm"
                   onClick={handleSave}
                   disabled={loadingCompany} // disable while saving
                 >
@@ -458,16 +458,16 @@ export default function SettingsPage() {
               <div className="md:col-span-2">
                 <Card title="Bank Information">
                   <label className="block mb-1 font-medium">Bank Name</label>
-                  <input className="border border-black px-3 py-2 w-full mb-4" placeholder="Bank Name" value={formData.bankName} onChange={(e) => setFormData({ ...formData, bankName: e.target.value })} />
+                  <input className="border border-white bg-white/20 px-3 py-2 w-full mb-4" placeholder="Bank Name" value={formData.bankName} onChange={(e) => setFormData({ ...formData, bankName: e.target.value })} />
 
                   <label className="block mb-1 font-medium">Account Number</label>
-                  <input className="border border-black px-3 py-2 w-full mb-4" placeholder="Account Number" value={formData.accountNumber} onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })} />
+                  <input className="border border-white bg-white/20 px-3 py-2 w-full mb-4" placeholder="Account Number" value={formData.accountNumber} onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })} />
 
                   <label className="block mb-1 font-medium">UPI ID (Optional)</label>
-                  <input className="border px-3 py-2 border border-black w-full mb-6" placeholder="example@upi" value={formData.upiId} onChange={(e) => setFormData({ ...formData, upiId: e.target.value })} />
+                  <input className="border px-3 py-2 border border-white bg-white/20 w-full mb-6" placeholder="example@upi" value={formData.upiId} onChange={(e) => setFormData({ ...formData, upiId: e.target.value })} />
 
                   <button
-                    className="bg-gray-300 px-6 py-2 border border-black rounded text-sm"
+                    className="bg-gray-300 px-6 py-2 border border-white  rounded text-sm"
                     onClick={handleSave}
                     disabled={loadingCompany} // disable while saving
                   >
@@ -501,7 +501,7 @@ export default function SettingsPage() {
                         reminderPeriod: Number(e.target.value),
                       })
                     }
-                    className="border border-black rounded px-3 py-2 text-sm w-full sm:w-auto"
+                    className="border border-white bg-white/20 rounded px-3 py-2 text-sm w-full sm:w-auto"
                   >
                     {[1, 3, 5].map((day) => (
                       <option key={day} value={day}>
@@ -514,7 +514,7 @@ export default function SettingsPage() {
                 <div className="mt-6 text-right">
                   <button
                     onClick={savePreferences}
-                    className="bg-gray-200 hover:bg-gray-300 px-6 py-2 rounded text-sm"
+                    className="bg-gray-300 border border-white  hover:bg-gray-300 px-6 py-2 rounded text-sm"
                     disabled={loadingPreferences}
                   >
                     {loadingPreferences ? "Saving..." : "Save Changes"}
@@ -523,7 +523,7 @@ export default function SettingsPage() {
                 </div>
               </Card>
 
-              <Card title="Appearance Preferences">
+              {/* <Card title="Appearance Preferences">
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-gray-600">Theme:</span>
                   <select value={preferences.theme} onChange={(e) => setPreferences({ ...preferences, theme: e.target.value })} className="border rounded px-3 py-2 text-sm">
@@ -534,14 +534,14 @@ export default function SettingsPage() {
                 <div className="mt-6 text-right">
                   <button
                     onClick={savePreferences}
-                    className="bg-gray-200 hover:bg-gray-300 px-6 py-2 rounded text-sm"
+                    className="bg-gray-300  border border-white hover:bg-gray-300 px-6 py-2 rounded text-sm"
                     disabled={loadingPreferences}
                   >
                     {loadingPreferences ? "Saving..." : "Save Changes"}
                   </button>
 
                 </div>
-              </Card>
+              </Card> */}
             </div>
           )}
         </div>
@@ -596,7 +596,7 @@ const MenuItem = ({ icon, label, isActive, onClick }: any) => (
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border border-black rounded-lg p-6 mb-6">
+    <div className="border border-white bg-white/20 rounded-lg p-6 mb-6">
       <h2 className="text-xl font-semibold mb-4">{title}</h2>
       {children}
     </div>

@@ -207,13 +207,13 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-300 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-200 p-4 md:p-6">
       {/* ---------------- TOP MENU ---------------- */}
       <motion.div
         variants={navbarVariants}
         initial="hidden"
         animate="visible"
-        className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
 
 
 
@@ -264,7 +264,7 @@ const Dashboard = () => {
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-12 auto-rows-[120px]"
 
       >
-        <motion.div variants={summaryItemVariants}>
+     <motion.div variants={summaryItemVariants}>
           <SummaryBox title="Total Invoices" value={totalInvoices} bg="#504e9e" innerBg="#464494" />
         </motion.div>
 
@@ -281,11 +281,11 @@ const Dashboard = () => {
         </motion.div>
 
         <motion.div variants={revenueVariants}>
-          <div className="glass-strong text-white rounded-2xl p-4 flex flex-col min-h-[200px]">
+          <div className="glass-strong bg-white/40 text-white rounded-2xl p-4 flex flex-col min-h-[200px]">
             <span className="text-sm text-center text-black text-[20px] font-medium">
               Total Revenue
             </span>
-            <hr className="border-gray-300 my-2" />
+            <hr className="border-black 300 my-2" />
             <div className="text-center text-xl text-black font-semibold mb-3">
               ${Number(totalRevenue).toFixed(2)}
             </div>
@@ -293,7 +293,7 @@ const Dashboard = () => {
 
             <Link
               href="/company-new-invoice"
-              className="mt-auto glass text-center text-black py-2 px-4 rounded-xl hover:bg-white/30 transition"
+              className="mt-auto bg-white text-center text-black py-2 px-4 rounded-xl hover:glass hover:bg-blue-200 transition"
             >
               Create Invoice
             </Link>
@@ -320,7 +320,7 @@ const Dashboard = () => {
               placeholder="Search by client..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full glass  pl-10 pr-3 py-2 text-white placeholder-black focus:outline-none"
+              className="w-full glass  pl-10 pr-3 py-2 text-black placeholder-black focus:outline-none"
 
 
             />
@@ -391,7 +391,7 @@ const Dashboard = () => {
                 <button
                   key={page}
                   onClick={() => handlePageChange(page)}
-                  className={`px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
+                  className={`px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-300"
                     }`}
                 >
                   {page}
@@ -465,7 +465,7 @@ const InvoiceRow = ({ id, client, amount, status, date }: any) => {
   };
 
   return (
-    <tr className="border-t md:table-row block md:table-row mb-4 md:mb-0">
+    <tr className="border-t border-white md:table-row block md:table-row mb-4 md:mb-0">
       {/* Mobile layout */}
       <td colSpan={5} className="block md:hidden px-2 py-2">
         <div className="flex flex-col items-center gap-2">

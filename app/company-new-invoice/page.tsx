@@ -704,7 +704,7 @@ export default function InvoicePage() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="visible" className="min-h-screen bg-gray-300 p-4 md:p-6">
+      animate="visible" className="min-h-screen bg-gray-200 p-4 md:p-6">
       {showOverlay && (
         <div className="fixed inset-0 bg-gray-300/70 z-[9999] flex items-center justify-center">
 
@@ -724,7 +724,7 @@ export default function InvoicePage() {
       <motion.div
         variants={navbarVariants}
         initial="hidden"
-        animate="visible" className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        animate="visible" className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
         <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
           {/* LOGO */}
         </motion.div>
@@ -769,12 +769,12 @@ export default function InvoicePage() {
 
       {/* ---------------- FORM START ---------------- */}
 
-      <motion.form variants={itemVariant} className="max-w-7xl mx-auto bg-white rounded-xl shadow p-6">
+      <motion.form variants={itemVariant} className="max-w-7xl mx-auto glass bg-white/20 rounded-xl shadow p-6">
         {/* HEADER + LOGO */}
         <motion.div variants={itemVariant} className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-semibold">Invoice</h1>
-          <div onClick={() => fileInputRef.current?.click()} className="w-20 h-20 border border-dashed rounded flex items-center justify-center cursor-pointer overflow-hidden hover:bg-gray-50">
-            {logoPreview ? <img src={logoPreview} alt="Logo" className="w-full h-full object-contain" /> : <span className="text-sm text-gray-500">Logo</span>}
+          <div onClick={() => fileInputRef.current?.click()} className="w-20 h-20 border border-dashed border-white rounded flex items-center justify-center cursor-pointer overflow-hidden hover:bg-gray-50">
+            {logoPreview ? <img src={logoPreview} alt="Logo" className="w-full h-full object-contain" /> : <span className="text-sm text-black">Logo</span>}
           </div>
           <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleLogoChange} />
         </motion.div>
@@ -782,12 +782,12 @@ export default function InvoicePage() {
         {/* ... Keep ALL your original JSX for Invoice Meta, Billed By/To, Items, Totals, File Uploads, Buttons ... */}
         <motion.div variants={itemVariant} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="flex flex-col gap-1">
-            <label className="ext-sm font-medium text-gray-700">
+            <label className="text-sm font-medium text-gray-700">
               Invoice Number
             </label>
 
             <input
-              className="w-full p-2 border-2 border-black rounded-md"
+              className="w-full p-2 border-2 glass bg-white/20 rounded-md"
               placeholder="Invoice Number"
               required
               value={invoiceMeta.invoiceNumber}
@@ -798,12 +798,12 @@ export default function InvoicePage() {
 
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">
+            <label className="text-sm font-medium text-gray-700 ">
               Date
             </label>
 
             <input
-              className="w-full p-2 bg-white text-black border-2 border-black rounded-md focus:outline-none focus:ring-0"
+              className="w-full p-2 glass bg-white/20 text-black border-2 border-black rounded-md focus:outline-none focus:ring-0"
               type="date"
               required
               value={invoiceMeta.invoiceDate}
@@ -818,7 +818,7 @@ export default function InvoicePage() {
               Due Date
             </label>
             <input
-              className="w-full p-2 bg-white text-black border-2 border-black rounded-md focus:outline-none focus:ring-0"
+              className="w-full p-2 glass bg-white/20 text-black border-2 border-black rounded-md focus:outline-none focus:ring-0"
               type="date"
               required
               value={invoiceMeta.dueDate}
@@ -848,9 +848,9 @@ export default function InvoicePage() {
 
         {/* ITEMS + SUMMARY */}
         {/* ---------------- BILLED DETAILS ---------------- */}
-        <motion.div variants={itemVariant} className="flex flex-col md:flex-row gap-8 mb-10 justify-center">
+        <motion.div variants={itemVariant} className="flex flex-col md:flex-row gap-8 mb-10 justify-center ">
           {/* Billed By */}
-          <div className="md:w-6/12 flex flex-col p-10 gap-6 bg-gray-200">
+          <div className="md:w-6/12 flex flex-col p-10 gap-6 glass bg-white/20 ">
             <h3 className="font-semibold mb-3">Billed By (Your Details)</h3>
             {(Object.keys(billedBy) as (keyof typeof billedBy)[]).map((key) => {
               const value = billedBy[key];
@@ -878,7 +878,7 @@ export default function InvoicePage() {
           </div>
 
           {/* Billed To */}
-          <div className="md:w-6/12 flex flex-col p-10 gap-6 bg-gray-200">
+          <div className="md:w-6/12 flex flex-col p-10 gap-6 glass bg-white/20">
             <h3 className="font-semibold mb-3">Billed To (Client’s Details)</h3>
             {Object.keys(billedTo).map((key) => {
               const value = (billedTo as any)[key];
@@ -935,7 +935,7 @@ export default function InvoicePage() {
                     <tr key={i}>
                       <td className="p-2 border border-gray-300">
                         <input
-                          className="w-full p-2 border border-gray-300 rounded text-sm"
+                          className="w-full p-2 border border-white rounded text-sm"
                           required
                           value={item.itemName}
                           onChange={(e) => handleChange(i, "itemName", e.target.value)}
@@ -943,7 +943,7 @@ export default function InvoicePage() {
                       </td>
                       <td className="p-2 border border-gray-300">
                         <input
-                          className="w-full p-2 border border-gray-300 rounded text-sm"
+                          className="w-full p-2 border border-white rounded text-sm"
                           required
                           value={item.hsn}
                           onChange={(e) => handleChange(i, "hsn", e.target.value)}
@@ -951,7 +951,7 @@ export default function InvoicePage() {
                       </td>
                       <td className="p-2 border border-gray-300">
                         <input
-                          className="w-full p-2 border border-gray-300 rounded text-sm"
+                          className="w-full p-2 border  border-white rounded text-sm"
                           type="number"
                           value={item.gst}
                           required
@@ -960,7 +960,7 @@ export default function InvoicePage() {
                       </td>
                       <td className="p-2 border border-gray-300">
                         <input
-                          className="w-full p-2 border border-gray-300 rounded text-sm"
+                          className="w-full p-2 border  border-white rounded text-sm"
                           type="number"
                           value={item.qty}
                           required
@@ -969,7 +969,7 @@ export default function InvoicePage() {
                       </td>
                       <td className="p-2 border border-gray-300">
                         <input
-                          className="w-full p-2 border border-gray-300 rounded text-sm"
+                          className="w-full p-2 border  border border-white rounded text-sm"
                           type="number"
                           value={item.rate}
                           required
@@ -1000,7 +1000,7 @@ export default function InvoicePage() {
                   <div className="flex justify-between">
                     <span className="font-semibold">Item:</span>
                     <input
-                      className="border p-1 rounded w-2/3"
+                      className="border p-1 rounded border  border-white w-2/3"
                       value={item.itemName}
                       onChange={(e) => handleChange(i, "itemName", e.target.value)}
                     />
@@ -1059,7 +1059,7 @@ export default function InvoicePage() {
           <button
             type="button"
             onClick={addItem}
-            className="w-full mt-3 bg-gray-200 py-2 rounded border border-gray-300 hover:bg-gray-300 transition"
+            className="w-full mt-3 bg-gray-100 py-2 rounded border border-white hover:bg-white-300 transition"
           >
             + Add New Item
           </button>
@@ -1067,9 +1067,9 @@ export default function InvoicePage() {
 
 
         <motion.div variants={itemVariant}>
-          <div className="bg-white  flex flex-col md:flex-row gap-6 md:justify-between p-4 md:p-10">
+          <div className="glass bg-white/20  flex flex-col md:flex-row gap-6 md:justify-between p-4 md:p-10">
 
-            <div className="bg-white  border-2 border-gray-300  mb-6 bg-gray-50 w-[250px] h-[200px] p-10">
+            <div className="glass bg-white/20  border-2 border-gray-300  mb-6 bg-gray-50 w-[250px] h-[200px] p-10">
 
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
@@ -1105,7 +1105,7 @@ export default function InvoicePage() {
 
             </div>
 
-            <div className="bg-white  border-2 bg-gray-50 p-4 rounded-lg space-y-3 w-full md:w-auto">
+            <div className="glass bg-white/20 border-2 bg-gray-50 p-4 rounded-lg space-y-3 w-full md:w-auto">
 
               <div className="flex justify-between font-semibold items-center">
                 <span>Show Total (PDF)</span>

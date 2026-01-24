@@ -199,13 +199,13 @@ export default function ReportsPage() {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible"className="min-h-screen bg-gray-300 p-4 md:p-6">
+            animate="visible"className="min-h-screen bg-gray-200 p-4 md:p-6">
 
            <motion.div
                   variants={navbarVariants}
                   initial="hidden"
                   animate="visible"
-                  className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                  className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
           
           
           
@@ -253,12 +253,12 @@ export default function ReportsPage() {
             {/* Summary Cards */}
             <motion.div variants={itemVariant} className="grid md:grid-cols-2 gap-6 mb-6">
                 <div className="glass rounded-2x p-6 rounded shadow">
-                    <p className="text-sm text-white mb-2">Total Revenues</p>
+                    <p className="text-sm text-black mb-2">Total Revenues</p>
                     <h2 className="text-3xl font-bold text-blue-600">${Number(totalRevenue).toFixed(2)}</h2>
                 </div>
 
                 <div className="glass rounded-2x p-6 rounded shadow">
-                    <h2 className="text-xl text-white font-bold mb-2">Total: {totalInvoices}</h2>
+                    <h2 className="text-xl text-black font-bold mb-2">Total: {totalInvoices}</h2>
                     <div className="flex gap-6 text-sm">
                         <span className="text-green-600">Paid Invoices: {paidInvoices}</span>
                         <span className="text-orange-500">Unpaid Invoices: {unpaidInvoices}</span>
@@ -276,7 +276,7 @@ export default function ReportsPage() {
                             <XAxis stroke="black" dataKey="month" />
                             <YAxis stroke="black" />
                             <Tooltip />
-                            <Bar dataKey="amount" fill="#E5E7EB" />
+                            <Bar dataKey="amount" fill="#FFFFFF" />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
@@ -311,7 +311,7 @@ export default function ReportsPage() {
                           placeholder="Search by client..."
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          className="w-full glass rounded-xl pl-10 pr-3 py-2 text-white placeholder-white/70 focus:outline-none"
+                          className="w-full glass rounded-xl pl-10 pr-3 py-2 text-black placeholder-black focus:outline-none"
             
                         />
             
@@ -381,7 +381,7 @@ export default function ReportsPage() {
                             <button
                               key={page}
                               onClick={() => handlePageChange(page)}
-                              className={`px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
+                              className={`px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-300"
                                 }`}
                             >
                               {page}

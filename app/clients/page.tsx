@@ -230,7 +230,7 @@ export default function ClientsPage() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="min-h-screen bg-gray-300 p-4 md:p-6">
+      className="min-h-screen bg-gray-200 p-4 md:p-6">
 
 
       {/* -------- HEADER -------- */}
@@ -238,7 +238,7 @@ export default function ClientsPage() {
         variants={navbarVariants}
         initial="hidden"
         animate="visible"
-        className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
 
 
 
@@ -307,47 +307,48 @@ export default function ClientsPage() {
       </motion.div>
 
       {/* -------- SEARCH -------- */}
-      <motion.div variants={itemVariant} className="relative w-full md:w-1/3 mb-4 ">
+      
+
+      {/* -------- TABLE -------- */}
+      <motion.div
+        variants={itemVariant}
+        className="bg-white/20 backdrop-blur-md rounded overflow-x-auto p-4 md:p-6"
+      >
+        <motion.div variants={itemVariant} className="relative w-full md:w-1/3 mb-4 ">
         <input
           type="text"
           placeholder="Search Clients"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border rounded w-full pl-10 pr-2 py-2 focus:ring-2 focus:ring-blue-500"
+          className="w-full glass  pl-10 pr-3 py-2 text-black placeholder-black focus:outline-none"
         />
         <Search
           className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
           size={18}
         />
       </motion.div>
-
-      {/* -------- TABLE -------- */}
-      <motion.div
-        variants={itemVariant}
-        className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg overflow-x-auto border border-white/30"
-      >
         {loading ? (
           <div className="text-center py-10 text-gray-700">Loading clients...</div>
         ) : (
-          <table className="w-full text-sm md:text-base border-collapse table-auto">
+          <table className="w-full text-sm md:text-base  table-auto">
             {/* Desktop headers */}
-            <thead className="hidden md:table-header-group">
-              <tr className="border-t border-white/20">
-                <th className="px-4 py-2 text-center bg-white/30 backdrop-blur-md bg-gray-100 glass bg-white/20 backdrop-blur">Client Name</th>
-                <th className=" px-4 py-2 text-center bg-white/30 backdrop-blur-md bg-gray-100 glass bg-white/20 backdrop-blur">Phone</th>
-                <th className=" px-4 py-2 text-center bg-white/30 backdrop-blur-md bg-gray-100 glass bg-white/20 backdrop-blur">GSTIN</th>
-                <th className=" px-4 py-2 text-center bg-white/30 backdrop-blur-md bg-gray-100 glass bg-white/20 backdrop-blur">Total Invoices</th>
-                <th className=" px-4 py-2 text-center bg-white/30 backdrop-blur-md bg-gray-100 glass bg-white/20 backdrop-blur">Email</th>
+            <thead className="hidden md:table-header-group  bg-white/20 backdrop-blur">
+              <tr className="border-t border-white border-white/20">
+                <th className="px-4 py-2 text-center ">Client Name</th>
+                <th className=" px-4 py-2 text-center  ">Phone</th>
+                <th className=" px-4 py-2 text-center  ">GSTIN</th>
+                <th className=" px-4 py-2 text-center ">Total Invoices</th>
+                <th className=" px-4 py-2 text-center">Email</th>
               </tr>
             </thead>
 
             <tbody>
               {paginatedClients.length > 0 ? (
                 paginatedClients.map((client) => (
-                  <tr key={client.id} className="md:table-row block md:mb-0 border-t border-white/20 ">
+                  <tr key={client.id} className="md:table-row block md:mb-0 md:border-t border-white  ">
                     {/* Mobile layout */}
                     <td colSpan={6} className="block md:hidden px-2 py-2">
-                      <div className="flex flex-col gap-2 border-t  p-4 shadow-inner ">
+                      <div className="flex flex-col gap-2 border-t border-white  p-4  ">
                         <div className="flex justify-between w-full">
                           <span className="font-semibold text-gray-800">Client Name:</span>
                           <span className="text-gray-900">{client.name}</span>
@@ -372,11 +373,11 @@ export default function ClientsPage() {
                     </td>
 
                     {/* Desktop layout */}
-                    <td className="hidden md:table-cell  px-4 py-2 text-center backdrop-blur-md">{client.name}</td>
-                    <td className="hidden md:table-cell  px-4 py-2 text-center  backdrop-blur-md">{client.phone}</td>
-                    <td className="hidden md:table-cell  px-4 py-2 text-center backdrop-blur-md">{client.gstin}</td>
-                    <td className="hidden md:table-cell  px-4 py-2 text-center backdrop-blur-md">{client.totalInvoices}</td>
-                    <td className="hidden md:table-cell  px-4 py-2 text-center backdrop-blur-md">{client.email || "-"}</td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center">{client.name}</td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center">{client.phone}</td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center">{client.gstin}</td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center ">{client.totalInvoices}</td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center">{client.email || "-"}</td>
                   </tr>
                 ))
               ) : (
@@ -389,11 +390,7 @@ export default function ClientsPage() {
             </tbody>
           </table>
         )}
-      </motion.div>
-
-
-
-      {/* -------- PAGINATION -------- */}
+         {/* -------- PAGINATION -------- */}
       <motion.div variants={itemVariant} className="flex justify-center gap-2 mt-4">
         {/* Previous button */}
         <button
@@ -409,7 +406,7 @@ export default function ClientsPage() {
           <button
             key={i + 1}
             onClick={() => setCurrentPage(i + 1)}
-            className={`px-3 py-1 border rounded ${currentPage === i + 1 ? "bg-blue-500 text-white" : ""}`}
+            className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-300"}`}
           >
             {i + 1}
           </button>
@@ -424,6 +421,11 @@ export default function ClientsPage() {
           &gt;
         </button>
       </motion.div>
+      </motion.div>
+
+
+
+     
 
     </motion.div>
   );

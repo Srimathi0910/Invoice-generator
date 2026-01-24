@@ -3,7 +3,6 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
-
 :root {
    --w: 96px;
   --h: 112px;
@@ -43,6 +42,9 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 }
+
+
+
 
 @theme inline {
   --color-background: var(--background);
@@ -86,12 +88,14 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 }
-
 @media (prefers-color-scheme: dark) {
   :root { /* 👈 CHANGE THIS */
 }
 
 }
+
+
+
 /* .input {
   @apply w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black;
 }
@@ -121,6 +125,7 @@ html.dark body {
   @apply bg-black text-white; /* dark mode */
 }
 
+
 /* Optional: update cards and buttons */
 html.dark .bg-white {
   @apply bg-gray-900 text-white;
@@ -135,6 +140,7 @@ html.dark select,
 html.dark textarea {
   @apply bg-gray-800 text-white border-gray-600;
 }
+
 @keyframes scaleIn {
   from {
     transform: scale(0.9);
@@ -149,6 +155,7 @@ html.dark textarea {
 .animate-scaleIn {
   animation: scaleIn 0.2s ease-out;
 }
+
 
 .dark {
    --background: oklch(0.145 0 0);
@@ -183,21 +190,26 @@ html.dark textarea {
    --sidebar-border: oklch(1 0 0 / 10%);
    --sidebar-ring: oklch(0.556 0 0);
 }
-
-@layer base {
+/* @layer base {
   * {
     @apply border-border outline-ring/50;
    }
   body {
     @apply bg-background text-foreground;
    }
-}
+} */
+/* .pdf-root,
+.pdf-root * {
+  border: none !important;
+  outline: none !important;
+} */
+
+
 /* Glassmorphism base */
 .glass {
   @apply bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg;
 }
 
-/* Dark mode tweak */
 .dark .glass {
   @apply bg-black/30 border-white/10;
 }

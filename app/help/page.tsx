@@ -118,11 +118,11 @@ export default function HelpPage() {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible" className="min-h-screen bg-gray-300 p-4 md:p-6">
+            animate="visible" className="min-h-screen bg-gray-200 p-4 md:p-6">
             <motion.div
                 variants={navbarVariants}
                 initial="hidden"
-                animate="visible" className="glass rounded-2xl backdrop-blur rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+                animate="visible" className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
                 <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0"></motion.div>
 
                 <motion.div variants={itemVariant} className="md:hidden flex items-center mb-3">
@@ -146,7 +146,7 @@ export default function HelpPage() {
                     ))}
 
                     <div className="flex flex-col items-end space-y-2">
-                        <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded shadow">
+                        <div className="flex items-center space-x-3 glass px-4 py-2 rounded shadow">
                             <FaUserCircle size={28} />
                             <span className="font-medium">{user?.username || "User"}</span>
                         </div>

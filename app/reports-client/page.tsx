@@ -200,11 +200,11 @@ export default function ReportsPage() {
         <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible" className="min-h-screen bg-gray-300 p-4 md:p-6">
+            animate="visible" className="min-h-screen bg-gray-200 p-4 md:p-6">
             <motion.div
                 variants={navbarVariants}
                 initial="hidden"
-                animate="visible" className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                animate="visible" className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
                 <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
                     {/* LOGO */}
                 </motion.div>
@@ -275,7 +275,7 @@ export default function ReportsPage() {
                             <XAxis stroke="black" dataKey="month" />
                             <YAxis stroke="black"/>
                             <Tooltip />
-                            <Bar dataKey="amount" fill="#E5E7EB" />
+                            <Bar dataKey="amount" fill="#FFFFFF" />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
@@ -328,8 +328,7 @@ export default function ReportsPage() {
                 <div className="overflow-x-auto w-full">
                     <table className="min-w-full  table-auto text-sm md:text-base min-w-full table-auto text-sm md:text-base">
                         <thead className="bg-gray-100 glass bg-white/20 backdrop-blur">
-                            <tr className="hidden md:table-row hidden md:table-row border-t-[10px] border-white/20
-"> {/* Hide headers on small screens */}
+                            <tr className="hidden md:table-row hidden md:table-row border-t border-white/20"> {/* Hide headers on small screens */}
                                 <Th>Invoice</Th>
                                 <Th>Client</Th>
                                 <Th>Amount</Th>
@@ -374,7 +373,7 @@ export default function ReportsPage() {
                                 <button
                                     key={page}
                                     onClick={() => handlePageChange(page)}
-                                    className={`px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
+                                    className={`px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-300"
                                         }`}
                                 >
                                     {page}

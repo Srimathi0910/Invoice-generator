@@ -215,13 +215,13 @@ const ProfilePage = () => {
   }
 
   return (
-    <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="min-h-screen bg-gray-300 p-4 md:p-6">
+    <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="min-h-screen bg-gray-200 p-4 md:p-6">
       {/* TOP BAR */}
       <motion.div
         variants={navbarVariants}
         initial="hidden"
         animate="visible"
-        className="glass-strong rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6"
+        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
       >
         <motion.div variants={itemVariant} className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
           {/* LOGO */}
@@ -273,21 +273,21 @@ const ProfilePage = () => {
           <h2 className="text-2xl font-bold">{user?.username}</h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-4">
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-6">
             <Input label="Contact Person" name="contactPerson" value={formData.contactPerson} onChange={handleChange} />
             <Input label="Phone Number" name="phone" value={formData.phone} onChange={handleChange} />
             <Input label="Email ID" name="email" value={formData.email} readOnly />
           </div>
 
-          <div className="space--4">
+          <div className="space-y-6">
             <Input label="Change Password" type="password" name="password" value={formData.password} onChange={handleChange} error={errors.password} />
             <Input label="Confirm Password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} error={errors.confirmPassword} />
           </div>
         </div>
 
         <div className="mt-6 flex justify-center">
-          <button onClick={handleUpdate} className="border border-black bg-gray-300 px-6 py-2 rounded font-medium hover:bg-gray-400">
+          <button onClick={handleUpdate} className="border border-white bg-white/40 px-6 py-2 rounded font-medium hover:bg-gray-400">
             {loading ? "Updating" : "Update profile"}
           </button>
         </div>
@@ -340,7 +340,7 @@ const Input = ({ label, error, type = "text", ...props }: any) => {
           {...props}
           type={inputType}
           className={`w-full border px-3 py-2 rounded pr-10  backdrop-blur ${
-            error ? "border-red-500" : "border-black"
+            error ? "border-red-500" : "bg-white/30 border-white/70"
           }`}
         />
 
