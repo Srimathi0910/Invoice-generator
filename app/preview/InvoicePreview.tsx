@@ -907,7 +907,7 @@ const InvoicePreview = () => {
           )}
 
           {/* Totals */}
-          <div className="flex justify-end text-right mb-4 sm:text-right p-10">
+          <div className="flex justify-end text-right mb-4 sm:text-right p-2">
             <div className="sm:w-2/3 space-y-1">
               <p>Amount: ₹{totals.amount.toFixed(2)}</p>
               <p>CGST: ₹{totals.cgst.toFixed(2)}</p>
