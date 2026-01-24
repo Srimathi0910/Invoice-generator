@@ -345,7 +345,7 @@ const Dashboard = () => {
 
         <div className="overflow-x-auto w-full">
           <table className="min-w-full table-auto text-sm md:text-base">
-            <thead className="bg-white/20 backdrop-blur">
+            <thead className="bg-white/30 backdrop-blur">
               <tr className="hidden md:table-row border-t border-white/20">
                 <Th>Invoice</Th>
                 <Th>Client</Th>

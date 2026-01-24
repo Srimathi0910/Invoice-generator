@@ -335,7 +335,7 @@ export default function ReportsPage() {
             
                     <div className="overflow-x-auto w-full">
                       <table className="min-w-full table-auto text-sm md:text-base">
-                        <thead className="bg-white/20 backdrop-blur">
+                        <thead className="bg-white/30 backdrop-blur">
                           <tr className="hidden md:table-row border-t border-white/20">
                             <Th>Invoice</Th>
                             <Th>Client</Th>
@@ -432,7 +432,7 @@ const InvoiceRow = ({ id, client, amount, status, date }: any) => {
     };
 
     return (
-        <tr className="border-t md:table-row block md:table-row mb-4 md:mb-0">
+        <tr className="border-t border-white md:table-row block md:table-row mb-4 md:mb-0">
             {/* Mobile layout */}
             <td colSpan={5} className="block md:hidden px-2 py-2">
                 <div className="flex flex-col items-center gap-2">

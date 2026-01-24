@@ -282,7 +282,7 @@ const Dashboard = () => {
         </div>
 
         <table className="min-w-full table-auto text-sm md:text-base">
-          <thead className="bg-white/20 backdrop-blur">
+          <thead className="bg-white/30 backdrop-blur">
             <tr className="hidden md:table-row border-t border-white/20">
               <Th>Invoice</Th>
               {/* <th className="px-4 py-2 w-1/6">Billed To</th> */}

@@ -359,9 +359,9 @@ export default function PaymentsPage() {
             </div>
           </div>
         </motion.div>
-        <table className="w-full text-sm border min-w-full table-auto text-sm md:text-base">
-          <thead className="bg-gray-200 hidden md:table-header-group bg-white/20 backdrop-blur">
-            <tr className="hidden md:table-row border border-white/20">
+        <table className="w-full text-sm  min-w-full table-auto text-sm md:text-base">
+          <thead className="bg-gray-200 hidden md:table-header-group bg-white/30 backdrop-blur">
+            <tr className=" border border-white hidden md:table-row">
               <Th>Invoice Number</Th>
               <Th>Client Name</Th>
               <Th>Payment Date</Th>
