@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import InvoicePreview from "./InvoicePreview";
 
 export default function PreviewPage() {
-  return <InvoicePreview />;
+  return (
+    <Suspense fallback={null}>
+      <InvoicePreview />
+    </Suspense>
+  );
 }
