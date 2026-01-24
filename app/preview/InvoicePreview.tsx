@@ -1271,28 +1271,64 @@ const InvoicePreview = () => {
       )}
 
       <motion.div variants={itemVariant} className="flex justify-center mb-6">
-        <button
-          className={`bg-indigo-400 text-black px-6 py-2 h-12 w-64 rounded flex items-center justify-center gap-2 ${downloading ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-300"}`}
-          disabled={downloading}
-          onClick={() => {
-            if (editMode) {
-              setPopup({
-                open: true,
-                message: "Please finish edit to download the PDF",
-                type: "error",
-              });
-              return;
-            }
+  <button
+    className={`relative h-12 w-64 rounded flex items-center justify-center 
+      ${downloading ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-300"}
+    `}
+    disabled={downloading}
+    onClick={() => {
+      if (editMode) {
+        setPopup({
+          open: true,
+          message: "Please finish edit to download the PDF",
+          type: "error",
+        });
+        return;
+      }
 
-            runWithOverlay(async () => {
-              await generatePDF();
-            });
-          }}
+      runWithOverlay(async () => {
+        await generatePDF();
+      });
+    }}
+  >
+    {/* Normal content */}
+    <span
+      className={`flex items-center gap-2 transition-opacity duration-200
+        ${downloading ? "opacity-0" : "opacity-100"}
+      `}
+    >
+      <Download size={16} />
+      Download PDF
+    </span>
+
+    {/* Loader / downloading text */}
+    {downloading && (
+      <span className="absolute flex items-center gap-2">
+        <svg
+          className="animate-spin h-4 w-4"
+          viewBox="0 0 24 24"
         >
-          <Download size={16} />
-          {downloading ? "Downloading PDF" : "Download PDF"}
-        </button>
-      </motion.div>
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+            fill="none"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+          />
+        </svg>
+        Downloading PDF
+      </span>
+    )}
+  </button>
+</motion.div>
+
       
 
       {popup.open && (
