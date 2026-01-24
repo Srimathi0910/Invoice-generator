@@ -1000,7 +1000,7 @@ export default function InvoicePage() {
                   <div className="flex justify-between">
                     <span className="font-semibold">Item:</span>
                     <input
-                      className="border p-1 rounded border  border-white w-2/3"
+                      className="border p-1 rounded w-2/3"
                       value={item.itemName}
                       onChange={(e) => handleChange(i, "itemName", e.target.value)}
                     />
