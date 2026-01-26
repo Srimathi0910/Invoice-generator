@@ -4,7 +4,7 @@ import TetrominosLoader from "../_components/TetrominosLoader";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter,usePathname } from "next/navigation";
 import {
   FaFileInvoiceDollar,
   FaUsers,
@@ -18,9 +18,11 @@ import {
   FaPhoneAlt,
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
+import Navbar1 from "@/app/_components/navbar/Navbar1"
 
 const Dashboard = () => {
   const router = useRouter();
+  const pathname = usePathname(); // get current path
 
   /* ---------------- AUTH ---------------- */
   const [user, setUser] = useState<{ username: string; email?: string } | null>(
@@ -40,20 +42,20 @@ const Dashboard = () => {
     return () => clearTimeout(timer); // cleanup
   }, []);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+  const userObj = storedUser ? JSON.parse(storedUser) : null;
 
-    if (!storedUser) {
-      router.replace("/login");
-      return;
-    }
+  if (!userObj?._id && pathname !== "/") {
+    router.replace("/login");
+  } else if (userObj?._id) {
+    setUser(userObj);
+    setEmail(userObj.email ?? "");
+  }
 
-    const parsedUser = JSON.parse(storedUser);
+  setLoadingUser(false);
+}, [router, pathname]);
 
-    setUser(parsedUser);
-    setEmail(parsedUser.email); // ✅ IMPORTANT
-    setLoadingUser(false);
-  }, [router]);
 
   const handleLogout = async () => {
     try {
@@ -214,54 +216,8 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-200 p-4 md:p-6">
       {/* ---------------- TOP MENU ---------------- */}
-      <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible"
-        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
-      >
-        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
-          {/* LOGO */}
-        </div>
+      <Navbar1 user={user} handleLogout={handleLogout} />
 
-        <div className="md:hidden flex items-center mb-3">
-          <button onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-          </button>
-        </div>
-
-        <div
-          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${
-            menuOpen ? "flex" : "hidden md:flex"
-          }`}
-        >
-          {menuItems.map((item) => (
-            <MenuItem
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              isActive={activeMenu === item.label}
-              onClick={() => {
-                setActiveMenu(item.label); // set active menu
-                if (item.path) router.push(item.path); // navigate to page
-              }}
-            />
-          ))}
-
-          <div className="flex flex-col items-end space-y-2">
-            <div className="glass flex items-center space-x-3 px-4 py-2 rounded-xl">
-              <FaUserCircle size={28} />
-              <span className="font-medium">{user?.username || "User"}</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:underline"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </motion.div>
 
       {/* ---------------- SUMMARY ---------------- */}
       <motion.div
@@ -379,6 +335,7 @@ const Dashboard = () => {
                 <Th>Amount</Th>
                 <Th>Status</Th>
                 <Th>Date</Th>
+                <Th>Due Date</Th>
               </tr>
             </thead>
             <tbody>
@@ -397,6 +354,8 @@ const Dashboard = () => {
                     amount={`₹${inv.totals?.grandTotal ?? 0}`}
                     status={(inv.status ?? "N/A").trim()}
                     date={new Date(inv.invoiceDate).toLocaleDateString()}
+                    dueDate={new Date(inv.dueDate).toLocaleDateString()}
+
                   />
                 ))
               )}
@@ -481,7 +440,7 @@ const Th = ({ children }: { children: React.ReactNode }) => (
   </th>
 );
 
-const InvoiceRow = ({ id, client, amount, status, date }: any) => {
+const InvoiceRow = ({ id, client, amount, status, date,dueDate }: any) => {
   const colors: Record<string, string> = {
     Paid: "bg-[#05410C]/200",
     Unpaid: "bg-[#E06A2A]",
@@ -518,6 +477,10 @@ const InvoiceRow = ({ id, client, amount, status, date }: any) => {
             <span className="font-semibold">Date:</span>
             <span className="text-left">{date}</span>
           </div>
+          <div className="flex justify-between w-full px-4">
+            <span className="font-semibold">Due Date:</span>
+            <span className="text-left">{dueDate}</span>
+          </div>
         </div>
       </td>
 
@@ -540,6 +503,9 @@ const InvoiceRow = ({ id, client, amount, status, date }: any) => {
       </td>
       <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">
         {date}
+      </td>
+      <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">
+        {dueDate}
       </td>
     </tr>
   );

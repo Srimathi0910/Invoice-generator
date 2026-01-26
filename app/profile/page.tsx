@@ -1,7 +1,7 @@
 "use client";
 import { authFetch } from "@/utils/authFetch";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   FaFileInvoiceDollar,
   FaUsers,
@@ -17,10 +17,11 @@ import {
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
 import { Eye, EyeOff } from "lucide-react";
+import ClientNavbar from "../_components/navbar/Navbar2";
 
 const ProfilePage = () => {
   const router = useRouter();
-
+  const pathname = usePathname(); // get current path
   const [user, setUser] = useState<any>(null);
   const [activeMenu, setActiveMenu] = useState("Profile");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -55,42 +56,59 @@ const ProfilePage = () => {
 
   // ---------------- LOAD USER ----------------
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
-      router.replace("/login");
-      return;
-    }
-    const fetchUser = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("/api/auth/profile-update", {
-          method: "GET",
-          credentials: "include",
-        });
-        const data = await res.json();
+  const storedUser = localStorage.getItem("user");
 
-        if (!res.ok) {
-          throw new Error(data.message || "Failed to fetch user");
-        }
+  // ❌ No user → redirect (except home)
+  if (!storedUser && pathname !== "/") {
+    router.replace("/login");
+    return; // stop further execution
+  }
 
-        setUser(data.user);
-        setFormData({
-          contactPerson: data.user.contactPerson || "",
-          phone: data.user.phone || "",
-          email: data.user.email || "",
-          password: "",
-          confirmPassword: "",
-        });
-      } catch (err) {
-        console.error(err);
-        router.replace("/login"); // redirect if not authorized
-      } finally {
-        setLoading(false);
+  const fetchUser = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch("/api/auth/profile-update", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch user");
       }
-    };
 
-    fetchUser();
-  }, [router]);
+      if (!data.user?._id) {
+        // Invalid user object → redirect
+        if (pathname !== "/") router.replace("/login");
+        return;
+      }
+
+      // ✅ Set valid user
+      setUser(data.user);
+      setFormData({
+        contactPerson: data.user.contactPerson || "",
+        phone: data.user.phone || "",
+        email: data.user.email || "",
+        password: "",
+        confirmPassword: "",
+      });
+    } catch (err: any) {
+      console.error(err);
+
+      // If unauthorized → redirect
+      if (err?.response?.status === 401) {
+        router.replace("/login");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchUser();
+}, [router, pathname]);
+
 
   // ---------------- HANDLERS ----------------
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -236,61 +254,7 @@ const ProfilePage = () => {
       className="min-h-screen bg-gray-200 p-4 md:p-6"
     >
       {/* TOP BAR */}
-      <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible"
-        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
-      >
-        <motion.div
-          variants={itemVariant}
-          className="text-xl font-bold cursor-pointer mb-3 md:mb-0"
-        >
-          {/* LOGO */}
-        </motion.div>
-
-        <motion.div
-          variants={itemVariant}
-          className="md:hidden flex items-center mb-3"
-        >
-          <button onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-          </button>
-        </motion.div>
-
-        <motion.div
-          variants={itemVariant}
-          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${
-            menuOpen ? "flex" : "hidden md:flex"
-          }`}
-        >
-          {menuItems.map((item) => (
-            <MenuItem
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              isActive={activeMenu === item.label}
-              onClick={() => {
-                setActiveMenu(item.label);
-                if (item.path) router.push(item.path);
-              }}
-            />
-          ))}
-
-          <div className="flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-3 glass px-4 py-2 rounded shadow">
-              <FaUserCircle size={28} />
-              <span className="font-medium">{user?.username || "User"}</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:underline"
-            >
-              Logout
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
+      <ClientNavbar user={user} handleLogout={handleLogout} />
 
       {/* PROFILE CARD */}
       <motion.div
@@ -357,7 +321,7 @@ const ProfilePage = () => {
       </motion.div>
       {popup.open && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
+          <div className="glass rounded-2xl px-8 py-6 w-[320px] text-center text-black w-[320px] text-center">
             <h3
               className={`text-lg font-semibold mb-3 ${
                 popup.type === "success"
@@ -374,7 +338,7 @@ const ProfilePage = () => {
                   : "Info"}
             </h3>
 
-            <p className="text-gray-700 mb-5">{popup.message}</p>
+            <p className="text-white mb-5">{popup.message}</p>
 
             <button
               onClick={() => setPopup({ ...popup, open: false })}

@@ -64,13 +64,18 @@ const invoiceSchema = new mongoose.Schema({
 
   totalInWords: String,
 
-  status: { type: String, enum: ["Paid", "Unpaid", "Overdue"], default: "Unpaid" },
+  status: {
+    type: String,
+    enum: ["Paid", "Unpaid", "Overdue"],
+    default: "Unpaid",
+  },
 
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
   logoUrl: String,
   pdfUrl: { type: String }, // stored PDF path
 
+  showTotalWords: { type: Boolean, default: true },
 
   files: {
     signature: [{ filename: String, url: String }],
@@ -93,7 +98,7 @@ invoiceSchema.post("save", async function (doc, next) {
       const newStatus = doc.status;
 
       console.log(
-        `Status changed for invoice ${doc.invoiceNumber}: ${previousStatus} → ${newStatus}`
+        `Status changed for invoice ${doc.invoiceNumber}: ${previousStatus} → ${newStatus}`,
       );
 
       const recipientEmail = doc.billedTo?.email;
@@ -126,5 +131,5 @@ invoiceSchema.post("save", async function (doc, next) {
   next();
 });
 
-
-export default mongoose.models.Invoice || mongoose.model("Invoice", invoiceSchema);
+export default mongoose.models.Invoice ||
+  mongoose.model("Invoice", invoiceSchema);

@@ -4,25 +4,22 @@ import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
 
 import { useState, useMemo, useEffect } from "react";
-import { Pencil, Search } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 import {
   FaFileInvoiceDollar,
   FaUsers,
   FaChartBar,
   FaMoneyCheckAlt,
   FaCog,
-  FaUserCircle,
-  FaBars,
-  FaTimes,
-  FaPhoneAlt
+  FaPhoneAlt,
 } from "react-icons/fa";
-
+import Navbar1 from "../_components/navbar/Navbar1";
 /* ---------------- TYPES ---------------- */
 type Client = {
   id: string;
   name: string;
-  email?: string;   // ✅ already present
+  email?: string; // ✅ already present
   phone: string;
   gstin: string;
   totalInvoices: number;
@@ -31,14 +28,12 @@ type Client = {
 /* ---------------- COMPONENT ---------------- */
 export default function ClientsPage() {
   const router = useRouter();
+  const pathname = usePathname(); // get current path
 
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-
-  const [activeMenu, setActiveMenu] = useState("Clients");
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const [user, setUser] = useState<{ username: string } | null>(null);
   const [showLoader, setShowLoader] = useState(true);
@@ -51,27 +46,19 @@ export default function ClientsPage() {
     return () => clearTimeout(timer); // cleanup
   }, []);
 
-
-
-  const menuItems = [
-    { icon: <FaFileInvoiceDollar />, label: "Invoices", path: "/dashboard" },
-    { icon: <FaUsers />, label: "Clients", path: "/clients" },
-    { icon: <FaChartBar />, label: "Reports", path: "/reports" },
-    { icon: <FaMoneyCheckAlt />, label: "Payments", path: "/payments" },
-    { icon: <FaCog />, label: "Settings", path: "/settings" },
-    { icon: <FaPhoneAlt />, label: "Contact us", path: "/contact" },
-  ];
-
   /* ---------------- AUTH CHECK ---------------- */
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
-      router.replace("/login");
-    } else {
-      setUser(JSON.parse(storedUser));
-    }
-  }, [router]);
 
+    if (!storedUser) {
+      if (pathname !== "/") {
+        router.replace("/login");
+      }
+      return; // ⬅️ STOP here
+    }
+
+    setUser(JSON.parse(storedUser));
+  }, [router, pathname]);
   /* ---------------- FETCH CLIENTS ---------------- */
   useEffect(() => {
     let isMounted = true;
@@ -112,7 +99,6 @@ export default function ClientsPage() {
       }
     };
 
-
     fetchClients();
 
     return () => {
@@ -120,20 +106,16 @@ export default function ClientsPage() {
     };
   }, []);
 
-
-
-
   /* ---------------- SEARCH ---------------- */
   const filteredClients = useMemo(() => {
     return clients.filter((client) =>
-      client.name.toLowerCase().includes(search.toLowerCase())
+      client.name.toLowerCase().includes(search.toLowerCase()),
     );
   }, [clients, search]);
 
   /* ---------------- PAGINATION ---------------- */
 
   /* ---------------- HANDLERS ---------------- */
-
 
   const handleLogout = async () => {
     try {
@@ -156,38 +138,12 @@ export default function ClientsPage() {
     }
   };
 
-
-
-  const navbarVariants: Variants = {
-    hidden: { y: -100, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
-  };
-
   // Summary boxes stagger
   const summaryContainerVariants: Variants = {
     hidden: {},
     visible: { transition: { staggerChildren: 0.15 } },
   };
 
-
-  // Total revenue box appears after summary boxes
-
-  // Recent invoices appear last
-  const recentInvoicesVariants: Variants = {
-    hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 1 } },
-  };
-
-
-  const summaryItemVariants: Variants = {
-    hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
-  };
-
-  const revenueVariants: Variants = {
-    hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
-  };
   const staggerContainer: Variants = {
     hidden: {},
     visible: {
@@ -232,62 +188,18 @@ export default function ClientsPage() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="min-h-screen bg-gray-200 p-4 md:p-6">
-
-
+      className="min-h-screen bg-gray-200 p-4 md:p-6"
+    >
       {/* -------- HEADER -------- */}
-      <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible"
-        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow">
+      <Navbar1 user={user} handleLogout={handleLogout} />
 
-
-
-        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
-          {/* LOGO */}
-        </div>
-
-        <div className="md:hidden flex items-center mb-3">
-          <button onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-          </button>
-        </div>
-
-        <div
-          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
-            }`}
-        >
-          {menuItems.map((item) => (
-            <MenuItem
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              isActive={activeMenu === item.label}
-              onClick={() => {
-                setActiveMenu(item.label); // set active menu
-                if (item.path) router.push(item.path); // navigate to page
-              }}
-            />
-          ))}
-
-          <div className="flex flex-col items-end space-y-2">
-            <div className="glass flex items-center space-x-3 px-4 py-2 rounded-xl">
-
-              <FaUserCircle size={28} />
-              <span className="font-medium">{user?.username || "User"}</span>
-            </div>
-            <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">Logout</button>
-          </div>
-
-        </div>
-      </motion.div>
       <motion.div
         variants={summaryContainerVariants}
         initial="hidden"
-        animate="visible" className="flex justify-end items-center mb-4 gap-4 ">
+        animate="visible"
+        className="flex justify-end items-center mb-4 gap-4 "
+      >
         {/* Add Client button */}
-
 
         {/* Search input */}
         {/* <motion.div variants={itemVariant} className="relative w-1/3">
@@ -309,28 +221,32 @@ export default function ClientsPage() {
       </motion.div>
 
       {/* -------- SEARCH -------- */}
-      
 
       {/* -------- TABLE -------- */}
       <motion.div
         variants={itemVariant}
         className="bg-white/20 backdrop-blur-md rounded overflow-x-auto p-4 md:p-6"
       >
-        <motion.div variants={itemVariant} className="relative w-full md:w-1/3 mb-4 ">
-        <input
-          type="text"
-          placeholder="Search Clients"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full glass  pl-10 pr-3 py-2 text-black placeholder-black focus:outline-none"
-        />
-        <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-          size={18}
-        />
-      </motion.div>
+        <motion.div
+          variants={itemVariant}
+          className="relative w-full md:w-1/3 mb-4 "
+        >
+          <input
+            type="text"
+            placeholder="Search Clients"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full glass  pl-10 pr-3 py-2 text-black placeholder-black focus:outline-none"
+          />
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={18}
+          />
+        </motion.div>
         {loading ? (
-          <div className="text-center py-10 text-gray-700">Loading clients...</div>
+          <div className="text-center py-10 text-gray-700">
+            Loading clients...
+          </div>
         ) : (
           <table className="w-full text-sm md:text-base  table-auto">
             {/* Desktop headers */}
@@ -347,39 +263,66 @@ export default function ClientsPage() {
             <tbody>
               {paginatedClients.length > 0 ? (
                 paginatedClients.map((client) => (
-                  <tr key={client.id} className="md:table-row block md:mb-0 md:border-t border-white  ">
+                  <tr
+                    key={client.id}
+                    className="md:table-row block md:mb-0 md:border-t border-white  "
+                  >
                     {/* Mobile layout */}
                     <td colSpan={6} className="block md:hidden px-2 py-2">
                       <div className="flex flex-col gap-2 border-t border-white  p-4  ">
                         <div className="flex justify-between w-full">
-                          <span className="font-semibold text-gray-800">Client Name:</span>
+                          <span className="font-semibold text-gray-800">
+                            Client Name:
+                          </span>
                           <span className="text-gray-900">{client.name}</span>
                         </div>
                         <div className="flex justify-between w-full">
-                          <span className="font-semibold text-gray-800">Phone:</span>
+                          <span className="font-semibold text-gray-800">
+                            Phone:
+                          </span>
                           <span className="text-gray-900">{client.phone}</span>
                         </div>
                         <div className="flex justify-between w-full">
-                          <span className="font-semibold text-gray-800">GSTIN:</span>
+                          <span className="font-semibold text-gray-800">
+                            GSTIN:
+                          </span>
                           <span className="text-gray-900">{client.gstin}</span>
                         </div>
                         <div className="flex justify-between w-full">
-                          <span className="font-semibold text-gray-800">Total Invoices:</span>
-                          <span className="text-gray-900">{client.totalInvoices}</span>
+                          <span className="font-semibold text-gray-800">
+                            Total Invoices:
+                          </span>
+                          <span className="text-gray-900">
+                            {client.totalInvoices}
+                          </span>
                         </div>
                         <div className="flex justify-between w-full">
-                          <span className="font-semibold text-gray-800">Email:</span>
-                          <span className="text-gray-900">{client.email || "-"}</span>
+                          <span className="font-semibold text-gray-800">
+                            Email:
+                          </span>
+                          <span className="text-gray-900">
+                            {client.email || "-"}
+                          </span>
                         </div>
                       </div>
                     </td>
 
                     {/* Desktop layout */}
-                    <td className="hidden md:table-cell  px-4 py-2 text-center">{client.name}</td>
-                    <td className="hidden md:table-cell  px-4 py-2 text-center">{client.phone}</td>
-                    <td className="hidden md:table-cell  px-4 py-2 text-center">{client.gstin}</td>
-                    <td className="hidden md:table-cell  px-4 py-2 text-center ">{client.totalInvoices}</td>
-                    <td className="hidden md:table-cell  px-4 py-2 text-center">{client.email || "-"}</td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center">
+                      {client.name}
+                    </td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center">
+                      {client.phone}
+                    </td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center">
+                      {client.gstin}
+                    </td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center ">
+                      {client.totalInvoices}
+                    </td>
+                    <td className="hidden md:table-cell  px-4 py-2 text-center">
+                      {client.email || "-"}
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -392,60 +335,41 @@ export default function ClientsPage() {
             </tbody>
           </table>
         )}
-         {/* -------- PAGINATION -------- */}
-      <motion.div variants={itemVariant} className="flex justify-center gap-2 mt-4">
-        {/* Previous button */}
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          className="px-3 py-1 border rounded disabled:opacity-50"
+        {/* -------- PAGINATION -------- */}
+        <motion.div
+          variants={itemVariant}
+          className="flex justify-center gap-2 mt-4"
         >
-          &lt;
-        </button>
-
-        {/* Page numbers */}
-        {Array.from({ length: totalPages }, (_, i) => (
+          {/* Previous button */}
           <button
-            key={i + 1}
-            onClick={() => setCurrentPage(i + 1)}
-            className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-300"}`}
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            className="px-3 py-1  rounded disabled:opacity-50"
           >
-            {i + 1}
+            &lt;
           </button>
-        ))}
 
-        {/* Next button */}
-        <button
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          &gt;
-        </button>
+          {/* Page numbers */}
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-300"}`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          {/* Next button */}
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            className="px-3 py-1  rounded disabled:opacity-50"
+          >
+            &gt;
+          </button>
+        </motion.div>
       </motion.div>
-      </motion.div>
-
-
-
-     
-
     </motion.div>
   );
 }
-
-/* ---------------- MENU ITEM ---------------- */
-const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-  <div
-    onClick={onClick}
-    className={`
-       px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
-      transition
-      ${isActive
-        ? "text-black bg-white/30"
-        : "text-black hover:bg-white/20"}
-    `}
-  >
-    {icon}
-    <span>{label}</span>
-  </div>
-);

@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     if (!tokenMatch) {
       return new Response(
         JSON.stringify({ success: false, error: "Unauthorized" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -24,7 +24,7 @@ export async function GET(req: Request) {
     } catch {
       return new Response(
         JSON.stringify({ success: false, error: "Invalid token" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
     if (!userEmail) {
       return new Response(
         JSON.stringify({ success: false, error: "Email not found in token" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -59,7 +59,7 @@ export async function GET(req: Request) {
     console.error("Payments API error:", err);
     return new Response(
       JSON.stringify({ success: false, error: err.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 }

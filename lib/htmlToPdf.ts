@@ -9,7 +9,7 @@ export async function generateInvoicePDF(
     process.env.VERCEL_ENV === "production";
 
   if (isVercel) {
-    // ✅ Vercel (Linux serverless)
+    // ✅ Vercel / Serverless
     const chromium = (await import("@sparticuz/chromium")).default;
     const puppeteer = await import("puppeteer-core");
 
@@ -28,15 +28,22 @@ export async function generateInvoicePDF(
   }
 
   const page = await browser.newPage();
-  await page.setContent(html, {
-  waitUntil: "domcontentloaded",
-  timeout: 0, // disable timeout
-});
 
+  // ✅ IMPORTANT: Use networkidle0 for fonts & styles
+  await page.setContent(html, {
+    waitUntil: "networkidle0",
+    timeout: 0,
+  });
 
   const pdfBuffer = await page.pdf({
-    format: "a4",
+    format: "A4",
     printBackground: true,
+    margin: {
+      top: "20px",
+      bottom: "20px",
+      left: "20px",
+      right: "20px",
+    },
   });
 
   await browser.close();

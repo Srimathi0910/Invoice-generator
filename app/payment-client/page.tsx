@@ -1,7 +1,7 @@
 "use client";
 import { authFetch } from "@/utils/authFetch";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter,usePathname } from "next/navigation";
 import {
   FaFileInvoiceDollar,
   FaUsers,
@@ -17,9 +17,11 @@ import {
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
+import ClientNavbar from "../_components/navbar/Navbar2";
 
 const Dashboard = () => {
   const router = useRouter();
+  const pathname = usePathname(); // get current path
 
   /* ---------------- AUTH ---------------- */
   const [user, setUser] = useState<{ username: string; email: string } | null>(
@@ -38,15 +40,36 @@ const Dashboard = () => {
 
     return () => clearTimeout(timer); // cleanup
   }, []);
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
+ useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+
+  // No user → redirect except home page
+  if (!storedUser) {
+    if (pathname !== "/") {
       router.replace("/login");
-    } else {
-      setUser(JSON.parse(storedUser));
     }
     setLoadingUser(false);
-  }, [router]);
+    return;
+  }
+
+  // Parse user safely
+  const parsedUser = JSON.parse(storedUser);
+
+  // Invalid user object → redirect except home
+  if (!parsedUser?._id) {
+    if (pathname !== "/") {
+      router.replace("/login");
+    }
+    setLoadingUser(false);
+    return;
+  }
+
+  // Valid user
+  setUser(parsedUser);
+  setLoadingUser(false);
+
+}, [router, pathname]);
+
 
   const handleLogout = async () => {
     try {
@@ -113,7 +136,7 @@ const Dashboard = () => {
     { icon: <FaRegUser />, label: "Profile", path: "/profile" },
     { icon: <FaCog />, label: "Help", path: "/help" },
         { icon: <FaPhoneAlt />, label: "Contact us", path: "/contact" },
-    
+
   ];
 
   const filteredInvoices = invoices.filter((inv) => {
@@ -187,50 +210,8 @@ const Dashboard = () => {
       className="min-h-screen bg-gray-200 p-4 md:p-6"
     >
       {/* ---------------- TOP MENU ---------------- */}
-      <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible"
-        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
-      >
-        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0"></div>
+           <ClientNavbar user={user} handleLogout={handleLogout} />
 
-        <div className="md:hidden flex items-center mb-3">
-          <button onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-          </button>
-        </div>
-
-        <div
-          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"}`}
-        >
-          {menuItems.map((item) => (
-            <MenuItem
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              isActive={activeMenu === item.label}
-              onClick={() => {
-                setActiveMenu(item.label);
-                if (item.path) router.push(item.path);
-              }}
-            />
-          ))}
-
-          <div className="flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-3 glass px-4 py-2 rounded shadow">
-              <FaUserCircle size={28} />
-              <span className="font-medium">{user?.username || "User"}</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:underline"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </motion.div>
 
       {/* ---------------- SUMMARY ---------------- */}
 
@@ -277,6 +258,7 @@ const Dashboard = () => {
                 <Th>Amount</Th>
                 <Th>Status</Th>
                 <Th>Date</Th>
+                <Th>Due Date</Th>
                 <Th>Action</Th>
               </tr>
             </thead>
@@ -328,6 +310,12 @@ const Dashboard = () => {
                           </span>
                         </div>
                         <div className="flex justify-between w-full">
+                          <span className="font-semibold">Due Date:</span>
+                          <span>
+                            {new Date(inv.dueDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between w-full">
                           <span className="font-semibold ">Action</span>
 
                           {inv.status === "Paid" ? (
@@ -371,6 +359,9 @@ const Dashboard = () => {
                       {new Date(inv.invoiceDate).toLocaleDateString()}
                     </td>
                     <td className="hidden md:table-cell px-4 py-4">
+                      {new Date(inv.dueDate).toLocaleDateString()}
+                    </td>
+                    <td className="hidden md:table-cell px-4 py-4">
                       {inv.status === "Paid" ? (
                         <span className="px-3 py-1 bg-green-200 text-green-800 rounded font-medium">
                           Paid
@@ -397,7 +388,7 @@ const Dashboard = () => {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((p) => p - 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1  rounded disabled:opacity-50"
           >
             &lt;
           </button>
@@ -415,7 +406,7 @@ const Dashboard = () => {
           <button
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((p) => p + 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1  rounded disabled:opacity-50"
           >
             &gt;
           </button>

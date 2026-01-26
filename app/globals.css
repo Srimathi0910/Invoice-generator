@@ -219,3 +219,13 @@ html.dark textarea {
   max-width: 794px !important;
   margin: 0 auto !important;
 }
+@font-face {
+  font-family: "AkayaTelivigala";
+  src: url("/fonts/AkayaTelivigala-Regulal.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  font-family: "AkayaTelivigala", sans-serif;
+}

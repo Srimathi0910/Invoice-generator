@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 
 export default function ChangePassword() {
   const router = useRouter();
+    const pathname = usePathname(); // get current path
 
   const [token, setToken] = useState("");
   const [email, setEmail] = useState("");
@@ -29,61 +30,73 @@ export default function ChangePassword() {
     type: "info",
   });
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const t = searchParams.get("token");
-    const e = searchParams.get("email");
+  const searchParams = new URLSearchParams(window.location.search);
+  const t = searchParams.get("token");
+  const e = searchParams.get("email");
 
-    if (!t || !e) {
-      setPopup({
-        open: true,
-        message: "Invalid reset link",
-        type: "error",
-      });
-      router.push("/login");
+  // ❌ Invalid token OR invalid email on protected page
+  if (!t || (!e && pathname !== "/")) {
+    setPopup({
+      open: true,
+      message: "Invalid reset link",
+      type: "error",
+    });
+    router.push("/login");
+    return;
+  }
+
+  // ✅ Only set valid values
+  if (t) setToken(t);
+  if (e) setEmail(e);
+}, [router, pathname]);
+
+const handleChangePassword = async () => {
+  setError("");
+  setSuccess("");
+
+  // ✅ Validate passwords match
+  if (newPassword !== confirmPassword) {
+    setError("Passwords do not match");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const res = await fetch("/api/auth/change-password-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        newPassword,
+        confirmPassword,
+        token,
+        email,
+      }),
+    });
+
+    const data = await res.json();
+
+    // ❌ Handle errors
+    if (!res.ok) {
+      setError(data.error || "Something went wrong");
       return;
     }
 
-    setToken(t);
-    setEmail(e);
-  }, [router]);
+    // ✅ Success
+    setSuccess(data.message);
 
-  const handleChangePassword = async () => {
-    setError("");
-    setSuccess("");
-
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
+    // Redirect safely only if not already on "/"
+    if (pathname !== "/") {
+      setTimeout(() => router.push("/login"), 1000);
     }
+  } catch (err) {
+    console.error(err);
+    setError("Network error");
+  } finally {
+    setLoading(false);
+  }
+};
 
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/auth/change-password-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          newPassword,
-          confirmPassword,
-          token,
-          email,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Something went wrong");
-      } else {
-        setSuccess(data.message);
-        setTimeout(() => router.push("/login"), 1000);
-      }
-    } catch {
-      setError("Network error");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   /* Tailwind floating label styles */
   const inputClass =
@@ -145,16 +158,10 @@ export default function ChangePassword() {
 
           <button
             type="button"
-            onClick={() =>
-              setShowConfirmPassword(!showConfirmPassword)
-            }
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             className="absolute right-0 top-2 text-gray-500 hover:text-black"
           >
-            {showConfirmPassword ? (
-              <Eye size={18} />
-            ) : (
-              <EyeOff size={18} />
-            )}
+            {showConfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
           </button>
         </div>
 
@@ -164,28 +171,33 @@ export default function ChangePassword() {
         <button
           onClick={handleChangePassword}
           disabled={loading}
-          className={`w-full py-2 rounded-lg bg-[#D9D9D9] hover:bg-gray-300 ${loading ? "opacity-60 cursor-not-allowed" : ""
-            }`}
+          className={`w-full py-2 rounded-lg bg-[#D9D9D9] hover:bg-gray-300 ${
+            loading ? "opacity-60 cursor-not-allowed" : ""
+          }`}
         >
           {loading ? "Changing..." : "Change Password"}
         </button>
       </div>
       {popup.open && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
-
+          <div className="glass rounded-2xl px-8 py-6 w-[320px] text-center text-black w-[320px] text-center">
             <h3
-              className={`text-lg font-semibold mb-3 ${popup.type === "success"
-                ? "text-green-600"
-                : popup.type === "error"
-                  ? "text-red-600"
-                  : "text-gray-700"
-                }`}
+              className={`text-lg font-semibold mb-3 ${
+                popup.type === "success"
+                  ? "text-green-600"
+                  : popup.type === "error"
+                    ? "text-red-600"
+                    : "text-gray-700"
+              }`}
             >
-              {popup.type === "success" ? "Success" : popup.type === "error" ? "Error" : "Info"}
+              {popup.type === "success"
+                ? "Success"
+                : popup.type === "error"
+                  ? "Error"
+                  : "Info"}
             </h3>
 
-            <p className="text-gray-700 mb-5">{popup.message}</p>
+            <p className="text-white mb-5">{popup.message}</p>
 
             <button
               onClick={() => setPopup({ ...popup, open: false })}

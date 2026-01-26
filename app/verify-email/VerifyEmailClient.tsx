@@ -151,20 +151,24 @@ export default function VerifyEmail() {
       </div>
       {popup.open && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
-
+          <div className="glass rounded-2xl px-8 py-6 w-[320px] text-center text-black w-[320px] text-center">
             <h3
-              className={`text-lg font-semibold mb-3 ${popup.type === "success"
-                ? "text-green-600"
-                : popup.type === "error"
-                  ? "text-red-600"
-                  : "text-gray-700"
-                }`}
+              className={`text-lg font-semibold mb-3 ${
+                popup.type === "success"
+                  ? "text-green-600"
+                  : popup.type === "error"
+                    ? "text-red-600"
+                    : "text-gray-700"
+              }`}
             >
-              {popup.type === "success" ? "Success" : popup.type === "error" ? "Error" : "Info"}
+              {popup.type === "success"
+                ? "Success"
+                : popup.type === "error"
+                  ? "Error"
+                  : "Info"}
             </h3>
 
-            <p className="text-gray-700 mb-5">{popup.message}</p>
+            <p className="text-white mb-5">{popup.message}</p>
 
             <button
               onClick={() => setPopup({ ...popup, open: false })}

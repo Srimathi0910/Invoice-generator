@@ -29,8 +29,8 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-3">Quick Links</h4>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li><Link href="/dashboard" className="hover:text-[#29268E]">Dashboard</Link></li>
-              <li><Link href="/company-new-invoice" className="hover:text-[#29268E]">Create Invoice</Link></li>
+              <li><Link href="/" className="hover:text-[#29268E]">Dashboard</Link></li>
+              {/* <li><Link href="/company-new-invoice" className="hover:text-[#29268E]">Create Invoice</Link></li> */}
               <li><Link href="/clients" className="hover:text-[#29268E]">Clients</Link></li>
               <li><Link href="/reports" className="hover:text-[#29268E]">Reports</Link></li>
             </ul>
@@ -41,7 +41,7 @@ const Footer = () => {
             <h4 className="font-semibold mb-3">Support</h4>
             <ul className="space-y-2 text-sm text-gray-600">
               <li><Link href="/help" className="hover:text-[#29268E]">Help Center</Link></li>
-              <li><Link href="/faq" className="hover:text-[#29268E]">FAQs</Link></li>
+              <li><Link href="/help" className="hover:text-[#29268E]">FAQs</Link></li>
               <li><Link href="/contact" className="hover:text-[#29268E]">Contact Us</Link></li>
             </ul>
           </div>

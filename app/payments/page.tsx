@@ -1,7 +1,7 @@
 "use client";
 import { authFetch } from "@/utils/authFetch";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter,usePathname } from "next/navigation";
 import {
   FaFileInvoiceDollar,
   FaUsers,
@@ -16,7 +16,7 @@ import {
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
-
+import Navbar1 from "../_components/navbar/Navbar1";
 type Payment = {
   _id: string;
   invoiceNumber: string;
@@ -29,6 +29,7 @@ type Payment = {
 
 export default function PaymentsPage() {
   const router = useRouter();
+  const pathname = usePathname(); // get current path
   const [user, setUser] = useState<{ username: string; email?: string } | null>(
     null,
   );
@@ -62,15 +63,36 @@ export default function PaymentsPage() {
     return () => clearTimeout(timer); // cleanup
   }, []);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
+useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+
+  // 🚫 No user → redirect (except home page)
+  if (!storedUser) {
+    if (pathname !== "/") {
       router.replace("/login");
-    } else {
-      setUser(JSON.parse(storedUser));
     }
     setLoadingUser(false);
-  }, [router]);
+    return; // stop further execution
+  }
+
+  // ✅ Parse user safely
+  const parsedUser = JSON.parse(storedUser);
+
+  // 🚫 Invalid user object → redirect (except home page)
+  if (!parsedUser?._id) {
+    if (pathname !== "/") {
+      router.replace("/login");
+    }
+    setLoadingUser(false);
+    return;
+  }
+
+  // ✅ Valid user
+  setUser(parsedUser);
+  setLoadingUser(false);
+
+}, [router, pathname]);
+
 
   const handleLogout = async () => {
     try {
@@ -238,54 +260,8 @@ export default function PaymentsPage() {
       animate="visible"
       className="min-h-screen bg-gray-200 p-4 md:p-6"
     >
-      <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible"
-        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
-      >
-        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
-          {/* LOGO */}
-        </div>
+            <Navbar1 user={user} handleLogout={handleLogout} />
 
-        <div className="md:hidden flex items-center mb-3">
-          <button onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-          </button>
-        </div>
-
-        <div
-          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${
-            menuOpen ? "flex" : "hidden md:flex"
-          }`}
-        >
-          {menuItems.map((item) => (
-            <MenuItem
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              isActive={activeMenu === item.label}
-              onClick={() => {
-                setActiveMenu(item.label); // set active menu
-                if (item.path) router.push(item.path); // navigate to page
-              }}
-            />
-          ))}
-
-          <div className="flex flex-col items-end space-y-2">
-            <div className="glass flex items-center space-x-3 px-4 py-2 rounded-xl">
-              <FaUserCircle size={28} />
-              <span className="font-medium">{user?.username || "User"}</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:underline"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </motion.div>
       <h1 className="text-2xl font-bold mb-4">Payments</h1>
 
       {/* <motion.div variants={itemVariant} className="mb-4">
@@ -363,7 +339,7 @@ export default function PaymentsPage() {
         </motion.div>
         <table className="w-full text-sm  min-w-full table-auto text-sm md:text-base">
           <thead className="bg-gray-200 hidden md:table-header-group bg-white/30 backdrop-blur">
-            <tr className=" border border-white hidden md:table-row">
+            <tr className="hidden md:table-row">
               <Th>Invoice Number</Th>
               <Th>Client Name</Th>
               <Th>Payment Date</Th>
@@ -786,7 +762,7 @@ export default function PaymentsPage() {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((p) => p - 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1  rounded disabled:opacity-50"
           >
             &lt;
           </button>
@@ -804,7 +780,7 @@ export default function PaymentsPage() {
           <button
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((p) => p + 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1  rounded disabled:opacity-50"
           >
             &gt;
           </button>

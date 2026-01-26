@@ -95,14 +95,7 @@ export default function ContactPage() {
   const faceSize = "200px";
 
   return (
-    <div
-  className="min-h-screen px-4 py-10 overflow-hidden relative bg-cover bg-center bg-no-repeat"
-  style={{
-    backgroundImage: "url('/assets/contact/contact-bg.jpg')",
-    backgroundSize: "cover",
-  }}
->
-      
+    <div className="min-h-screen bg-gray-200 p-4 md:p-6">
       {/* 1. THE 3D CUBE LOADER */}
       <AnimatePresence>
         {animPhase !== "ready" && (
@@ -133,15 +126,28 @@ export default function ContactPage() {
                 font-weight: bold;
                 font-size: 1.2rem;
                 color: #333;
-                box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+                box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
                 backface-visibility: visible;
               }
-              .front  { transform: translateZ(100px); }
-              .back   { transform: rotateY(180deg) translateZ(100px); }
-              .right  { transform: rotateY(90deg) translateZ(100px); }
-              .left   { transform: rotateY(-90deg) translateZ(100px); }
-              .top    { transform: rotateX(90deg) translateZ(100px); }
-              .bottom { transform: rotateX(-90deg) translateZ(100px); box-shadow: 0 50px 40px rgba(0,0,0,0.2); }
+              .front {
+                transform: translateZ(100px);
+              }
+              .back {
+                transform: rotateY(180deg) translateZ(100px);
+              }
+              .right {
+                transform: rotateY(90deg) translateZ(100px);
+              }
+              .left {
+                transform: rotateY(-90deg) translateZ(100px);
+              }
+              .top {
+                transform: rotateX(90deg) translateZ(100px);
+              }
+              .bottom {
+                transform: rotateX(-90deg) translateZ(100px);
+                box-shadow: 0 50px 40px rgba(0, 0, 0, 0.2);
+              }
             `}</style>
             <div className="face front">CONTACT US</div>
             <div className="face back">US</div>
@@ -163,9 +169,9 @@ export default function ContactPage() {
             animate="visible"
           >
             {/* Heading */}
-            <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold text-white">Contact Us</h1>
-              <p className="text-white mt-2">
+            <div className="text-center m-15">
+              <h1 className="text-3xl font-bold text-black">Contact Us</h1>
+              <p className="text-black mt-2">
                 We’d love to hear from you. Please reach out with any questions.
               </p>
             </div>
@@ -176,32 +182,34 @@ export default function ContactPage() {
                 initial={{ opacity: 0, x: 100 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
-                className="bg-[#D9D9D9]/20 rounded-lg shadow p-6 space-y-6"
+                className="border border-white bg-white/20 rounded-2xl p-6 space-y-6 text-black"
               >
-                <h2 className="text-xl font-semibold text-white">Get in Touch</h2>
-
+                <h2 className="text-xl font-semibold text-black">
+                  Get in Touch
+                </h2>
                 <div className="flex items-start gap-4">
-                  <FaEnvelope className="text-xl text-white mt-1" />
+                  <FaEnvelope className="text-xl text-black mt-1" />
                   <div>
-                    <p className="font-medium text-white">Email</p>
-                    <p className="text-white">support@invoicegenerator.com</p>
+                    <p className="font-medium text-black">Email</p>
+                    <p className="text-black">support@invoicegenerator.com</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <FaPhoneAlt className="text-xl text-white mt-1" />
+                  <FaPhoneAlt className="text-xl text-black mt-1" />
                   <div>
-                    <p className="font-medium text-white">Phone</p>
-                    <p className="text-white">+91 98765 43210</p>
+                    <p className="font-medium text-black">Phone</p>
+                    <p className="text-black">+91 98765 43210</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <FaMapMarkerAlt className="text-xl text-white mt-1" />
+                  <FaMapMarkerAlt className="text-xl text-black mt-1" />
                   <div>
-                    <p className="font-medium text-white">Address</p>
-                    <p className="text-white">
-                      Invoice Generator Pvt Ltd<br />
+                    <p className="font-medium text-black">Address</p>
+                    <p className="text-black">
+                      Invoice Generator Pvt Ltd
+                      <br />
                       Tamil Nadu, India
                     </p>
                   </div>
@@ -213,10 +221,10 @@ export default function ContactPage() {
                 initial={{ opacity: 0, x: -100 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
-                className="bg-[#D9D9D9]/20 rounded-lg shadow p-6 space-y-4"
+                className="border border-white bg-white/20 rounded-2xl p-6 space-y-4 border border-white bg-white/20"
                 onSubmit={handleSubmit}
               >
-                <h2 className="text-xl font-semibold text-white mb-2">
+                <h2 className="text-xl font-semibold text-black mb-2">
                   Send a Message
                 </h2>
 
@@ -225,30 +233,28 @@ export default function ContactPage() {
                   placeholder="Your Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-4 py-2 text-white placeholder-white/70 focus:ring-2 focus:ring-gray-400 outline-none"
+                  className="w-full bg-white/20 backdrop-blur-md border px-4 py-2 text-black placeholder-black/70  border border-white bg-white/20 px-3 py-2 w-full mb-3"
                 />
 
- <input
-  type="email"
-  placeholder="Your Email"
-  value={email}
-  onChange={(e) => setEmail(e.target.value)}
-  className="w-full border border-gray-300 rounded px-4 py-2 text-white placeholder-white/70 focus:ring-2 focus:ring-gray-400 outline-none"
-/>
-
-
+                <input
+                  type="email"
+                  placeholder="Your Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-white/20 backdrop-blur-md border px-4 py-2 text-black placeholder-black/70  border border-white bg-white/20 px-3 py-2 w-full mb-3"
+                />
 
                 <textarea
                   placeholder="Your Message"
                   rows={4}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-4 py-2 text-white placeholder-white/70 focus:ring-2 focus:ring-gray-400 outline-none"
+                  className="w-full bg-white/20 backdrop-blur-md border px-4 py-2 text-black placeholder-black/70  border border-white bg-white/20 px-3 py-2 w-full mb-3"
                 />
 
                 <button
                   type="submit"
-                  className="w-full bg-gray-300 text-black py-2 rounded hover:bg-gray-400 transition"
+                  className="w-full bg-white/30 backdrop-blur-md text-black py-2 rounded-xl border border-white/30 hover:bg-white/40 transition"
                 >
                   Send Message
                 </button>
@@ -261,24 +267,24 @@ export default function ContactPage() {
       {/* Popup stays outside the animPhase logic to ensure it can show anytime */}
       {popup.open && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center">
+          <div className="glass rounded-2xl px-8 py-6 w-[320px] text-center text-black w-[320px] text-center">
             <h3
               className={`text-lg font-semibold mb-3 ${
                 popup.type === "success"
                   ? "text-green-600"
                   : popup.type === "error"
-                  ? "text-red-600"
-                  : "text-gray-700"
+                    ? "text-red-600"
+                    : "text-gray-700"
               }`}
             >
               {popup.type === "success"
                 ? "Success"
                 : popup.type === "error"
-                ? "Error"
-                : "Info"}
+                  ? "Error"
+                  : "Info"}
             </h3>
 
-            <p className="text-gray-700 mb-5">{popup.message}</p>
+            <p className="text-white mb-5">{popup.message}</p>
 
             <button
               onClick={() => setPopup({ ...popup, open: false })}

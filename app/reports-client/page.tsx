@@ -1,7 +1,7 @@
 "use client";
 import { authFetch } from "@/utils/authFetch";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   BarChart,
   Bar,
@@ -29,9 +29,11 @@ import {
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
+import ClientNavbar from "../_components/navbar/Navbar2";
 
 export default function ReportsPage() {
   const router = useRouter();
+  const pathname = usePathname(); // get current path
   const [user, setUser] = useState<{ username: string; email?: string } | null>(
     null,
   );
@@ -56,9 +58,27 @@ export default function ReportsPage() {
   /* ---------------- AUTH ---------------- */
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (!storedUser) return router.replace("/login");
-    setUser(JSON.parse(storedUser));
-  }, [router]);
+
+    // Redirect if not logged in, except for "/"
+    if (!storedUser) {
+      if (pathname !== "/") {
+        router.replace("/login");
+      }
+      return; // stop further execution
+    }
+
+    const parsedUser = JSON.parse(storedUser);
+
+    // Optional: check for valid user
+    if (!parsedUser?._id) {
+      if (pathname !== "/") {
+        router.replace("/login");
+      }
+      return;
+    }
+
+    setUser(parsedUser);
+  }, [router, pathname]);
 
   /* ---------------- FETCH INVOICES ---------------- */
   useEffect(() => {
@@ -245,61 +265,8 @@ export default function ReportsPage() {
       animate="visible"
       className="min-h-screen bg-gray-200 p-4 md:p-6"
     >
-      <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible"
-        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
-      >
-        <motion.div
-          variants={itemVariant}
-          className="text-xl font-bold cursor-pointer mb-3 md:mb-0"
-        >
-          {/* LOGO */}
-        </motion.div>
+      <ClientNavbar user={user} handleLogout={handleLogout} />
 
-        <motion.div
-          variants={itemVariant}
-          className="md:hidden flex items-center mb-3"
-        >
-          <button onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-          </button>
-        </motion.div>
-
-        <motion.div
-          variants={itemVariant}
-          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${
-            menuOpen ? "flex" : "hidden md:flex"
-          }`}
-        >
-          {menuItems.map((item) => (
-            <MenuItem
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              isActive={activeMenu === item.label}
-              onClick={() => {
-                setActiveMenu(item.label); // set active menu
-                if (item.path) router.push(item.path); // navigate to page
-              }}
-            />
-          ))}
-
-          <div className="flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-3 glass px-4 py-2 rounded shadow">
-              <FaUserCircle size={28} />
-              <span className="font-medium">{user?.username || "User"}</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:underline"
-            >
-              Logout
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
       <motion.div variants={itemVariant}>
         <h1 className="text-3xl font-bold mb-6">Reports</h1>
       </motion.div>
@@ -412,6 +379,7 @@ export default function ReportsPage() {
                 <Th>Amount</Th>
                 <Th>Status</Th>
                 <Th>Date</Th>
+                <Th>Due Date</Th>
               </tr>
             </thead>
             <tbody>
@@ -430,6 +398,7 @@ export default function ReportsPage() {
                     amount={`₹${inv.totals?.grandTotal ?? 0}`}
                     status={(inv.status ?? "N/A").trim()}
                     date={new Date(inv.invoiceDate).toLocaleDateString()}
+                    dueDate={new Date(inv.dueDate).toLocaleDateString()}
                   />
                 ))
               )}
@@ -493,7 +462,7 @@ const Th = ({ children }: { children: React.ReactNode }) => (
   <th className="px-4 py-2 text-left whitespace-nowrap">{children}</th>
 );
 
-const InvoiceRow = ({ id, client, amount, status, date }: any) => {
+const InvoiceRow = ({ id, client, amount, status, date,dueDate }: any) => {
   const colors: Record<string, string> = {
     Paid: "bg-[#05410C]",
     Unpaid: "bg-[#E06A2A]",
@@ -530,6 +499,10 @@ const InvoiceRow = ({ id, client, amount, status, date }: any) => {
             <span className="font-semibold">Date:</span>
             <span className="text-left">{date}</span>
           </div>
+          <div className="flex justify-between w-full px-4">
+            <span className="font-semibold">Due Date:</span>
+            <span className="text-left">{dueDate}</span>
+          </div>
         </div>
       </td>
 
@@ -552,6 +525,9 @@ const InvoiceRow = ({ id, client, amount, status, date }: any) => {
       </td>
       <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">
         {date}
+      </td>
+      <td className="hidden md:table-cell px-2 md:px-4 py-1 md:py-2 text-left">
+        {dueDate}
       </td>
     </tr>
   );

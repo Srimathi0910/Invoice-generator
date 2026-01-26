@@ -1,7 +1,7 @@
 "use client";
-import { authFetch} from "@/utils/authFetch"; 
+import { authFetch} from "@/utils/authFetch";
 import { useEffect, useState, useRef } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams,usePathname } from "next/navigation";
 import Link from "next/link";
 import { Download } from "lucide-react";
 
@@ -61,6 +61,7 @@ interface Invoice {
 
 export default function InvoicePage() {
     const router = useRouter();
+    const pathname = usePathname(); // get current path
     const { id } = useParams();
     const invoiceRef = useRef<HTMLDivElement>(null);
     const [user, setUser] = useState<{ username: string; email: string } | null>(null);
@@ -82,43 +83,60 @@ export default function InvoicePage() {
 
     // ---------------- AUTH + FETCH ----------------
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        if (!storedUser) {
+    // 1️⃣ Auth check
+    const storedUser = localStorage.getItem("user");
+
+    if (!storedUser) {
+        if (pathname !== "/") {
             router.replace("/login");
-            return;
         }
-        setUser(JSON.parse(storedUser));
+        setLoading(false);
+        return; // Stop execution
+    }
 
-        const fetchInvoice = async () => {
-            try {
-                const token = localStorage.getItem("token");
-                const res = await authFetch(`/api/auth/invoice/${id}`, {
-                    headers: {
-                        Authorization: token ? `Bearer ${token}` : "",
-                    },
-                });
+    const parsedUser = JSON.parse(storedUser);
 
-                if (!res.ok) throw new Error("Invoice fetch failed");
+    if (!parsedUser?._id) {
+        if (pathname !== "/") {
+            router.replace("/login");
+        }
+        setLoading(false);
+        return; // Stop execution
+    }
 
-                const data = await res.json();
+    // 2️⃣ Set user
+    setUser(parsedUser);
 
-                // Check API success
-                if (!data.success || !data.invoice) {
-                    throw new Error(data.error || "Invoice fetch failed");
-                }
+    // 3️⃣ Fetch invoice
+    const fetchInvoice = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) throw new Error("Not authorized");
 
-                // Set invoice correctly
-                setInvoice(data.invoice);
-            } catch (err: any) {
-                console.error("Failed to fetch invoice:", err);
-                setError(err.message || "Something went wrong");
-            } finally {
-                setLoading(false);
+            const res = await authFetch(`/api/auth/invoice/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!res.ok) throw new Error("Invoice fetch failed");
+
+            const data = await res.json();
+
+            if (!data.success || !data.invoice) {
+                throw new Error(data.error || "Invoice fetch failed");
             }
-        };
 
-        fetchInvoice();
-    }, [id, router]);
+            setInvoice(data.invoice);
+        } catch (err: any) {
+            console.error("Failed to fetch invoice:", err);
+            setError(err.message || "Something went wrong");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchInvoice();
+}, [id, router, pathname]);
+
 
 
     const handleLogout = async () => {

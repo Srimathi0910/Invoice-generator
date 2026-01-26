@@ -1,7 +1,7 @@
 "use client";
 import { authFetch } from "@/utils/authFetch";
 import { useEffect, useState, useMemo, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter,usePathname } from "next/navigation";
 import {
   Edit2,
   Download,
@@ -21,11 +21,12 @@ import {
   FaUserCircle,
   FaBars,
   FaTimes,
-  FaPhoneAlt
+  FaPhoneAlt,
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
 import { numberToWords } from "@/utils/numberToWords";
+import Navbar1 from "../_components/navbar/Navbar1";
 
 type InvoiceFiles = {
   signature?: File | null;
@@ -40,6 +41,7 @@ const InvoicePreview = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname(); // get current path
 
   const [user, setUser] = useState<{
     username: string;
@@ -90,14 +92,32 @@ const InvoicePreview = () => {
   });
 
   /* ---------------- LOAD USER ---------------- */
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
+useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+
+  // 🚫 If no user in localStorage, redirect except for home
+  if (!storedUser) {
+    if (pathname !== "/") {
       router.replace("/login");
-      return;
     }
-    setUser(JSON.parse(storedUser));
-  }, [router]);
+    return; // stop further execution
+  }
+
+  // ✅ Parse user safely
+  const parsedUser = JSON.parse(storedUser);
+
+  // 🚫 Optional: check if user is valid
+  if (!parsedUser?._id) {
+    if (pathname !== "/") {
+      router.replace("/login");
+    }
+    return;
+  }
+
+  // ✅ Set valid user
+  setUser(parsedUser);
+}, [router, pathname]);
+
 
   /* ---------------- LOAD INVOICE ---------------- */
   useEffect(() => {
@@ -319,86 +339,83 @@ const InvoicePreview = () => {
   };
 
   /* ---------------- PDF GENERATION ---------------- */
-const generatePDF = async () => {
-  if (!invoiceRef.current) {
-    setPopup({
-      open: true,
-      message: "Invoice content not found",
-      type: "error",
-    });
-    return;
-  }
-
-  try {
-    setDownloading(true);
-
-    const html2canvas = (await import("html2canvas")).default;
-    const { jsPDF } = await import("jspdf");
-
-    const element = invoiceRef.current;
-
-    // ✅ CLONE THE INVOICE (DO NOT TOUCH REAL UI)
-    const clone = element.cloneNode(true) as HTMLElement;
-
-    clone.style.width = "794px"; // A4 width
-    clone.style.position = "fixed";
-    clone.style.top = "-9999px";
-    clone.style.left = "-9999px";
-    clone.style.background = "#ffffff";
-    clone.style.transform = "scale(1)";
-    clone.style.overflow = "hidden";
-
-    document.body.appendChild(clone);
-
-    // ✅ CAPTURE CLONE
-    const canvas = await html2canvas(clone, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      windowWidth: 794,
-    });
-
-    // 🧹 CLEANUP
-    document.body.removeChild(clone);
-
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    // ✅ FIRST PAGE
-    pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-    heightLeft -= pdfHeight;
-
-    // ✅ NEXT PAGES
-    while (heightLeft > 0) {
-      position -= pdfHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-      heightLeft -= pdfHeight;
+  const generatePDF = async () => {
+    if (!invoiceRef.current) {
+      setPopup({
+        open: true,
+        message: "Invoice content not found",
+        type: "error",
+      });
+      return;
     }
 
-    pdf.save(`Invoice-${invoice?.invoiceNumber || "0000"}.pdf`);
-  } catch (err) {
-    console.error("PDF generation error:", err);
-    setPopup({
-      open: true,
-      message: "Failed to generate PDF.",
-      type: "error",
-    });
-  } finally {
-    setDownloading(false);
-  }
-};
+    try {
+      setDownloading(true);
 
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
 
+      const element = invoiceRef.current;
 
+      // ✅ CLONE THE INVOICE (DO NOT TOUCH REAL UI)
+      const clone = element.cloneNode(true) as HTMLElement;
+
+      clone.style.width = "794px"; // A4 width
+      clone.style.position = "fixed";
+      clone.style.top = "-9999px";
+      clone.style.left = "-9999px";
+      clone.style.background = "#ffffff";
+      clone.style.transform = "scale(1)";
+      clone.style.overflow = "hidden";
+
+      document.body.appendChild(clone);
+
+      // ✅ CAPTURE CLONE
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        windowWidth: 794,
+      });
+
+      // 🧹 CLEANUP
+      document.body.removeChild(clone);
+
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // ✅ FIRST PAGE
+      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      // ✅ NEXT PAGES
+      while (heightLeft > 0) {
+        position -= pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      pdf.save(`Invoice-${invoice?.invoiceNumber || "0000"}.pdf`);
+    } catch (err) {
+      console.error("PDF generation error:", err);
+      setPopup({
+        open: true,
+        message: "Failed to generate PDF.",
+        type: "error",
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   /* ---------------- SEND INVOICE ---------------- */
   const sendInvoice = async () => {
@@ -629,76 +646,21 @@ const generatePDF = async () => {
           </div>
         </div>
       )}
-      <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible"
-        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
-      >
-        <motion.div
-          variants={itemVariant}
-          className="text-xl font-bold cursor-pointer mb-3 md:mb-0"
-        >
-          {/* LOGO */}
-        </motion.div>
-
-        <motion.div
-          variants={itemVariant}
-          className="md:hidden flex items-center mb-3"
-        >
-          <button onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-          </button>
-        </motion.div>
-
-        <motion.div
-          variants={itemVariant}
-          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${
-            menuOpen ? "flex" : "hidden md:flex"
-          }`}
-        >
-          {menuItems.map((item) => (
-            <MenuItem
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              isActive={activeMenu === item.label}
-              onClick={() => {
-                setActiveMenu(item.label); // set active menu
-                if (item.path) router.push(item.path); // navigate to page
-              }}
-            />
-          ))}
-
-          <div className="flex flex-col items-end space-y-2">
-            <div className="glass flex items-center space-x-3 px-4 py-2 rounded-xl">
-              <FaUserCircle size={28} />
-              <span className="font-medium">{user?.username || "User"}</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:underline"
-            >
-              Logout
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
+      <Navbar1 user={user} handleLogout={handleLogout} />
 
       {/* Invoice Preview */}
       <motion.div
         variants={itemVariant}
         ref={invoiceRef}
-        className="pdf-root w-full max-w-5xl mx-auto bg-white 
-             p-3 sm:p-4 md:p-6 
-             rounded-lg shadow space-y-6 
+        className="pdf-root w-full max-w-5xl mx-auto bg-white
+             p-3 sm:p-4 md:p-6
+             rounded-lg shadow space-y-6
              overflow-x-hidden"
       >
         {/* Billed By */}
         <div className="border border-black p-4 rounded">
           <div className="flex flex-col sm:flex-row sm:justify-between gap-4 mb-6">
             <div>
-
               <h2 className="font-bold">
                 {invoice?.billedBy?.businessName || "Your Business"}
               </h2>
@@ -748,7 +710,7 @@ const generatePDF = async () => {
             <p>
               <b>Phone:</b> {invoice?.billedTo?.phone}
             </p>
-            <p>
+            <p className="mb-4">
               <b>GSTIN:</b> {invoice?.billedTo?.gstin}
             </p>
           </div>
@@ -1264,7 +1226,7 @@ const generatePDF = async () => {
           />
           <button
             disabled={sending}
-            className={`px-4 py-2 rounded text-white 
+            className={`px-4 py-2 rounded text-white
     ${sending ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500"}`}
             onClick={() =>
               runWithOverlay(async () => {
@@ -1309,7 +1271,7 @@ const generatePDF = async () => {
 
       {popup.open && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
+          <div className="glass rounded-2xl px-8 py-6 w-[320px] text-center text-black w-[320px] text-center">
             <h3
               className={`text-lg font-semibold mb-3 ${
                 popup.type === "success"
@@ -1326,7 +1288,7 @@ const generatePDF = async () => {
                   : "Info"}
             </h3>
 
-            <p className="text-gray-700 mb-5">{popup.message}</p>
+            <p className="text-white mb-5">{popup.message}</p>
 
             <button
               onClick={() => setPopup({ ...popup, open: false })}

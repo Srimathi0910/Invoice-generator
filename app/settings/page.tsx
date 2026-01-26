@@ -1,32 +1,32 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter,usePathname } from "next/navigation";
 import {
   FaFileInvoiceDollar,
   FaUsers,
   FaChartBar,
   FaMoneyCheckAlt,
   FaCog,
-  FaUserCircle,
-  FaBars,
-  FaTimes,
-  FaPhoneAlt
+
+  FaPhoneAlt,
 } from "react-icons/fa";
 import { authFetch } from "@/utils/authFetch";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
-
+import Navbar1 from "../_components/navbar/Navbar1";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [activeMenu, setActiveMenu] = useState("Settings");
-  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname(); // get current path
+
   const [user, setUser] = useState<{ username: string } | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [activeTab, setActiveTab] = useState<"company" | "preferences">("company");
+  const [activeTab, setActiveTab] = useState<"company" | "preferences">(
+    "company",
+  );
   const [loadingCompany, setLoadingCompany] = useState(false);
   const [loadingPreferences, setLoadingPreferences] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
@@ -79,15 +79,36 @@ export default function SettingsPage() {
 
   // -------------------- Load user --------------------
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) router.replace("/login");
-    else setUser(JSON.parse(storedUser));
-  }, [router]);
+  const storedUser = localStorage.getItem("user");
+
+  // ❌ Not logged in → redirect (except for home)
+  if (!storedUser) {
+    if (pathname !== "/") {
+      router.replace("/login");
+    }
+    return; // stop further execution
+  }
+
+  const parsedUser = JSON.parse(storedUser);
+
+  // ❌ Invalid user object → redirect
+  if (!parsedUser?._id) {
+    if (pathname !== "/") {
+      router.replace("/login");
+    }
+    return;
+  }
+
+  // ✅ Valid user
+  setUser(parsedUser);
+
+}, [router, pathname]);
+
 
   // -------------------- Load company settings --------------------
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return router.push("/login");
+    if (!token && pathname !== "/") return router.push("/login");
     const loadCompany = async () => {
       try {
         const data = await authFetch("/api/auth/company/settings", {
@@ -174,9 +195,8 @@ export default function SettingsPage() {
           accountNumber: formData.accountNumber,
           upiId: formData.upiId,
           logoUrl: formData.logoUrl,
-        })
+        }),
       );
-
 
       if (logoFile) {
         form.append("logo", logoFile);
@@ -215,17 +235,15 @@ export default function SettingsPage() {
         message: "Failed to update settings",
         type: "error",
       });
-    }
-    finally {
+    } finally {
       setLoadingCompany(false); // ✅ End loading
     }
   };
 
-
   // -------------------- Save preferences --------------------
   const savePreferences = async () => {
     const token = localStorage.getItem("token");
-    if (!token) return router.push("/login");
+    if (!token && pathname !== "/") return router.push("/login");
 
     try {
       setLoadingPreferences(true); // start loading
@@ -259,17 +277,18 @@ export default function SettingsPage() {
         message: "Error saving preferences",
         type: "error",
       });
-    }
-    finally {
+    } finally {
       setLoadingPreferences(false); // end loading
     }
   };
 
-
   // -------------------- Logout --------------------
   const handleLogout = async () => {
     try {
-      const res = await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Logout failed");
       localStorage.removeItem("user");
       localStorage.removeItem("token");
@@ -301,7 +320,11 @@ export default function SettingsPage() {
   // Navbar slides from top
   const navbarVariants: Variants = {
     hidden: { y: -100, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
   };
 
   // Summary boxes stagger
@@ -310,24 +333,34 @@ export default function SettingsPage() {
     visible: { transition: { staggerChildren: 0.15 } },
   };
 
-
   // Total revenue box appears after summary boxes
 
   // Recent invoices appear last
   const recentInvoicesVariants: Variants = {
     hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 1 } },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5, ease: "easeOut", delay: 1 },
+    },
   };
-
 
   const summaryItemVariants: Variants = {
     hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
   };
 
   const revenueVariants: Variants = {
     hidden: { y: -50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut", delay: 0.6 } },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5, ease: "easeOut", delay: 0.6 },
+    },
   };
   if (showLoader) {
     return (
@@ -339,71 +372,31 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-gray-200 p-4 md:p-6">
       {/* NAVBAR */}
-      <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible"
-        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
-      >
-
-
-
-        <div className="text-xl font-bold cursor-pointer mb-3 md:mb-0">
-          {/* LOGO */}
-        </div>
-
-        <motion.div
-          variants={navbarVariants}
-          initial="hidden"
-          animate="visible" className="md:hidden flex items-center mb-3">
-          <button onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-          </button>
-        </motion.div>
-
-        <div
-          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"
-            }`}
-        >
-          {menuItems.map((item) => (
-            <MenuItem
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              isActive={activeMenu === item.label}
-              onClick={() => {
-                setActiveMenu(item.label); // set active menu
-                if (item.path) router.push(item.path); // navigate to page
-              }}
-            />
-          ))}
-
-          <div className="flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-3 glass px-4 py-2 rounded shadow">
-              <FaUserCircle size={28} />
-              <span className="font-medium">{user?.username || "User"}</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:underline"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </motion.div>
+      <Navbar1 user={user} handleLogout={handleLogout} />
 
       {/* PAGE CONTENT */}
       <motion.div
         variants={recentInvoicesVariants}
         initial="hidden"
-        animate="visible" className="px-4 sm:px-6 md:px-10 lg:px-16 py-8">
+        animate="visible"
+        className="px-4 sm:px-6 md:px-10 lg:px-16 py-8"
+      >
         <h1 className="text-3xl font-bold mb-6">Settings</h1>
         <div className="glass rounded-xl p-6 sm:p-8">
           {/* Tabs */}
           <div className="flex gap-10 mb-8">
-            <span onClick={() => setActiveTab("company")} className={`cursor-pointer font-semibold pb-1 ${activeTab === "company" ? "text-[#8F90DF] underline underline-offset-7 pb-2" : "text-gray-800"}`}>Company Profile</span>
-            <span onClick={() => setActiveTab("preferences")} className={`cursor-pointer font-semibold pb-1 ${activeTab === "preferences" ? "text-[#8F90DF] underline underline-offset-7 pb-1" : "text-gray-800"}`}>Preferences</span>
+            <span
+              onClick={() => setActiveTab("company")}
+              className={`cursor-pointer font-semibold pb-1 ${activeTab === "company" ? "text-[#8F90DF] underline underline-offset-7 pb-2" : "text-gray-800"}`}
+            >
+              Company Profile
+            </span>
+            <span
+              onClick={() => setActiveTab("preferences")}
+              className={`cursor-pointer font-semibold pb-1 ${activeTab === "preferences" ? "text-[#8F90DF] underline underline-offset-7 pb-1" : "text-gray-800"}`}
+            >
+              Preferences
+            </span>
           </div>
 
           {/* Company Profile */}
@@ -411,41 +404,117 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Card title="Company Profile">
                 <div className="flex gap-4 mb-4 items-center">
-                  <div onClick={() => fileInputRef.current?.click()} className="w-20 h-20 border border-dashed border-white bg-white/20 rounded flex items-center justify-center cursor-pointer overflow-hidden hover:bg-gray-50">
-                    {logoPreview ? <img src={logoPreview} alt="Logo" className="w-full h-full object-contain border-white bg-white/20" /> : <span className=" border-white bg-white/20 text-sm text-gray-500">Logo</span>}
-                    <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleLogoChange} />
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-20 h-20 border border-dashed border-white bg-white/20 rounded flex items-center justify-center cursor-pointer overflow-hidden hover:bg-gray-50"
+                  >
+                    {logoPreview ? (
+                      <img
+                        src={logoPreview}
+                        alt="Logo"
+                        className="w-full h-full object-contain border-white bg-white/20"
+                      />
+                    ) : (
+                      <span className=" border-white bg-white/20 text-sm text-gray-500">
+                        Logo
+                      </span>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={handleLogoChange}
+                    />
                   </div>
-                  <input className="border border-white bg-white/20 px-3 py-2 w-full bg-transparent text-black placeholder-black/60 " placeholder="Company Name" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} />
+                  <input
+                    className="border border-white bg-white/20 px-3 py-2 w-full bg-transparent text-black placeholder-black/60 "
+                    placeholder="Company Name"
+                    value={formData.companyName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, companyName: e.target.value })
+                    }
+                  />
                 </div>
 
-                <input className="border border-white bg-white/20 px-3 py-2 w-full mb-3" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-                <textarea className="borderborder-white bg-white/20 px-3 py-2 w-full mb-3" rows={4} placeholder="Address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
-                <input className="border border-white bg-white/20 px-3 py-2 w-full mb-3" placeholder="GSTIN" value={formData.gstin} onChange={(e) => setFormData({ ...formData, gstin: e.target.value })} />
+                <input
+                  className="border border-white bg-white/20 px-3 py-2 w-full mb-3"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                />
+                <textarea
+                  className="border border-white bg-white/20 px-3 py-2 w-full mb-3"
+                  rows={4}
+                  placeholder="Address"
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                />
+                <input
+                  className="border border-white bg-white/20 px-3 py-2 w-full mb-3"
+                  placeholder="GSTIN"
+                  value={formData.gstin}
+                  onChange={(e) =>
+                    setFormData({ ...formData, gstin: e.target.value })
+                  }
+                />
                 <input
                   className="border border-white bg-white/20 px-3 py-2 w-full mb-3"
                   placeholder="Phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
                 />
-
               </Card>
 
               <Card title="Payment Settings">
-                <label className="block mb-1 font-medium">Default Currency</label>
-                <select className="border border-white bg-white/20 px-3 py-2 w-full mb-4" value={formData.currency} onChange={(e) => setFormData({ ...formData, currency: e.target.value })}>
+                <label className="block mb-1 font-medium">
+                  Default Currency
+                </label>
+                <select
+                  className="border border-white bg-white/20 px-3 py-2 w-full mb-4"
+                  value={formData.currency}
+                  onChange={(e) =>
+                    setFormData({ ...formData, currency: e.target.value })
+                  }
+                >
                   <option value="INR">Indian Rupee</option>
                   <option value="USD">USD</option>
                 </select>
 
-                <label className="block mb-1 font-medium">Default GST Rate</label>
-                <select className="border border-white bg-white/20 px-3 py-2 w-full mb-4" value={formData.gstRate} onChange={(e) => setFormData({ ...formData, gstRate: Number(e.target.value) })}>
+                <label className="block mb-1 font-medium">
+                  Default GST Rate
+                </label>
+                <select
+                  className="border border-white bg-white/20 px-3 py-2 w-full mb-4"
+                  value={formData.gstRate}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      gstRate: Number(e.target.value),
+                    })
+                  }
+                >
                   <option value={18}>18%</option>
                   <option value={12}>12%</option>
                   <option value={5}>5%</option>
                 </select>
 
-                <label className="block mb-1 font-medium">Invoice Number Prefix</label>
-                <input className="border border-white bg-white/20 px-3 py-2 w-full mb-6" value={formData.invoicePrefix} onChange={(e) => setFormData({ ...formData, invoicePrefix: e.target.value })} />
+                <label className="block mb-1 font-medium">
+                  Invoice Number Prefix
+                </label>
+                <input
+                  className="border border-white bg-white/20 px-3 py-2 w-full mb-6"
+                  value={formData.invoicePrefix}
+                  onChange={(e) =>
+                    setFormData({ ...formData, invoicePrefix: e.target.value })
+                  }
+                />
 
                 <button
                   className="bg-gray-300 px-6 py-2 border border-white  rounded text-sm"
@@ -454,19 +523,46 @@ export default function SettingsPage() {
                 >
                   {loadingCompany ? "Saving..." : "Save Changes"}
                 </button>
-
               </Card>
 
               <div className="md:col-span-2">
                 <Card title="Bank Information">
                   <label className="block mb-1 font-medium">Bank Name</label>
-                  <input className="border border-white bg-white/20 px-3 py-2 w-full mb-4" placeholder="Bank Name" value={formData.bankName} onChange={(e) => setFormData({ ...formData, bankName: e.target.value })} />
+                  <input
+                    className="border border-white bg-white/20 px-3 py-2 w-full mb-4"
+                    placeholder="Bank Name"
+                    value={formData.bankName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, bankName: e.target.value })
+                    }
+                  />
 
-                  <label className="block mb-1 font-medium">Account Number</label>
-                  <input className="border border-white bg-white/20 px-3 py-2 w-full mb-4" placeholder="Account Number" value={formData.accountNumber} onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })} />
+                  <label className="block mb-1 font-medium">
+                    Account Number
+                  </label>
+                  <input
+                    className="border border-white bg-white/20 px-3 py-2 w-full mb-4"
+                    placeholder="Account Number"
+                    value={formData.accountNumber}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        accountNumber: e.target.value,
+                      })
+                    }
+                  />
 
-                  <label className="block mb-1 font-medium">UPI ID (Optional)</label>
-                  <input className="border px-3 py-2 border border-white bg-white/20 w-full mb-6" placeholder="example@upi" value={formData.upiId} onChange={(e) => setFormData({ ...formData, upiId: e.target.value })} />
+                  <label className="block mb-1 font-medium">
+                    UPI ID (Optional)
+                  </label>
+                  <input
+                    className="border px-3 py-2 border border-white bg-white/20 w-full mb-6"
+                    placeholder="example@upi"
+                    value={formData.upiId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, upiId: e.target.value })
+                    }
+                  />
 
                   <button
                     className="bg-gray-300 px-6 py-2 border border-white  rounded text-sm"
@@ -484,12 +580,35 @@ export default function SettingsPage() {
           {activeTab === "preferences" && (
             <div>
               <Card title="Notifications Preferences">
-                {["dueDateReminder", "overdueAlert", "paymentReceived"].map((field) => (
-                  <label className="flex items-center gap-3" key={field}>
-                    <input type="checkbox" name={field} checked={preferences[field as keyof typeof preferences] as boolean} onChange={(e) => setPreferences({ ...preferences, [field]: e.target.checked })} className="h-4 w-4" />
-                    <span>{field === "dueDateReminder" ? "Due Date Reminder" : field === "overdueAlert" ? "Overdue Invoice Alert" : "Payment Received Notification"}</span>
-                  </label>
-                ))}
+                {["dueDateReminder", "overdueAlert", "paymentReceived"].map(
+                  (field) => (
+                    <label className="flex items-center gap-3" key={field}>
+                      <input
+                        type="checkbox"
+                        name={field}
+                        checked={
+                          preferences[
+                            field as keyof typeof preferences
+                          ] as boolean
+                        }
+                        onChange={(e) =>
+                          setPreferences({
+                            ...preferences,
+                            [field]: e.target.checked,
+                          })
+                        }
+                        className="h-4 w-4"
+                      />
+                      <span>
+                        {field === "dueDateReminder"
+                          ? "Due Date Reminder"
+                          : field === "overdueAlert"
+                            ? "Overdue Invoice Alert"
+                            : "Payment Received Notification"}
+                      </span>
+                    </label>
+                  ),
+                )}
                 <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 w-full">
                   <span className="text-sm text-gray-600 whitespace-nowrap">
                     Reminder Period:
@@ -521,7 +640,6 @@ export default function SettingsPage() {
                   >
                     {loadingPreferences ? "Saving..." : "Save Changes"}
                   </button>
-
                 </div>
               </Card>
 
@@ -550,20 +668,24 @@ export default function SettingsPage() {
       </motion.div>
       {popup.open && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl px-8 py-6 shadow-xl w-[320px] text-center animate-scaleIn">
-
+          <div className="glass rounded-2xl px-8 py-6 w-[320px] text-center text-black w-[320px] text-center">
             <h3
-              className={`text-lg font-semibold mb-3 ${popup.type === "success"
-                ? "text-green-600"
-                : popup.type === "error"
-                  ? "text-red-600"
-                  : "text-gray-700"
-                }`}
+              className={`text-lg font-semibold mb-3 ${
+                popup.type === "success"
+                  ? "text-green-600"
+                  : popup.type === "error"
+                    ? "text-red-600"
+                    : "text-gray-700"
+              }`}
             >
-              {popup.type === "success" ? "Success" : popup.type === "error" ? "Error" : "Info"}
+              {popup.type === "success"
+                ? "Success"
+                : popup.type === "error"
+                  ? "Error"
+                  : "Info"}
             </h3>
 
-            <p className="text-gray-700 mb-5">{popup.message}</p>
+            <p className="text-white mb-5">{popup.message}</p>
 
             <button
               onClick={() => setPopup({ ...popup, open: false })}
@@ -579,24 +701,15 @@ export default function SettingsPage() {
 }
 
 // -------------------- Components --------------------
-const MenuItem = ({ icon, label, isActive, onClick }: any) => (
-  <div
-    onClick={onClick}
-    className={`
-       px-3 py-2 rounded-xl flex gap-2 items-center cursor-pointer whitespace-nowrap
-      transition
-      ${isActive
-        ? "text-black bg-white/30"
-        : "text-black hover:bg-white/20"}
-    `}
-  >
-    {icon}
-    <span>{label}</span>
-  </div>
-);
 
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="border border-white bg-white/20 rounded-lg p-6 mb-6">
       <h2 className="text-xl font-semibold mb-4">{title}</h2>

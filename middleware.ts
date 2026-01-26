@@ -2,22 +2,25 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
-  let pathname = req.nextUrl.pathname;
+  let { pathname } = req.nextUrl;
 
-  // Remove trailing slash (except for root)
+  // Normalize pathname (remove trailing slash)
   if (pathname !== "/" && pathname.endsWith("/")) {
     pathname = pathname.slice(0, -1);
   }
 
+  // ---------------- PUBLIC ROUTES ----------------
   const publicRoutes = [
-    "/", // landing page always allowed
+    "/", // landing page
     "/login",
     "/signup",
     "/forgot-password-email",
     "/verify-email",
     "/change-password",
+    "/contact",
   ];
 
+  // ---------------- COMPANY ROUTES ----------------
   const companyRoutes = [
     "/dashboard",
     "/clients",
@@ -28,6 +31,7 @@ export function middleware(req: NextRequest) {
     "/company-new-invoice",
   ];
 
+  // ---------------- CLIENT ROUTES ----------------
   const clientRoutes = [
     "/dashboard-client",
     "/myInvoices",
@@ -40,43 +44,38 @@ export function middleware(req: NextRequest) {
   const accessToken = req.cookies.get("accessToken")?.value;
   const role = req.cookies.get("role")?.value;
 
-  /* ---------------- ALWAYS ALLOW LANDING PAGE ---------------- */
-  if (pathname === "/") {
-    // Landing page is accessible for everyone
+  // ---------------- ALWAYS ALLOW PUBLIC ROUTES ----------------
+  if (publicRoutes.includes(pathname)) {
     return NextResponse.next();
   }
 
-  /* ---------------- PROTECT PRIVATE ROUTES ---------------- */
+  // ---------------- PROTECT PRIVATE ROUTES ----------------
   if (!accessToken) {
-    // Not logged in, redirect only if trying to access private routes
-    if (!publicRoutes.includes(pathname)) {
-      return NextResponse.redirect(new URL("/login", req.url));
-    }
-    return NextResponse.next(); // allow public route like /login
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  /* ---------------- ROLE PROTECTION ---------------- */
-  if (
-    role === "company" &&
-    clientRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"))
-  ) {
+  // ---------------- ROLE PROTECTION ----------------
+  if (role === "company" && clientRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"))) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  if (
-    role === "client" &&
-    companyRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"))
-  ) {
+  if (role === "client" && companyRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"))) {
     return NextResponse.redirect(new URL("/dashboard-client", req.url));
   }
 
-  // Otherwise, allow access
+  // ---------------- ALLOW ALL OTHER ACCESS ----------------
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    "/",
+    "/", // landing page
+    "/login",
+    "/signup",
+    "/forgot-password-email",
+    "/verify-email",
+    "/change-password",
+    "/contact",
     "/dashboard/:path*",
     "/clients/:path*",
     "/reports/:path*",
@@ -90,10 +89,5 @@ export const config = {
     "/reports-client/:path*",
     "/profile/:path*",
     "/help/:path*",
-    "/login",
-    "/signup",
-    "/forgot-password-email",
-    "/verify-email",
-    "/change-password",
   ],
 };

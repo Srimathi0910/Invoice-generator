@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Mail, Phone } from "lucide-react"; // optional icons
-import { useRouter } from "next/navigation";
+import { useRouter,usePathname } from "next/navigation";
 import { authFetch } from "@/utils/authFetch";
 import {
   FaFileInvoiceDollar,
@@ -19,6 +19,7 @@ import {
 } from "react-icons/fa";
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
+import ClientNavbar from "../_components/navbar/Navbar2";
 
 const faqsData = [
   {
@@ -44,6 +45,7 @@ const faqsData = [
 
 export default function HelpPage() {
   const router = useRouter();
+  const pathname = usePathname(); // get current path
   const [activeMenu, setActiveMenu] = useState("Help");
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -60,15 +62,24 @@ export default function HelpPage() {
     return () => clearTimeout(timer); // cleanup
   }, []);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
+ useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+
+  // ❌ Not logged in → redirect (except home)
+  if (!storedUser) {
+    if (pathname !== "/") {
       router.replace("/login");
-    } else {
-      setUser(JSON.parse(storedUser));
     }
     setLoadingUser(false);
-  }, [router]);
+    return;
+  }
+
+  // ✅ Logged in
+  const parsedUser = JSON.parse(storedUser);
+  setUser(parsedUser);
+  setLoadingUser(false);
+
+}, [router, pathname]);
 
   const handleLogout = async () => {
     try {
@@ -148,57 +159,8 @@ export default function HelpPage() {
       animate="visible"
       className="min-h-screen bg-gray-200 p-4 md:p-6"
     >
-      <motion.div
-        variants={navbarVariants}
-        initial="hidden"
-        animate="visible"
-        className="glass rounded-2xl  p-4 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 shadow"
-      >
-        <motion.div
-          variants={itemVariant}
-          className="text-xl font-bold cursor-pointer mb-3 md:mb-0"
-        ></motion.div>
+      <ClientNavbar user={user} handleLogout={handleLogout} />
 
-        <motion.div
-          variants={itemVariant}
-          className="md:hidden flex items-center mb-3"
-        >
-          <button onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-          </button>
-        </motion.div>
-
-        <motion.div
-          variants={itemVariant}
-          className={`flex flex-col md:flex-row md:items-center md:space-x-10 w-full md:w-auto ${menuOpen ? "flex" : "hidden md:flex"}`}
-        >
-          {menuItems.map((item) => (
-            <MenuItem
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              isActive={activeMenu === item.label}
-              onClick={() => {
-                setActiveMenu(item.label);
-                if (item.path) router.push(item.path);
-              }}
-            />
-          ))}
-
-          <div className="flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-3 glass px-4 py-2 rounded shadow">
-              <FaUserCircle size={28} />
-              <span className="font-medium">{user?.username || "User"}</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:underline"
-            >
-              Logout
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
       <motion.div variants={itemVariant} className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">How can we assist you?</h1>
 
