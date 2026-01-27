@@ -78,23 +78,3 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
-import { NextApiRequest, NextApiResponse } from "next";
-
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await connectDB();
-
-  const { id } = req.query;
-
-  try {
-    const invoice = await Invoice.findById(id);
-    if (!invoice) {
-      return res.status(404).json({ success: false, message: "Invoice not found" });
-    }
-
-    res.status(200).json({ success: true, invoice });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-}
