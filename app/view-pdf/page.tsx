@@ -1,11 +1,15 @@
 import { Suspense } from "react";
-import ViewPDF from "./ViewPDf";
+import View from "./View";
 
 export default function PreviewPage() {
   return (
     <Suspense fallback={null}>
-      <ViewPDF />
+      <View />
 
-    </Suspense>
+
+
+
+
+</Suspense>
   );
 }
