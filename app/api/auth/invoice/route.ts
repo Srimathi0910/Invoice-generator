@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       extras: data.extras ?? { paymentStatus: "Unpaid", paymentMethod: "N/A" },
       totalInWords: data.totalInWords ?? "",
       status: "Unpaid",
-      showTotalWords: data.showTotalWords ?? true,
+      showTotalInWords: data.showTotalInWords,
       logoUrl: data.logoUrl ?? "",
     };
 
@@ -326,7 +326,7 @@ body, h1, h2, h3, p, table, th, td {
           <p><b>Additional Charges: ₹${invoiceData.extras?.charges || 0}</b></p>
           <p style="font-size: 18px;"><b>Grand Total: ₹${invoiceData.totals.grandTotal.toFixed(2)}</b></p>
           ${
-            invoiceData.showTotalWords
+            invoiceData.showTotalInWords
               ? `<p style="font-style: italic;">Total in words: ${invoiceData.totalInWords}</p>`
               : ""
           }

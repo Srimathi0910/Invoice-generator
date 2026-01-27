@@ -75,7 +75,7 @@ const invoiceSchema = new mongoose.Schema({
   logoUrl: String,
   pdfUrl: { type: String }, // stored PDF path
 
-  showTotalWords: { type: Boolean, default: true },
+  showTotalInWords: { type: Boolean, default: true },
 
   files: {
     signature: [{ filename: String, url: String }],

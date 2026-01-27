@@ -39,7 +39,7 @@ export default function InvoicePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
   const [invoice, setInvoice] = useState<any>(null); // <-- store saved invoice
-  const [showTotalWords, setShowTotalWords] = useState(true);
+  const [showTotalInWords, setShowTotalInWords] = useState(true);
   const [showPdfTotal, setShowPdfTotal] = useState(true);
   const [showOverlay, setShowOverlay] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -151,6 +151,24 @@ export default function InvoicePage() {
     setUser(parsedUser);
     setLoadingUser(false);
   }, [router, pathname]);
+  const getTotalInWords = (showTotalInWords: boolean, totals: any): string => {
+    if (!showTotalInWords) return "";
+
+    if (!totals?.grandTotal || totals.grandTotal === 0) {
+      return "Zero Rupees Only";
+    }
+
+    const grand = totals.grandTotal.toFixed(2);
+    const [integerPart, decimalPart] = grand.split(".").map(Number);
+
+    let words = numberToWords(integerPart) + " Rupees";
+
+    if (decimalPart && decimalPart > 0) {
+      words += ` and ${numberToWords(decimalPart)} Paise`;
+    }
+
+    return words + " Only";
+  };
 
   /* ---------------- File to Base64 ---------------- */
   const fileToBase64 = (file: File): Promise<string> =>
@@ -380,9 +398,9 @@ export default function InvoicePage() {
       items,
       extras,
       totals: calculatedTotals,
-      totalInWords: `${calculatedTotals.grandTotal} rupees only`,
+      totalInWords: getTotalInWords(showTotalInWords, calculatedTotals),
       logoUrl: logoPreview || "",
-      showTotalWords: showTotalWords ?? true,
+      showTotalInWords,
       files: invoiceFilesBase64,
       userId: user?._id, // include user ID for saving
     };
@@ -520,7 +538,8 @@ export default function InvoicePage() {
         items,
         extras,
         totals: calculatedTotals,
-        totalInWords: `${calculatedTotals.grandTotal} rupees only`,
+        totalInWords: getTotalInWords(showTotalInWords, calculatedTotals),
+        showTotalInWords,
         logoUrl: logoPreview || "",
         userId: user?._id || "",
       };
@@ -1071,9 +1090,9 @@ export default function InvoicePage() {
                   <span>Total in Words:</span>
                   <button
                     type="button"
-                    onClick={() => setShowTotalWords(!showTotalWords)}
+                    onClick={() => setShowTotalInWords(!showTotalInWords)}
                   >
-                    {showTotalWords ? (
+                    {showTotalInWords ? (
                       <Eye size={16} />
                     ) : (
                       <EyeOff size={16} />
@@ -1082,7 +1101,7 @@ export default function InvoicePage() {
                 </div>
 
                 <p className="text-sm">
-                  {showTotalWords
+                  {showTotalInWords
                     ? (() => {
                         if (!totals?.grandTotal || totals.grandTotal === 0)
                           return "Zero rupees only";
