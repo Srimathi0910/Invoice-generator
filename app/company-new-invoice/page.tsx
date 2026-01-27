@@ -151,24 +151,27 @@ export default function InvoicePage() {
     setUser(parsedUser);
     setLoadingUser(false);
   }, [router, pathname]);
-  const getTotalInWords = (showTotalInWords: boolean, totals: any): string => {
-    if (!showTotalInWords) return "";
+const getTotalInWords = (
+  showTotalInWords: boolean,
+  totals: any
+): string => {
+  if (!showTotalInWords) return "";
 
-    if (!totals?.grandTotal || totals.grandTotal === 0) {
-      return "Zero Rupees Only";
-    }
+  if (!totals?.grandTotal || totals.grandTotal === 0) {
+    return "Zero Rupees Only";
+  }
 
-    const grand = totals.grandTotal.toFixed(2);
-    const [integerPart, decimalPart] = grand.split(".").map(Number);
+  const grand = totals.grandTotal.toFixed(2);
+  const [integerPart, decimalPart] = grand.split(".").map(Number);
 
-    let words = numberToWords(integerPart) + " Rupees";
+  let words = numberToWords(integerPart) + " Rupees";
 
-    if (decimalPart && decimalPart > 0) {
-      words += ` and ${numberToWords(decimalPart)} Paise`;
-    }
+  if (decimalPart && decimalPart > 0) {
+    words += ` and ${numberToWords(decimalPart)} Paise`;
+  }
 
-    return words + " Only";
-  };
+  return words + " Only";
+};
 
   /* ---------------- File to Base64 ---------------- */
   const fileToBase64 = (file: File): Promise<string> =>

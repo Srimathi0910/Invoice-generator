@@ -1,7 +1,7 @@
 "use client";
 import { authFetch } from "@/utils/authFetch";
 import { useState, useEffect } from "react";
-import { useRouter,usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   FaFileInvoiceDollar,
   FaUsers,
@@ -18,9 +18,10 @@ import {
 import { motion, Variants } from "framer-motion";
 import TetrominosLoader from "../_components/TetrominosLoader";
 import ClientNavbar from "../_components/navbar/Navbar2";
+import Link from "next/link";
 const Dashboard = () => {
   const router = useRouter();
-const pathname = usePathname(); // get current path
+  const pathname = usePathname(); // get current path
   /* ---------------- AUTH ---------------- */
   const [user, setUser] = useState<{ username: string; email: string } | null>(
     null,
@@ -28,8 +29,10 @@ const pathname = usePathname(); // get current path
   const [loadingUser, setLoadingUser] = useState(true);
   const [showLoader, setShowLoader] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+    const [showOverlay, setShowOverlay] = useState(false);
 
-  useEffect(() => {
+
+ useEffect(() => {
     // Show loader for 3 seconds
     const timer = setTimeout(() => {
       setShowLoader(false);
@@ -37,35 +40,38 @@ const pathname = usePathname(); // get current path
 
     return () => clearTimeout(timer); // cleanup
   }, []);
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
 
-
-useEffect(() => {
-  const storedUser = localStorage.getItem("user");
-
-  if (!storedUser) {
-    if (pathname !== "/") {
-      router.replace("/login");
+    if (!storedUser) {
+      if (pathname !== "/") {
+        router.replace("/login");
+      }
+      setLoadingUser(false);
+      return;
     }
-    setLoadingUser(false);
-    return;
-  }
 
-  const parsedUser = JSON.parse(storedUser);
+    const parsedUser = JSON.parse(storedUser);
 
-  if (!parsedUser?._id) {
-    if (pathname !== "/") {
-      router.replace("/login");
+    if (!parsedUser?._id) {
+      if (pathname !== "/") {
+        router.replace("/login");
+      }
+      setLoadingUser(false);
+      return;
     }
+
+    setUser(parsedUser);
     setLoadingUser(false);
-    return;
-  }
-
-  setUser(parsedUser);
-  setLoadingUser(false);
-
-}, [router, pathname]);
-
-
+  }, [router, pathname]);
+  const runWithOverlay = async (fn: () => Promise<void> | void) => {
+    setShowOverlay(true);
+    try {
+      await fn();
+    } finally {
+      setShowOverlay(false);
+    }
+  };
   const handleLogout = async () => {
     try {
       const res = await fetch("/api/auth/logout", {
@@ -148,7 +154,7 @@ useEffect(() => {
     return matchesTab && matchesSearch;
   });
 
-  if (showLoader) {
+   if (showLoader) {
     return (
       <div className="relative w-full h-screen flex items-center justify-center bg-gray-50">
         <TetrominosLoader />
@@ -216,8 +222,7 @@ useEffect(() => {
       className="min-h-screen bg-gray-200 p-4 md:p-6"
     >
       {/* ---------------- TOP MENU ---------------- */}
-           <ClientNavbar user={user} handleLogout={handleLogout} />
-
+      <ClientNavbar user={user} handleLogout={handleLogout} />
 
       {/* ---------------- SUMMARY ---------------- */}
 
@@ -328,14 +333,12 @@ useEffect(() => {
                       </div>
 
                       <div className="flex justify-end w-full mt-2">
-                        <a
-                          href={inv.pdfUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-blue-200 text-blue-700 font-medium px-3 py-1 rounded hover:bg-blue-300"
+                        <Link
+                          href={`/view-pdf?invoiceNumber=${encodeURIComponent(inv.invoiceNumber)}`}
+                          className="bg-blue-200 text-blue-700 font-medium px-3 py-1 rounded"
                         >
                           View
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </td>
@@ -364,18 +367,14 @@ useEffect(() => {
                     {new Date(inv.dueDate).toLocaleDateString()}
                   </td>
                   <td className="hidden md:table-cell px-4 py-4">
-                    <button className="bg-blue-200 text-blue-700 font-medium px-3 py-1 rounded hover:bg-blue-300">
-                      <div className="flex justify-end w-full">
-                        <a
-                          href={inv.pdfUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-blue-200 text-blue-700 font-medium rounded hover:bg-blue-300"
-                        >
-                          View
-                        </a>
-                      </div>
-                    </button>
+                    <div className="flex justify-end w-full mt-2">
+                      <Link
+                        href={`/view-pdf?invoiceNumber=${encodeURIComponent(inv.invoiceNumber)}`}
+                        className="bg-blue-200 text-blue-700 font-medium px-3 py-1 rounded"
+                      >
+                        View
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))

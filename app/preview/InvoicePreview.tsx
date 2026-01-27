@@ -1247,7 +1247,7 @@ useEffect(() => {
 
       <motion.div variants={itemVariant} className="flex justify-center mb-6">
         <button
-          className={`bg-indigo-400 text-black px-6 py-2 h-12 w-64 rounded flex items-center justify-center gap-2 ${downloading ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-300"}`}
+          className={`bg-indigo-500 text-white px-6 py-2 h-12 w-64 rounded flex items-center justify-center gap-2 ${downloading ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-300"}`}
           disabled={downloading}
           onClick={() => {
             if (editMode) {
