@@ -5,11 +5,6 @@ export default function PreviewPage() {
   return (
     <Suspense fallback={null}>
       <View />
-
-
-
-
-
-</Suspense>
+    </Suspense>
   );
 }
