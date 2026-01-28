@@ -44,9 +44,9 @@ const ViewPDF = () => {
     }
     setUser(parsedUser);
   }, [router, pathname]);
-useEffect(() => {
-  setShowOverlay(false);
-}, []);
+  useEffect(() => {
+    setShowOverlay(false);
+  }, []);
   /* ---------------- FETCH INVOICE ---------------- */
   useEffect(() => {
     const invoiceNumber = searchParams.get("invoiceNumber");
@@ -215,7 +215,7 @@ useEffect(() => {
       },
     },
   };
-   const runWithOverlay = async (fn: () => Promise<void> | void) => {
+  const runWithOverlay = async (fn: () => Promise<void> | void) => {
     setShowOverlay(true);
     try {
       await fn();
@@ -406,14 +406,19 @@ useEffect(() => {
         </div>
       </motion.div>
 
-      <motion.div variants={itemVariant} className="flex justify-center mb-6">
+      <motion.div variants={itemVariant} className="flex justify-center m-6">
         <button
-          className={`bg-indigo-500 text-white m-10 px-6 py-2 h-12 w-64 rounded flex items-center justify-center gap-2 ${downloading ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-300"}`}
+          className={`text-white px-6 py-2 h-12 w-64 rounded flex items-center justify-center gap-2
+    ${downloading ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-500 hover:bg-indigo-600"}
+  `}
           disabled={downloading}
-          onClick={generatePDF}
+          onClick={() =>
+            runWithOverlay(async () => {
+              await generatePDF();
+            })
+          }
         >
-          <Download size={16} />
-          {downloading ? "Downloading PDF" : "Download PDF"}
+          {downloading ? "Downloading..." : "Download PDF"}
         </button>
       </motion.div>
 
